@@ -18,104 +18,65 @@ use Sylius\Component\Core\Model\AddressInterface;
 
 interface AddressPageInterface extends SymfonyPageInterface
 {
-    /**
-     * @throws \RuntimeException
-     */
-    public function chooseDifferentBillingAddress();
+    public function chooseDifferentShippingAddress(): void;
 
-    /**
-     * @return bool
-     */
-    public function checkInvalidCredentialsValidation();
+    public function chooseDifferentBillingAddress(): void;
 
-    /**
-     * @param string $element
-     * @param string $message
-     *
-     * @return bool
-     */
-    public function checkValidationMessageFor($element, $message);
+    public function checkInvalidCredentialsValidation(): bool;
 
-    public function specifyBillingAddress(AddressInterface $billingAddress);
+    public function checkValidationMessageFor(string $element, string $message): bool;
 
-    /**
-     * @param string $province
-     */
-    public function selectBillingAddressProvince($province);
+    public function specifyShippingAddress(AddressInterface $shippingAddress): void;
 
-    public function specifyShippingAddress(AddressInterface $shippingAddress);
+    public function selectShippingAddressProvince(string $province): void;
 
-    /**
-     * @param string $province
-     */
-    public function selectShippingAddressProvince($province);
+    public function specifyBillingAddress(AddressInterface $billingAddress): void;
 
-    /**
-     * @return bool
-     */
-    public function canSignIn();
+    public function selectBillingAddressProvince(string $province): void;
 
-    public function signIn();
+    public function specifyEmail(?string $email): void;
 
-    /**
-     * @param string $email
-     */
-    public function specifyEmail($email);
+    public function specifyBillingAddressFullName(string $fullName): void;
 
-    public function specifyShippingAddressFullName(string $fullName);
+    public function canSignIn(): bool;
 
-    /**
-     * @param string $password
-     */
-    public function specifyPassword($password);
+    public function signIn(): void;
 
-    /**
-     * @param string $itemName
-     *
-     * @return string
-     */
-    public function getItemSubtotal($itemName);
+    public function specifyPassword(string $password): void;
 
-    /**
-     * @return string
-     */
-    public function getShippingAddressCountry();
+    public function getItemSubtotal(string $itemName): string;
 
-    public function nextStep();
+    public function getShippingAddressCountry(): string;
 
-    public function backToStore();
+    public function nextStep(): void;
 
-    /**
-     * @param string $provinceName
-     */
-    public function specifyBillingAddressProvince($provinceName);
+    public function backToStore(): void;
 
-    /**
-     * @param string $provinceName
-     */
-    public function specifyShippingAddressProvince($provinceName);
+    public function specifyBillingAddressProvince(string $provinceName): void;
 
-    /**
-     * @return bool
-     */
-    public function hasShippingAddressInput();
+    public function specifyShippingAddressProvince(string $provinceName): void;
 
-    /**
-     * @return bool
-     */
-    public function hasBillingAddressInput();
+    public function hasShippingAddressInput(): bool;
 
-    public function selectShippingAddressFromAddressBook(AddressInterface $address);
+    public function hasBillingAddressInput(): bool;
 
-    public function selectBillingAddressFromAddressBook(AddressInterface $address);
+    public function hasEmailInput(): bool;
 
-    /**
-     * @return AddressInterface
-     */
-    public function getPreFilledShippingAddress();
+    public function selectShippingAddressFromAddressBook(AddressInterface $address): void;
 
-    /**
-     * @return AddressInterface
-     */
-    public function getPreFilledBillingAddress();
+    public function selectBillingAddressFromAddressBook(AddressInterface $address): void;
+
+    public function getPreFilledShippingAddress(): AddressInterface;
+
+    public function getPreFilledBillingAddress(): AddressInterface;
+
+    /** @return string[] */
+    public function getAvailableShippingCountries(): array;
+
+    /** @return string[] */
+    public function getAvailableBillingCountries(): array;
+
+    public function isDifferentShippingAddressChecked(): bool;
+
+    public function isShippingAddressVisible(): bool;
 }

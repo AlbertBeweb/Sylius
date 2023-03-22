@@ -22,7 +22,7 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 
-class AddBaseCurrencySubscriberSpec extends ObjectBehavior
+final class AddBaseCurrencySubscriberSpec extends ObjectBehavior
 {
     function it_implements_event_subscriber_interface(): void
     {
@@ -37,7 +37,7 @@ class AddBaseCurrencySubscriberSpec extends ObjectBehavior
     function it_sets_base_currency_as_disabled_when_channel_is_not_new(
         FormEvent $event,
         ChannelInterface $channel,
-        FormInterface $form
+        FormInterface $form,
     ): void {
         $event->getData()->willReturn($channel);
         $event->getForm()->willReturn($form);
@@ -46,6 +46,7 @@ class AddBaseCurrencySubscriberSpec extends ObjectBehavior
 
         $form
             ->add('baseCurrency', Argument::type('string'), Argument::withEntry('disabled', true))
+            ->willReturn($form)
             ->shouldBeCalled()
         ;
 
@@ -55,7 +56,7 @@ class AddBaseCurrencySubscriberSpec extends ObjectBehavior
     function it_does_not_set_base_currency_as_enabled_when_channel_is_new(
         FormEvent $event,
         ChannelInterface $channel,
-        FormInterface $form
+        FormInterface $form,
     ): void {
         $event->getData()->willReturn($channel);
         $event->getForm()->willReturn($form);
@@ -64,6 +65,7 @@ class AddBaseCurrencySubscriberSpec extends ObjectBehavior
 
         $form
             ->add('baseCurrency', Argument::type('string'), Argument::withEntry('disabled', false))
+            ->willReturn($form)
             ->shouldBeCalled()
         ;
 
@@ -72,7 +74,7 @@ class AddBaseCurrencySubscriberSpec extends ObjectBehavior
 
     function it_throws_unexpected_type_exception_when_resource_does_not_implements_channel_interface(
         FormEvent $event,
-        $resource
+        $resource,
     ): void {
         $event->getData()->willReturn($resource);
         $this->shouldThrow(UnexpectedTypeException::class)->during('preSetData', [$event]);

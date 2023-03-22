@@ -15,9 +15,10 @@ namespace Sylius\Bundle\CoreBundle\Application;
 
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
- * @mixin \Symfony\Component\HttpKernel\Bundle\Bundle
+ * @mixin Bundle
  *
  * @see \Symfony\Component\HttpKernel\Bundle\Bundle
  *
@@ -43,7 +44,7 @@ trait SyliusPluginTrait
 
             if (null !== $extension) {
                 if (!$extension instanceof ExtensionInterface) {
-                    throw new \LogicException(sprintf('Extension %s must implement %s.', get_class($extension), ExtensionInterface::class));
+                    throw new \LogicException(sprintf('Extension %s must implement %s.', $extension::class, ExtensionInterface::class));
                 }
 
                 // check naming convention for Sylius Plugins
@@ -53,7 +54,8 @@ trait SyliusPluginTrait
                 if ($expectedAlias !== $extension->getAlias()) {
                     throw new \LogicException(sprintf(
                         'Users will expect the alias of the default extension of a plugin to be the underscored version of the plugin name ("%s"). You can override "Bundle::getContainerExtension()" if you want to use "%s" or another alias.',
-                        $expectedAlias, $extension->getAlias()
+                        $expectedAlias,
+                        $extension->getAlias(),
                     ));
                 }
 

@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ShippingCategoryChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $shippingCategoryRepository;
-
-    public function __construct(RepositoryInterface $shippingCategoryRepository)
+    public function __construct(private RepositoryInterface $shippingCategoryRepository)
     {
-        $this->shippingCategoryRepository = $shippingCategoryRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -41,32 +34,21 @@ final class ShippingCategoryChoiceType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'choices' => function (Options $options) {
-                return $this->shippingCategoryRepository->findAll();
-            },
+            'choices' => fn (Options $options) => $this->shippingCategoryRepository->findAll(),
             'choice_value' => 'code',
             'choice_label' => 'name',
             'choice_translation_domain' => false,
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_shipping_category_choice';

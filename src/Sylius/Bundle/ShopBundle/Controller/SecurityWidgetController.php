@@ -13,21 +13,17 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\ShopBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Twig\Environment;
 
 final class SecurityWidgetController
 {
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    public function __construct(EngineInterface $templatingEngine)
+    public function __construct(private Environment $templatingEngine)
     {
-        $this->templatingEngine = $templatingEngine;
     }
 
     public function renderAction(): Response
     {
-        return $this->templatingEngine->renderResponse('@SyliusShop/Menu/_security.html.twig');
+        return new Response($this->templatingEngine->render('@SyliusShop/Menu/_security.html.twig'));
     }
 }

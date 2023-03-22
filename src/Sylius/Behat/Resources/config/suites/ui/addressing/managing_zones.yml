@@ -6,6 +6,7 @@ default:
         ui_managing_zones:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.country
                 - sylius.behat.context.transform.province
@@ -23,4 +24,4 @@ default:
                 - sylius.behat.context.ui.admin.notification
 
             filters:
-                tags: "@managing_zones && @ui"
+                tags: "@managing_zones&&@ui"

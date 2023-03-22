@@ -30,17 +30,18 @@ class ProductTaxonController extends ResourceController
      * @throws HttpException
      *
      * @deprecated This ajax action is deprecated and will be removed in Sylius 2.0 - use ProductTaxonController::updateProductTaxonsPositionsAction instead.
+     *
+     * @psalm-suppress DeprecatedMethod
      */
     public function updatePositionsAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
         $this->isGrantedOr403($configuration, ResourceActions::UPDATE);
-        $productTaxons = $request->get('productTaxons');
-
+        $productTaxons = $this->getParameterFromRequest($request, 'productTaxons');
         $this->validateCsrfProtection($request, $configuration);
 
         if ($this->shouldProductsPositionsBeUpdated($request, $productTaxons)) {
-            /** @var ProductTaxonInterface $productTaxon */
+            /** @psalm-var array{position: string|int, id: int} $productTaxon */
             foreach ($productTaxons as $productTaxon) {
                 try {
                     $this->updatePositions($productTaxon['position'], $productTaxon['id']);
@@ -55,11 +56,14 @@ class ProductTaxonController extends ResourceController
         return new JsonResponse();
     }
 
+    /**
+     * @psalm-suppress DeprecatedMethod
+     */
     public function updateProductTaxonsPositionsAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
         $this->isGrantedOr403($configuration, ResourceActions::UPDATE);
-        $productTaxons = $request->get('productTaxons');
+        $productTaxons = $this->getParameterFromRequest($request, 'productTaxons');
 
         $this->validateCsrfProtection($request, $configuration);
 
@@ -67,7 +71,6 @@ class ProductTaxonController extends ResourceController
             /** @var Session $session */
             $session = $request->getSession();
 
-            /** @var ProductTaxonInterface $productTaxon */
             foreach ($productTaxons as $id => $position) {
                 try {
                     $this->updatePositions($position, $id);
@@ -86,7 +89,7 @@ class ProductTaxonController extends ResourceController
 
     private function validateCsrfProtection(Request $request, RequestConfiguration $configuration): void
     {
-        if ($configuration->isCsrfProtectionEnabled() && !$this->isCsrfTokenValid('update-product-taxon-position', $request->request->get('_csrf_token'))) {
+        if ($configuration->isCsrfProtectionEnabled() && !$this->isCsrfTokenValid('update-product-taxon-position', (string) $request->request->get('_csrf_token'))) {
             throw new HttpException(Response::HTTP_FORBIDDEN, 'Invalid csrf token.');
         }
     }
@@ -100,7 +103,31 @@ class ProductTaxonController extends ResourceController
     {
         Assert::numeric($position, sprintf('The position "%s" is invalid.', $position));
 
+        /** @var ProductTaxonInterface $productTaxonFromBase */
         $productTaxonFromBase = $this->repository->findOneBy(['id' => $id]);
         $productTaxonFromBase->setPosition((int) $position);
+    }
+
+    /**
+     * @return mixed
+     *
+     * @deprecated This function will be removed in Sylius 2.0, since Symfony 5.4, use explicit input sources instead
+     * based on Symfony\Component\HttpFoundation\Request::get
+     */
+    private function getParameterFromRequest(Request $request, string $key)
+    {
+        if ($request !== $result = $request->attributes->get($key, $request)) {
+            return $result;
+        }
+
+        if ($request->query->has($key)) {
+            return $request->query->all()[$key];
+        }
+
+        if ($request->request->has($key)) {
+            return $request->request->all()[$key];
+        }
+
+        return null;
     }
 }

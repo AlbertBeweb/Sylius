@@ -20,12 +20,8 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
 final class LoadMetadataSubscriber implements EventSubscriber
 {
-    /** @var array */
-    private $subjects;
-
-    public function __construct(array $subjects)
+    public function __construct(private array $subjects)
     {
-        $this->subjects = $subjects;
     }
 
     public function getSubscribedEvents(): array
@@ -52,7 +48,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
         string $subject,
         string $subjectClass,
         ClassMetadataInfo $metadata,
-        ClassMetadataFactory $metadataFactory
+        ClassMetadataFactory $metadataFactory,
     ): void {
         /** @var ClassMetadataInfo $targetEntityMetadata */
         $targetEntityMetadata = $metadataFactory->getMetadataFor($subjectClass);
@@ -62,7 +58,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
             'inversedBy' => 'attributes',
             'joinColumns' => [[
                 'name' => $subject . '_id',
-                'referencedColumnName' => $targetEntityMetadata->fieldMappings['id']['columnName'],
+                'referencedColumnName' => $targetEntityMetadata->fieldMappings['id']['columnName'] ?? $targetEntityMetadata->fieldMappings['id']['fieldName'],
                 'nullable' => false,
                 'onDelete' => 'CASCADE',
             ]],
@@ -74,7 +70,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
     private function mapAttributeOnAttributeValue(
         string $attributeClass,
         ClassMetadataInfo $metadata,
-        ClassMetadataFactory $metadataFactory
+        ClassMetadataFactory $metadataFactory,
     ): void {
         /** @var ClassMetadataInfo $attributeMetadata */
         $attributeMetadata = $metadataFactory->getMetadataFor($attributeClass);
@@ -83,9 +79,8 @@ final class LoadMetadataSubscriber implements EventSubscriber
             'targetEntity' => $attributeClass,
             'joinColumns' => [[
                 'name' => 'attribute_id',
-                'referencedColumnName' => $attributeMetadata->fieldMappings['id']['columnName'],
+                'referencedColumnName' => $attributeMetadata->fieldMappings['id']['columnName'] ?? $attributeMetadata->fieldMappings['id']['fieldName'],
                 'nullable' => false,
-                'onDelete' => 'CASCADE',
             ]],
         ];
 

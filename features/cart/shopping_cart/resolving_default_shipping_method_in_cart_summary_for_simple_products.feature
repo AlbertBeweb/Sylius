@@ -19,17 +19,17 @@ Feature: Viewing a cart summary with correct default shipping method based on va
         And the store has "Free" shipping category
         And the store has "Free" shipping method with "$0.00" fee
         And this shipping method requires that all units match to "Free" shipping category
-        And the store has a product "T-shirt banana" priced at "$9.99"
+        And the store has a product "T-Shirt banana" priced at "$9.99"
         And this product belongs to "Free" shipping category
 
-    @ui
+    @ui @api
     Scenario:
         Given I added product "Star Trek Table Linen" to the cart
         When I see the summary of my cart
         Then my cart shipping total should be "$5.00"
 
-    @ui
+    @ui @api
     Scenario:
-        Given I have product "T-shirt banana" in the cart
+        Given I have product "T-Shirt banana" in the cart
         When I see the summary of my cart
         Then my cart shipping total should be "$0.00"

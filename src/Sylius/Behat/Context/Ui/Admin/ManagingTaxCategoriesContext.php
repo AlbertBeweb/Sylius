@@ -23,28 +23,12 @@ use Webmozart\Assert\Assert;
 
 final class ManagingTaxCategoriesContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
     ) {
-        $this->indexPage = $indexPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
     }
 
     /**
@@ -65,7 +49,7 @@ final class ManagingTaxCategoriesContext implements Context
     }
 
     /**
-     * @Given I want to create a new tax category
+     * @When I want to create a new tax category
      */
     public function iWantToCreateNewTaxCategory()
     {
@@ -120,8 +104,8 @@ final class ManagingTaxCategoriesContext implements Context
     }
 
     /**
-     * @Given I want to modify a tax category :taxCategory
-     * @Given /^I want to modify (this tax category)$/
+     * @When I want to modify a tax category :taxCategory
+     * @When /^I want to modify (this tax category)$/
      */
     public function iWantToModifyTaxCategory(TaxCategoryInterface $taxCategory)
     {
@@ -162,9 +146,9 @@ final class ManagingTaxCategoriesContext implements Context
     }
 
     /**
-     * @Then the code field should be disabled
+     * @Then I should not be able to edit its code
      */
-    public function theCodeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsCode(): void
     {
         Assert::true($this->updatePage->isCodeDisabled());
     }

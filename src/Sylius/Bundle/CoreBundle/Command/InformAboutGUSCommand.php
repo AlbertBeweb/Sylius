@@ -20,13 +20,14 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class InformAboutGUSCommand extends Command
 {
+    protected static $defaultName = 'sylius:inform-about-gus';
+
     protected function configure(): void
     {
-        $this->setName('sylius:inform-about-gus');
         $this->setDescription('Informs about Sylius internal statistical service');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): void
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
 
@@ -42,7 +43,9 @@ final class InformAboutGUSCommand extends Command
                 'If you do not consent please follow this cookbook article:',
                 'https://docs.sylius.com/en/latest/cookbook/configuration/disabling-admin-notifications.html',
                 'That being said, every time we get a notification about a new site deployed with Sylius, it brings a huge smile to our face and motivates us to continue our Open Source work.',
-            ]
+            ],
         );
+
+        return 0;
     }
 }

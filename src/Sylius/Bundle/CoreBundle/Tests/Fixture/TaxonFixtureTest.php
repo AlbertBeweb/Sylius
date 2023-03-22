@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Tests\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
@@ -72,7 +72,7 @@ final class TaxonFixtureTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [['custom' => [['children' => [['nested' => ['key' => 'value']]]]]]],
             ['custom' => [['children' => [['nested' => ['key' => 'value']]]]]],
-            'custom.*.children'
+            'custom.*.children',
         );
     }
 
@@ -92,18 +92,15 @@ final class TaxonFixtureTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [['custom' => [['translations' => [['nested' => ['key' => 'value']]]]]]],
             ['custom' => [['translations' => [['nested' => ['key' => 'value']]]]]],
-            'custom.*.translations'
+            'custom.*.translations',
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): TaxonFixture
     {
         return new TaxonFixture(
             $this->getMockBuilder(ObjectManager::class)->getMock(),
-            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock()
+            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock(),
         );
     }
 }

@@ -13,39 +13,20 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\UserBundle\EventListener;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\User\Model\UserInterface;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+use Webmozart\Assert\Assert;
 
 final class UpdateUserEncoderListener
 {
-    /** @var ObjectManager */
-    private $objectManager;
-
-    /** @var string */
-    private $recommendedEncoderName;
-
-    /** @var string */
-    private $className;
-
-    /** @var string */
-    private $interfaceName;
-
-    /** @var string */
-    private $passwordParameter;
-
     public function __construct(
-        ObjectManager $objectManager,
-        string $recommendedEncoderName,
-        string $className,
-        string $interfaceName,
-        string $passwordParameter
+        private ObjectManager $objectManager,
+        private string $recommendedEncoderName,
+        private string $className,
+        private string $interfaceName,
+        private string $passwordParameter,
     ) {
-        $this->objectManager = $objectManager;
-        $this->recommendedEncoderName = $recommendedEncoderName;
-        $this->className = $className;
-        $this->interfaceName = $interfaceName;
-        $this->passwordParameter = $passwordParameter;
     }
 
     public function onSecurityInteractiveLogin(InteractiveLoginEvent $event): void
@@ -60,6 +41,7 @@ final class UpdateUserEncoderListener
             return;
         }
 
+        Assert::methodExists($user, 'getEncoderName');
         if ($user->getEncoderName() === $this->recommendedEncoderName) {
             return;
         }
@@ -72,7 +54,7 @@ final class UpdateUserEncoderListener
         }
 
         $user->setEncoderName($this->recommendedEncoderName);
-        $user->setPlainPassword($plainPassword);
+        $user->setPlainPassword((string) $plainPassword);
 
         $this->objectManager->persist($user);
         $this->objectManager->flush();

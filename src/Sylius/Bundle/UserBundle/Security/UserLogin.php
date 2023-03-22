@@ -21,31 +21,18 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface as SymfonyUserInterface;
+use Webmozart\Assert\Assert;
 
 class UserLogin implements UserLoginInterface
 {
-    /** @var TokenStorageInterface */
-    private $tokenStorage;
-
-    /** @var UserCheckerInterface */
-    private $userChecker;
-
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-
     public function __construct(
-        TokenStorageInterface $tokenStorage,
-        UserCheckerInterface $userChecker,
-        EventDispatcherInterface $eventDispatcher
+        private TokenStorageInterface $tokenStorage,
+        private UserCheckerInterface $userChecker,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
-        $this->tokenStorage = $tokenStorage;
-        $this->userChecker = $userChecker;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function login(UserInterface $user, ?string $firewallName = null): void
     {
         $firewallName = $firewallName ?? 'main';
@@ -54,16 +41,32 @@ class UserLogin implements UserLoginInterface
         $this->userChecker->checkPostAuth($user);
 
         $token = $this->createToken($user, $firewallName);
-        if (!$token->isAuthenticated()) {
+        if (null === $token->getUser() || [] === $token->getUser()->getRoles()) {
             throw new AuthenticationException('Unauthenticated token');
         }
 
         $this->tokenStorage->setToken($token);
-        $this->eventDispatcher->dispatch(UserEvents::SECURITY_IMPLICIT_LOGIN, new UserEvent($user));
+        $this->eventDispatcher->dispatch(new UserEvent($user), UserEvents::SECURITY_IMPLICIT_LOGIN);
     }
 
     protected function createToken(UserInterface $user, string $firewallName): UsernamePasswordToken
     {
-        return new UsernamePasswordToken($user, null, $firewallName, $user->getRoles());
+        Assert::isInstanceOf($user, SymfonyUserInterface::class);
+        /** @deprecated parameter credential was deprecated in Symfony 5.4, so in Sylius 1.11 too, in Sylius 2.0 providing 4 arguments will be prohibited. */
+        if (3 === (new \ReflectionClass(UsernamePasswordToken::class))->getConstructor()->getNumberOfParameters()) {
+            return new UsernamePasswordToken(
+                $user,
+                $firewallName,
+                array_map(/** @param object|string $role */ static function ($role): string { return (string) $role; }, $user->getRoles()),
+            );
+        }
+
+        /** @psalm-suppress NullArgument */
+        return new UsernamePasswordToken(
+            $user,
+            null,
+            $firewallName,
+            array_map(/** @param object|string $role */ static fn ($role): string => (string) $role, $user->getRoles()),
+        );
     }
 }

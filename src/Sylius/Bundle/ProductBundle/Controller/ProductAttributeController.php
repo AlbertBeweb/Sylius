@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\ProductBundle\Controller;
 
-use FOS\RestBundle\View\View;
 use Sylius\Bundle\ProductBundle\Form\Type\ProductAttributeChoiceType;
 use Sylius\Bundle\ResourceBundle\Controller\ResourceController;
 use Sylius\Component\Attribute\Model\AttributeInterface;
+use Sylius\Component\Locale\Context\LocaleContextInterface;
+use Sylius\Component\Product\Model\ProductAttribute;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,18 +27,13 @@ class ProductAttributeController extends ResourceController
 {
     public function getAttributeTypesAction(Request $request, string $template): Response
     {
-        $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
-
-        $view = View::create()
-            ->setTemplate($template)
-            ->setTemplateVar($this->metadata->getPluralName())
-            ->setData([
+        return $this->render(
+            $template,
+            [
                 'types' => $this->get('sylius.registry.attribute_type')->all(),
                 'metadata' => $this->metadata,
-            ])
-        ;
-
-        return $this->viewHandler->handle($configuration, $view);
+            ],
+        );
     }
 
     public function renderAttributesAction(Request $request): Response
@@ -55,13 +51,12 @@ class ProductAttributeController extends ResourceController
     {
         $template = $request->attributes->get('template', '@SyliusAttribute/attributeValueForms.html.twig');
 
-        $form = $this->get('form.factory')->create(ProductAttributeChoiceType::class, null, [
-            'multiple' => true,
+        /** @var ProductAttribute[] $attributes */
+        $attributes = $this->repository->findBy([
+            'code' => $request->query->all('sylius_product_attribute_choice'),
         ]);
-        $form->handleRequest($request);
 
-        $attributes = $form->getData();
-        if (null === $attributes) {
+        if (empty($attributes)) {
             throw new BadRequestHttpException();
         }
 
@@ -89,14 +84,38 @@ class ProductAttributeController extends ResourceController
         $attributeForm = $this->get('sylius.form_registry.attribute_type')->get($attribute->getType(), 'default');
 
         $forms = [];
+
+        if (!$attribute->isTranslatable()) {
+            $adminLocaleCode = $this->get(LocaleContextInterface::class)->getLocaleCode();
+
+            return [null => $this->createFormAndView($attributeForm, $attribute, $adminLocaleCode)];
+        }
+
         foreach ($localeCodes as $localeCode) {
-            $forms[$localeCode] = $this
-                ->get('form.factory')
-                ->createNamed('value', $attributeForm, null, ['label' => $attribute->getName(), 'configuration' => $attribute->getConfiguration()])
-                ->createView()
-            ;
+            $forms[$localeCode] = $this->createFormAndView($attributeForm, $attribute, $localeCode);
         }
 
         return $forms;
+    }
+
+    private function createFormAndView(
+        $attributeForm,
+        AttributeInterface $attribute,
+        string $localeCode,
+    ): FormView {
+        return $this
+            ->get('form.factory')
+            ->createNamed(
+                'value',
+                $attributeForm,
+                null,
+                [
+                    'label' => $attribute->getTranslation($localeCode)->getName(),
+                    'configuration' => $attribute->getConfiguration(),
+                    'locale_code' => $localeCode,
+                ],
+            )
+            ->createView()
+        ;
     }
 }

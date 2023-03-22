@@ -32,7 +32,7 @@ final class UniqueReviewerEmailValidatorSpec extends ObjectBehavior
         UserRepositoryInterface $userRepository,
         TokenStorageInterface $tokenStorage,
         AuthorizationCheckerInterface $authorizationChecker,
-        ExecutionContextInterface $executionContextInterface
+        ExecutionContextInterface $executionContextInterface,
     ): void {
         $this->beConstructedWith($userRepository, $tokenStorage, $authorizationChecker);
         $this->initialize($executionContextInterface);
@@ -52,12 +52,37 @@ final class UniqueReviewerEmailValidatorSpec extends ObjectBehavior
         TokenInterface $token,
         ReviewInterface $review,
         CustomerInterface $customer,
-        UserInterface $existingUser
+        UserInterface $existingUser,
     ): void {
         $constraint = new UniqueReviewerEmail();
 
         $tokenStorage->getToken()->willReturn($token);
         $authorizationChecker->isGranted('IS_AUTHENTICATED_REMEMBERED')->willReturn(false);
+
+        $review->getAuthor()->willReturn($customer);
+        $customer->getEmail()->willReturn('john.doe@example.com');
+        $userRepository->findOneByEmail('john.doe@example.com')->willReturn($existingUser);
+
+        $executionContextInterface->buildViolation($constraint->message)->shouldBeCalled()->willReturn($constraintViolationBuilder);
+        $constraintViolationBuilder->atPath('author')->shouldBeCalled()->willReturn($constraintViolationBuilder);
+        $constraintViolationBuilder->addViolation()->shouldBeCalled();
+
+        $this->validate($review, $constraint);
+    }
+
+    function it_builds_violation_when_review_already_has_a_registered_email_and_there_is_no_current_user(
+        UserRepositoryInterface $userRepository,
+        TokenStorageInterface $tokenStorage,
+        ExecutionContextInterface $executionContextInterface,
+        ConstraintViolationBuilderInterface $constraintViolationBuilder,
+        TokenInterface $token,
+        ReviewInterface $review,
+        CustomerInterface $customer,
+        UserInterface $existingUser,
+    ): void {
+        $constraint = new UniqueReviewerEmail();
+
+        $tokenStorage->getToken()->willReturn(null);
 
         $review->getAuthor()->willReturn($customer);
         $customer->getEmail()->willReturn('john.doe@example.com');

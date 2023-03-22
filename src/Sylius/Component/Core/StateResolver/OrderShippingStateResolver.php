@@ -25,17 +25,10 @@ use Webmozart\Assert\Assert;
 
 final class OrderShippingStateResolver implements StateResolverInterface
 {
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    public function __construct(FactoryInterface $stateMachineFactory)
+    public function __construct(private FactoryInterface $stateMachineFactory)
     {
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function resolve(BaseOrderInterface $order): void
     {
         /** @var OrderInterface $order */
@@ -71,7 +64,7 @@ final class OrderShippingStateResolver implements StateResolverInterface
     private function allShipmentsInStateButOrderStateNotUpdated(
         OrderInterface $order,
         string $shipmentState,
-        string $orderShippingState
+        string $orderShippingState,
     ): bool {
         $shipmentInStateAmount = $this->countOrderShipmentsInState($order, $shipmentState);
         $shipmentAmount = $order->getShipments()->count();

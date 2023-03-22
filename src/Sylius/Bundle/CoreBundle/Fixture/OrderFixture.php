@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
+use Faker\Factory;
+use Faker\Generator;
 use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\OrderExampleFactory;
 use Sylius\Bundle\FixturesBundle\Fixture\AbstractFixture;
@@ -34,8 +36,7 @@ class OrderFixture extends AbstractFixture
     /** @var ObjectManager */
     protected $orderManager;
 
-    /** @var \Faker\Generator */
-    private $faker;
+    private Generator $faker;
 
     public function __construct(
         FactoryInterface $orderFactory,
@@ -52,7 +53,7 @@ class OrderFixture extends AbstractFixture
         StateMachineFactoryInterface $stateMachineFactory,
         OrderShippingMethodSelectionRequirementCheckerInterface $orderShippingMethodSelectionRequirementChecker,
         OrderPaymentMethodSelectionRequirementCheckerInterface $orderPaymentMethodSelectionRequirementChecker,
-        OrderExampleFactory $orderExampleFactory = null
+        OrderExampleFactory $orderExampleFactory = null,
     ) {
         if ($orderExampleFactory === null) {
             $orderExampleFactory = new OrderExampleFactory(
@@ -69,7 +70,7 @@ class OrderFixture extends AbstractFixture
                 $addressFactory,
                 $stateMachineFactory,
                 $orderShippingMethodSelectionRequirementChecker,
-                $orderPaymentMethodSelectionRequirementChecker
+                $orderPaymentMethodSelectionRequirementChecker,
             );
 
             @trigger_error('Use orderExampleFactory. OrderFixture is deprecated since 1.6 and will be prohibited since 2.0.', \E_USER_DEPRECATED);
@@ -78,7 +79,7 @@ class OrderFixture extends AbstractFixture
         $this->orderManager = $orderManager;
         $this->orderExampleFactory = $orderExampleFactory;
 
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
     }
 
     public function load(array $options): void
@@ -113,16 +114,17 @@ class OrderFixture extends AbstractFixture
                 ->scalarNode('channel')->cannotBeEmpty()->end()
                 ->scalarNode('customer')->cannotBeEmpty()->end()
                 ->scalarNode('country')->cannotBeEmpty()->end()
+                ->booleanNode('fulfilled')->defaultValue(false)->end()
             ->end()
         ;
     }
 
     private function generateDates(int $amount): array
     {
+        /** @var \DateTimeInterface[] $dates */
         $dates = [];
 
         for ($i = 0; $i < $amount; ++$i) {
-            /** @var \DateTimeInterface|array $dates */
             $dates[] = $this->faker->dateTimeBetween('-1 years', 'now');
         }
 

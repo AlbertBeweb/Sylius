@@ -22,21 +22,10 @@ use Sylius\Component\Order\Model\OrderInterface;
 
 final class SessionAndChannelBasedCartContext implements CartContextInterface
 {
-    /** @var CartStorageInterface */
-    private $cartStorage;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    public function __construct(CartStorageInterface $cartStorage, ChannelContextInterface $channelContext)
+    public function __construct(private CartStorageInterface $cartStorage, private ChannelContextInterface $channelContext)
     {
-        $this->cartStorage = $cartStorage;
-        $this->channelContext = $channelContext;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCart(): OrderInterface
     {
         try {

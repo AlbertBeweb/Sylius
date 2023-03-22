@@ -14,9 +14,12 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Admin\Taxon\CreateForParentPageInterface;
 use Sylius\Behat\Page\Admin\Taxon\CreatePageInterface;
 use Sylius\Behat\Page\Admin\Taxon\UpdatePageInterface;
+use Sylius\Behat\Service\Helper\JavaScriptTestHelper;
+use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\Resolver\CurrentPageResolverInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
@@ -24,38 +27,20 @@ use Webmozart\Assert\Assert;
 
 final class ManagingTaxonsContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var CreateForParentPageInterface */
-    private $createForParentPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        CreatePageInterface $createPage,
-        CreateForParentPageInterface $createForParentPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver
+        private SharedStorageInterface $sharedStorage,
+        private CreatePageInterface $createPage,
+        private CreateForParentPageInterface $createForParentPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private NotificationCheckerInterface $notificationChecker,
+        private JavaScriptTestHelper $testHelper,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->createPage = $createPage;
-        $this->createForParentPage = $createForParentPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
     }
 
     /**
-     * @Given I want to create a new taxon
-     * @Given I want to see all taxons in store
+     * @When I want to create a new taxon
+     * @When I want to see all taxons in store
      */
     public function iWantToCreateANewTaxon()
     {
@@ -63,21 +48,21 @@ final class ManagingTaxonsContext implements Context
     }
 
     /**
-     * @Given I want to create a new taxon for :taxon
+     * @When I want to create a new taxon for :taxon
      */
     public function iWantToCreateANewTaxonForParent(TaxonInterface $taxon)
     {
-        $this->createForParentPage->open(['id' => $taxon->getId()]);
+        $this->testHelper->waitUntilPageOpens($this->createForParentPage, ['id' => $taxon->getId()]);
     }
 
     /**
-     * @Given /^I want to modify the ("[^"]+" taxon)$/
+     * @When /^I want to modify the ("[^"]+" taxon)$/
      */
     public function iWantToModifyATaxon(TaxonInterface $taxon)
     {
         $this->sharedStorage->set('taxon', $taxon);
 
-        $this->updatePage->open(['id' => $taxon->getId()]);
+        $this->testHelper->waitUntilPageOpens($this->updatePage, ['id' => $taxon->getId()]);
     }
 
     /**
@@ -149,6 +134,7 @@ final class ManagingTaxonsContext implements Context
     }
 
     /**
+     * @Given /^I set its (parent taxon to "[^"]+")$/
      * @Given /^I change its (parent taxon to "[^"]+")$/
      */
     public function iChangeItsParentTaxonTo(TaxonInterface $taxon)
@@ -197,7 +183,7 @@ final class ManagingTaxonsContext implements Context
     public function thisTaxonElementShouldHaveSlugIn($value, $language = null)
     {
         if (null !== $language) {
-            $this->updatePage->activateLanguageTab($language ?? '');
+            $this->updatePage->activateLanguageTab($language);
         }
 
         Assert::same($this->updatePage->getSlug($language ?? ''), $value);
@@ -281,6 +267,10 @@ final class ManagingTaxonsContext implements Context
      */
     public function taxonNamedShouldNotBeAdded($name)
     {
+        if (!$this->createPage->isOpen()) {
+            $this->createPage->open();
+        }
+
         Assert::same($this->createPage->countTaxonsByName($name), 0);
     }
 
@@ -381,9 +371,84 @@ final class ManagingTaxonsContext implements Context
     }
 
     /**
-     * @return CreatePageInterface|CreateForParentPageInterface|UpdatePageInterface
+     * @Then I should be notified that I cannot delete a menu taxon of any channel
      */
-    private function resolveCurrentPage()
+    public function iShouldBeNotifiedThatICannotDeleteAMenuTaxonOfAnyChannel(): void
+    {
+        $this->notificationChecker->checkNotification(
+            'You cannot delete a menu taxon of any channel.',
+            NotificationType::failure(),
+        );
+    }
+
+    /**
+     * @Then I should be notified that I cannot delete a taxon in use
+     */
+    public function iShouldBeNotifiedThatICannotDeleteATaxonInUse(): void
+    {
+        $this->notificationChecker->checkNotification(
+            'Cannot delete, the Taxon is in use.',
+            NotificationType::failure(),
+        );
+    }
+
+    /**
+     * @When I move up :taxonName taxon
+     */
+    public function iMoveUpTaxon(string $taxonName)
+    {
+        $this->createPage->moveUpTaxon($taxonName);
+    }
+
+    /**
+     * @When I move down :taxonName taxon
+     */
+    public function iMoveDownTaxon(string $taxonName)
+    {
+        $this->createPage->moveDownTaxon($taxonName);
+    }
+
+    /**
+     * @Then the first taxon on the list should be :taxonName
+     */
+    public function theFirstTaxonOnTheListShouldBe(string $taxonName)
+    {
+        Assert::same($this->createPage->getFirstTaxonOnTheList(), $taxonName);
+    }
+
+    /**
+     * @When I enable it
+     */
+    public function iEnableIt(): void
+    {
+        $this->updatePage->enable();
+    }
+
+    /**
+     * @When I disable it
+     */
+    public function iDisableIt(): void
+    {
+        $this->updatePage->disable();
+    }
+
+    /**
+     * @Then /^(?:this taxon|it) should be enabled$/
+     */
+    public function itShouldBeEnabled(): void
+    {
+        Assert::true($this->updatePage->isEnabled());
+    }
+
+    /**
+     * @Then /^(?:this taxon|it) should be disabled$/
+     */
+    public function itShouldBeDisabled(): void
+    {
+        Assert::false($this->updatePage->isEnabled());
+    }
+
+    private function resolveCurrentPage(): CreateForParentPageInterface|CreatePageInterface|UpdatePageInterface
     {
         return $this->currentPageResolver->getCurrentPageWithForm([
             $this->createPage,

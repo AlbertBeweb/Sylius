@@ -35,7 +35,7 @@ For the ``ProductFactory`` run:
 
 .. code-block:: bash
 
-    $ php bin/console debug:container sylius.factory.product
+    php bin/console debug:container sylius.factory.product
 
 As a result you will get the ``Sylius\Component\Product\Factory\ProductFactory`` - this is the class that you need to decorate.
 Take its interface (``Sylius\Component\Product\Factory\ProductFactoryInterface``) and implement it.
@@ -111,18 +111,18 @@ To actually use it overwrite ``sylius_admin_product_create_simple`` route like b
                 section: admin
                 factory:
                     method: createDisabled # like here for example
-                template: SyliusAdminBundle:Crud:create.html.twig
+                template: "@SyliusAdmin/Crud/create.html.twig"
                 redirect: sylius_admin_product_update
                 vars:
                     subheader: sylius.ui.manage_your_product_catalog
                     templates:
-                        form: SyliusAdminBundle:Product:_form.html.twig
+                        form: "@SyliusAdmin/Product/_form.html.twig"
                     route:
                         name: sylius_admin_product_create_simple
 
-.. include:: /customization/plugins.rst.inc
+.. include:: /customization/plugins.rst
 
 Learn more
 ----------
 
-* :doc:`SyliusResourceBundle creating resources </components_and_bundles/bundles/SyliusResourceBundle/create_resource>`
+* `ResourceBundle documentation <https://github.com/Sylius/SyliusResourceBundle/blob/master/docs/index.md>`_

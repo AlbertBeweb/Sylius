@@ -37,68 +37,21 @@ final class DefaultUnitedStatesChannelFactory implements DefaultChannelFactoryIn
 
     public const DEFAULT_CHANNEL_NAME = 'United States';
 
-    /** @var RepositoryInterface */
-    private $channelRepository;
-
-    /** @var RepositoryInterface */
-    private $countryRepository;
-
-    /** @var RepositoryInterface */
-    private $currencyRepository;
-
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
-    /** @var ChannelFactoryInterface */
-    private $channelFactory;
-
-    /** @var FactoryInterface */
-    private $countryFactory;
-
-    /** @var FactoryInterface */
-    private $currencyFactory;
-
-    /** @var FactoryInterface */
-    private $localeFactory;
-
-    /** @var ZoneFactoryInterface */
-    private $zoneFactory;
-
-    /** @var string */
-    private $defaultLocaleCode;
-
     public function __construct(
-        RepositoryInterface $channelRepository,
-        RepositoryInterface $countryRepository,
-        RepositoryInterface $currencyRepository,
-        RepositoryInterface $localeRepository,
-        RepositoryInterface $zoneRepository,
-        ChannelFactoryInterface $channelFactory,
-        FactoryInterface $countryFactory,
-        FactoryInterface $currencyFactory,
-        FactoryInterface $localeFactory,
-        ZoneFactoryInterface $zoneFactory,
-        string $defaultLocaleCode
+        private RepositoryInterface $channelRepository,
+        private RepositoryInterface $countryRepository,
+        private RepositoryInterface $currencyRepository,
+        private RepositoryInterface $localeRepository,
+        private RepositoryInterface $zoneRepository,
+        private ChannelFactoryInterface $channelFactory,
+        private FactoryInterface $countryFactory,
+        private FactoryInterface $currencyFactory,
+        private FactoryInterface $localeFactory,
+        private ZoneFactoryInterface $zoneFactory,
+        private string $defaultLocaleCode,
     ) {
-        $this->channelRepository = $channelRepository;
-        $this->countryRepository = $countryRepository;
-        $this->currencyRepository = $currencyRepository;
-        $this->localeRepository = $localeRepository;
-        $this->zoneRepository = $zoneRepository;
-        $this->channelFactory = $channelFactory;
-        $this->countryFactory = $countryFactory;
-        $this->currencyFactory = $currencyFactory;
-        $this->localeFactory = $localeFactory;
-        $this->zoneFactory = $zoneFactory;
-        $this->defaultLocaleCode = $defaultLocaleCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(?string $code = null, ?string $name = null, ?string $currencyCode = null): array
     {
         $currency = $this->provideCurrency($currencyCode);
@@ -110,6 +63,7 @@ final class DefaultUnitedStatesChannelFactory implements DefaultChannelFactoryIn
         $channel->addLocale($locale);
         $channel->setDefaultLocale($locale);
         $channel->setTaxCalculationStrategy('order_items_based');
+        $channel->setHostname('us.store.com');
 
         $defaultData = [
             'channel' => $channel,
@@ -148,7 +102,7 @@ final class DefaultUnitedStatesChannelFactory implements DefaultChannelFactoryIn
     {
         $currencyCode = $currencyCode ?? self::DEFAULT_CURRENCY_CODE;
 
-        /** @var CurrencyInterface $currency */
+        /** @var CurrencyInterface|null $currency */
         $currency = $this->currencyRepository->findOneBy(['code' => $currencyCode]);
 
         if (null === $currency) {
@@ -164,7 +118,7 @@ final class DefaultUnitedStatesChannelFactory implements DefaultChannelFactoryIn
 
     private function provideLocale(): LocaleInterface
     {
-        /** @var LocaleInterface $locale */
+        /** @var LocaleInterface|null $locale */
         $locale = $this->localeRepository->findOneBy(['code' => $this->defaultLocaleCode]);
 
         if (null === $locale) {

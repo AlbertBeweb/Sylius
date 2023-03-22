@@ -23,28 +23,12 @@ use Webmozart\Assert\Assert;
 
 final class ZoneMemberContext implements Context
 {
-    /** @var CountryNameConverterInterface */
-    private $countryNameConverter;
-
-    /** @var RepositoryInterface */
-    private $provinceRepository;
-
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
-    /** @var RepositoryInterface */
-    private $zoneMemberRepository;
-
     public function __construct(
-        CountryNameConverterInterface $countryNameConverter,
-        RepositoryInterface $provinceRepository,
-        RepositoryInterface $zoneRepository,
-        RepositoryInterface $zoneMemberRepository
+        private CountryNameConverterInterface $countryNameConverter,
+        private RepositoryInterface $provinceRepository,
+        private RepositoryInterface $zoneRepository,
+        private RepositoryInterface $zoneMemberRepository,
     ) {
-        $this->countryNameConverter = $countryNameConverter;
-        $this->provinceRepository = $provinceRepository;
-        $this->zoneRepository = $zoneRepository;
-        $this->zoneMemberRepository = $zoneMemberRepository;
     }
 
     /**
@@ -55,6 +39,17 @@ final class ZoneMemberContext implements Context
         $countryCode = $this->countryNameConverter->convertToCode($name);
 
         return $this->getZoneMemberByCode($countryCode);
+    }
+
+    /**
+     * @Transform /^"([^"]+)", "([^"]+)" and "([^"]+)" country members$/
+     */
+    public function getCountryTypeZoneMembersByNames(string ...$names): array
+    {
+        $codes = $names;
+        array_walk($codes, fn (&$item) => $item = $this->countryNameConverter->convertToCode($item));
+
+        return $this->getZoneMembersByCodes($codes);
     }
 
     /**
@@ -89,10 +84,15 @@ final class ZoneMemberContext implements Context
         $zoneMember = $this->zoneMemberRepository->findOneBy(['code' => $code]);
         Assert::notNull(
             $zoneMember,
-            sprintf('Zone member with code %s does not exist.', $code)
+            sprintf('Zone member with code %s does not exist.', $code),
         );
 
         return $zoneMember;
+    }
+
+    private function getZoneMembersByCodes(array $codes): array
+    {
+        return $this->zoneMemberRepository->findBy(['code' => $codes]);
     }
 
     /**
@@ -107,7 +107,7 @@ final class ZoneMemberContext implements Context
         $province = $this->provinceRepository->findOneBy(['name' => $name]);
         Assert::notNull(
             $province,
-            sprintf('Province with name %s does not exist.', $name)
+            sprintf('Province with name %s does not exist.', $name),
         );
 
         return $province;
@@ -125,7 +125,7 @@ final class ZoneMemberContext implements Context
         $zone = $this->zoneRepository->findOneBy(['name' => $name]);
         Assert::notNull(
             $zone,
-            sprintf('Zone with name %s does not exist.', $name)
+            sprintf('Zone with name %s does not exist.', $name),
         );
 
         return $zone;

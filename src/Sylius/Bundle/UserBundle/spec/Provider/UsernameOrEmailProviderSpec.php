@@ -19,7 +19,9 @@ use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Sylius\Component\User\Model\User;
 use Sylius\Component\User\Model\UserInterface;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\RuntimeException;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\UserInterface as CoreUserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 final class UsernameOrEmailProviderSpec extends ObjectBehavior
@@ -53,7 +55,7 @@ final class UsernameOrEmailProviderSpec extends ObjectBehavior
     function it_loads_user_by_username(
         UserRepositoryInterface $userRepository,
         CanonicalizerInterface $canonicalizer,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $canonicalizer->canonicalize('testUser')->willReturn('testuser');
 
@@ -64,20 +66,20 @@ final class UsernameOrEmailProviderSpec extends ObjectBehavior
 
     function it_throws_exception_when_there_is_no_user_with_given_username_or_email(
         UserRepositoryInterface $userRepository,
-        CanonicalizerInterface $canonicalizer
+        CanonicalizerInterface $canonicalizer,
     ): void {
         $canonicalizer->canonicalize('testUser')->willReturn('testuser');
 
         $userRepository->findOneBy(['usernameCanonical' => 'testuser'])->willReturn(null);
         $userRepository->findOneByEmail('testuser')->willReturn(null);
 
-        $this->shouldThrow(new UsernameNotFoundException('Username "testuser" does not exist.'))->during('loadUserByUsername', ['testUser']);
+        $this->shouldThrow(new RuntimeException('Username "testuser" does not exist.'))->during('loadUserByUsername', ['testUser']);
     }
 
     function it_loads_user_by_email(
         UserRepositoryInterface $userRepository,
         CanonicalizerInterface $canonicalizer,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $canonicalizer->canonicalize('test@user.com')->willReturn('test@user.com');
 
@@ -93,5 +95,11 @@ final class UsernameOrEmailProviderSpec extends ObjectBehavior
         $user->getId()->willReturn(1);
 
         $this->refreshUser($user)->shouldReturn($refreshedUser);
+    }
+
+    function it_should_throw_exception_when_unsupported_user_is_used(
+        CoreUserInterface $user,
+    ): void {
+        $this->shouldThrow(UnsupportedUserException::class)->during('refreshUser', [$user]);
     }
 }

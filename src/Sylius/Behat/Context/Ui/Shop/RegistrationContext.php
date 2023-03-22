@@ -30,53 +30,17 @@ use Webmozart\Assert\Assert;
 
 class RegistrationContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var DashboardPageInterface */
-    private $dashboardPage;
-
-    /** @var HomePageInterface */
-    private $homePage;
-
-    /** @var LoginPageInterface */
-    private $loginPage;
-
-    /** @var RegisterPageInterface */
-    private $registerPage;
-
-    /** @var VerificationPageInterface */
-    private $verificationPage;
-
-    /** @var ProfileUpdatePageInterface */
-    private $profileUpdatePage;
-
-    /** @var RegisterElementInterface */
-    private $registerElement;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        DashboardPageInterface $dashboardPage,
-        HomePageInterface $homePage,
-        LoginPageInterface $loginPage,
-        RegisterPageInterface $registerPage,
-        VerificationPageInterface $verificationPage,
-        ProfileUpdatePageInterface $profileUpdatePage,
-        RegisterElementInterface $registerElement,
-        NotificationCheckerInterface $notificationChecker
+        private SharedStorageInterface $sharedStorage,
+        private DashboardPageInterface $dashboardPage,
+        private HomePageInterface $homePage,
+        private LoginPageInterface $loginPage,
+        private RegisterPageInterface $registerPage,
+        private VerificationPageInterface $verificationPage,
+        private ProfileUpdatePageInterface $profileUpdatePage,
+        private RegisterElementInterface $registerElement,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->dashboardPage = $dashboardPage;
-        $this->homePage = $homePage;
-        $this->loginPage = $loginPage;
-        $this->registerPage = $registerPage;
-        $this->verificationPage = $verificationPage;
-        $this->profileUpdatePage = $profileUpdatePage;
-        $this->registerElement = $registerElement;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -200,7 +164,7 @@ class RegistrationContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Thank you for registering, check your email to verify your account.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -236,7 +200,7 @@ class RegistrationContext implements Context
     {
         $this->iLogInAsWithPassword($email, $password);
 
-        Assert::true($this->loginPage->hasValidationErrorWith('Error Account is disabled.'));
+        Assert::true($this->loginPage->hasValidationErrorWith('Error Invalid credentials.'));
     }
 
     /**
@@ -252,10 +216,11 @@ class RegistrationContext implements Context
 
     /**
      * @When I register with email :email and password :password
+     * @When I register with email :email and password :password in the :localeCode locale
      */
-    public function iRegisterWithEmailAndPassword(string $email, string $password): void
+    public function iRegisterWithEmailAndPassword(string $email, string $password, string $localeCode = 'en_US'): void
     {
-        $this->registerPage->open();
+        $this->registerPage->open(['_locale' => $localeCode]);
         $this->registerElement->specifyEmail($email);
         $this->registerElement->specifyPassword($password);
         $this->registerElement->verifyPassword($password);
@@ -361,7 +326,7 @@ class RegistrationContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'An email with the verification link has been sent to your email address.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 

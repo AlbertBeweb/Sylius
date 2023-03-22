@@ -26,23 +26,12 @@ use Webmozart\Assert\Assert;
 
 final class BuildAttributesFormSubscriber implements EventSubscriberInterface
 {
-    /** @var FactoryInterface */
-    private $attributeValueFactory;
-
-    /** @var TranslationLocaleProviderInterface */
-    private $localeProvider;
-
     public function __construct(
-        FactoryInterface $attributeValueFactory,
-        TranslationLocaleProviderInterface $localeProvider
+        private FactoryInterface $attributeValueFactory,
+        private TranslationLocaleProviderInterface $localeProvider,
     ) {
-        $this->attributeValueFactory = $attributeValueFactory;
-        $this->localeProvider = $localeProvider;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -56,19 +45,18 @@ final class BuildAttributesFormSubscriber implements EventSubscriberInterface
      */
     public function preSetData(FormEvent $event): void
     {
-        /** @var ProductInterface $product */
         $product = $event->getData();
 
+        /** @var ProductInterface $product */
         Assert::isInstanceOf($product, ProductInterface::class);
 
         $defaultLocaleCode = $this->localeProvider->getDefaultLocaleCode();
 
         $attributes = $product->getAttributes()->filter(
-            function (ProductAttributeValueInterface $attribute) use ($defaultLocaleCode) {
-                return $attribute->getLocaleCode() === $defaultLocaleCode;
-            }
+            fn (ProductAttributeValueInterface $attribute) => $attribute->getLocaleCode() === $defaultLocaleCode,
         );
 
+        /** @var ProductAttributeValueInterface $attribute */
         foreach ($attributes as $attribute) {
             $this->resolveLocalizedAttributes($product, $attribute);
         }
@@ -79,9 +67,9 @@ final class BuildAttributesFormSubscriber implements EventSubscriberInterface
      */
     public function postSubmit(FormEvent $event): void
     {
-        /** @var ProductInterface $product */
         $product = $event->getData();
 
+        /** @var ProductInterface $product */
         Assert::isInstanceOf($product, ProductInterface::class);
 
         /** @var AttributeValueInterface $attribute */
@@ -106,7 +94,7 @@ final class BuildAttributesFormSubscriber implements EventSubscriberInterface
 
     private function createProductAttributeValue(
         ProductAttributeInterface $attribute,
-        string $localeCode
+        string $localeCode,
     ): ProductAttributeValueInterface {
         /** @var ProductAttributeValueInterface $attributeValue */
         $attributeValue = $this->attributeValueFactory->createNew();

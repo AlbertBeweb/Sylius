@@ -18,35 +18,21 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Scope;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Core\Repository\ShippingMethodRepositoryInterface;
-use Sylius\Component\Shipping\Checker\ShippingMethodEligibilityCheckerInterface;
+use Sylius\Component\Shipping\Checker\Eligibility\ShippingMethodEligibilityCheckerInterface;
 use Sylius\Component\Shipping\Model\ShippingSubjectInterface;
 use Sylius\Component\Shipping\Resolver\ShippingMethodsResolverInterface;
 use Webmozart\Assert\Assert;
 
 class ZoneAndChannelBasedShippingMethodsResolver implements ShippingMethodsResolverInterface
 {
-    /** @var ShippingMethodRepositoryInterface */
-    private $shippingMethodRepository;
-
-    /** @var ZoneMatcherInterface */
-    private $zoneMatcher;
-
-    /** @var ShippingMethodEligibilityCheckerInterface */
-    private $eligibilityChecker;
-
     public function __construct(
-        ShippingMethodRepositoryInterface $shippingMethodRepository,
-        ZoneMatcherInterface $zoneMatcher,
-        ShippingMethodEligibilityCheckerInterface $eligibilityChecker
+        private ShippingMethodRepositoryInterface $shippingMethodRepository,
+        private ZoneMatcherInterface $zoneMatcher,
+        private ShippingMethodEligibilityCheckerInterface $eligibilityChecker,
     ) {
-        $this->shippingMethodRepository = $shippingMethodRepository;
-        $this->zoneMatcher = $zoneMatcher;
-        $this->eligibilityChecker = $eligibilityChecker;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \InvalidArgumentException
      */
     public function getSupportedMethods(ShippingSubjectInterface $subject): array
@@ -75,15 +61,11 @@ class ZoneAndChannelBasedShippingMethodsResolver implements ShippingMethodsResol
         return $methods;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports(ShippingSubjectInterface $subject): bool
     {
         return $subject instanceof ShipmentInterface &&
             null !== $subject->getOrder() &&
             null !== $subject->getOrder()->getShippingAddress() &&
-            null !== $subject->getOrder()->getChannel()
-        ;
+            null !== $subject->getOrder()->getChannel();
     }
 }

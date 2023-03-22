@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sylius\Bundle\UiBundle\Controller;
 
 use Sylius\Bundle\UiBundle\Form\Type\SecurityLoginType;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,36 +21,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Twig\Environment;
 
 final class SecurityController
 {
-    /** @var AuthenticationUtils */
-    private $authenticationUtils;
-
-    /** @var FormFactoryInterface */
-    private $formFactory;
-
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var AuthorizationCheckerInterface */
-    private $authorizationChecker;
-
-    /** @var RouterInterface */
-    private $router;
-
     public function __construct(
-        AuthenticationUtils $authenticationUtils,
-        FormFactoryInterface $formFactory,
-        EngineInterface $templatingEngine,
-        AuthorizationCheckerInterface $authorizationChecker,
-        RouterInterface $router
+        private AuthenticationUtils $authenticationUtils,
+        private FormFactoryInterface $formFactory,
+        private Environment $templatingEngine,
+        private AuthorizationCheckerInterface $authorizationChecker,
+        private RouterInterface $router,
     ) {
-        $this->authenticationUtils = $authenticationUtils;
-        $this->formFactory = $formFactory;
-        $this->templatingEngine = $templatingEngine;
-        $this->authorizationChecker = $authorizationChecker;
-        $this->router = $router;
     }
 
     public function loginAction(Request $request): Response
@@ -71,11 +51,11 @@ final class SecurityController
         $formType = $options['form'] ?? SecurityLoginType::class;
         $form = $this->formFactory->createNamed('', $formType);
 
-        return $this->templatingEngine->renderResponse($template, [
+        return new Response($this->templatingEngine->render($template, [
             'form' => $form->createView(),
             'last_username' => $lastUsername,
             'last_error' => $lastError,
-        ]);
+        ]));
     }
 
     public function checkAction(Request $request): void

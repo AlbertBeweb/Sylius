@@ -28,35 +28,19 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 final class ProductType extends AbstractResourceType
 {
-    /** @var ProductVariantResolverInterface */
-    private $variantResolver;
-
-    /** @var FactoryInterface */
-    private $attributeValueFactory;
-
-    /** @var TranslationLocaleProviderInterface */
-    private $localeProvider;
-
     /**
      * @param array|string[] $validationGroups
      */
     public function __construct(
         string $dataClass,
         array $validationGroups,
-        ProductVariantResolverInterface $variantResolver,
-        FactoryInterface $attributeValueFactory,
-        TranslationLocaleProviderInterface $localeProvider
+        private ProductVariantResolverInterface $variantResolver,
+        private FactoryInterface $attributeValueFactory,
+        private TranslationLocaleProviderInterface $localeProvider,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->variantResolver = $variantResolver;
-        $this->attributeValueFactory = $attributeValueFactory;
-        $this->localeProvider = $localeProvider;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -87,9 +71,6 @@ final class ProductType extends AbstractResourceType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product';

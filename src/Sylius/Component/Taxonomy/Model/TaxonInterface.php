@@ -17,54 +17,48 @@ use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Resource\Model\CodeAwareInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Sylius\Component\Resource\Model\SlugAwareInterface;
+use Sylius\Component\Resource\Model\ToggleableInterface;
 use Sylius\Component\Resource\Model\TranslatableInterface;
 use Sylius\Component\Resource\Model\TranslationInterface;
 
-interface TaxonInterface extends CodeAwareInterface, TranslatableInterface, ResourceInterface, SlugAwareInterface
+interface TaxonInterface extends CodeAwareInterface, TranslatableInterface, ResourceInterface, SlugAwareInterface, ToggleableInterface
 {
     public function isRoot(): bool;
 
-    /**
-     * @return TaxonInterface|null
-     */
     public function getRoot(): ?self;
 
-    /**
-     * @return TaxonInterface|null
-     */
     public function getParent(): ?self;
 
-    /**
-     * @param TaxonInterface|null $taxon
-     */
     public function setParent(?self $taxon): void;
 
     /**
      * @return Collection|TaxonInterface[]
+     *
+     * @psalm-return Collection<array-key, TaxonInterface>
      */
     public function getAncestors(): Collection;
 
     /**
      * @return Collection|TaxonInterface[]
+     *
+     * @psalm-return Collection<array-key, TaxonInterface>
      */
     public function getChildren(): Collection;
 
-    /**
-     * @param TaxonInterface $taxon
-     */
     public function hasChild(self $taxon): bool;
 
     public function hasChildren(): bool;
 
-    /**
-     * @param TaxonInterface $taxon
-     */
     public function addChild(self $taxon): void;
 
-    /**
-     * @param TaxonInterface $taxon
-     */
     public function removeChild(self $taxon): void;
+
+    /**
+     * @return Collection|TaxonInterface[]
+     *
+     * @psalm-return Collection<array-key, TaxonInterface>
+     */
+    public function getEnabledChildren(): Collection;
 
     public function getName(): ?string;
 

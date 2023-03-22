@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Locale\Converter\LocaleConverterInterface;
@@ -24,38 +24,14 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class LocaleContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var FactoryInterface */
-    private $localeFactory;
-
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var ObjectManager */
-    private $localeManager;
-
-    /** @var ObjectManager */
-    private $channelManager;
-
-    /** @var LocaleConverterInterface */
-    private $localeConverter;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        LocaleConverterInterface $localeConverter,
-        FactoryInterface $localeFactory,
-        RepositoryInterface $localeRepository,
-        ObjectManager $localeManager,
-        ObjectManager $channelManager
+        private SharedStorageInterface $sharedStorage,
+        private LocaleConverterInterface $localeConverter,
+        private FactoryInterface $localeFactory,
+        private RepositoryInterface $localeRepository,
+        private ObjectManager $localeManager,
+        private ObjectManager $channelManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->localeConverter = $localeConverter;
-        $this->localeFactory = $localeFactory;
-        $this->localeRepository = $localeRepository;
-        $this->localeManager = $localeManager;
-        $this->channelManager = $channelManager;
     }
 
     /**

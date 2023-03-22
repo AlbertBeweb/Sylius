@@ -15,6 +15,7 @@ namespace Sylius\Behat\Context\Ui\Shop\Checkout;
 
 use Behat\Behat\Context\Context;
 use Sylius\Behat\Page\Shop\Account\Order\ShowPageInterface;
+use Sylius\Behat\Page\Shop\Order\ShowPageInterface as OrderDetailsPage;
 use Sylius\Behat\Page\Shop\Order\ThankYouPageInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
@@ -22,23 +23,12 @@ use Webmozart\Assert\Assert;
 
 final class CheckoutThankYouContext implements Context
 {
-    /** @var ThankYouPageInterface */
-    private $thankYouPage;
-
-    /** @var ShowPageInterface */
-    private $orderShowPage;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
     public function __construct(
-        ThankYouPageInterface $thankYouPage,
-        ShowPageInterface $orderShowPage,
-        OrderRepositoryInterface $orderRepository
+        private ThankYouPageInterface $thankYouPage,
+        private ShowPageInterface $orderShowPage,
+        private OrderRepositoryInterface $orderRepository,
+        private OrderDetailsPage $orderDetails,
     ) {
-        $this->thankYouPage = $thankYouPage;
-        $this->orderShowPage = $orderShowPage;
-        $this->orderRepository = $orderRepository;
     }
 
     /**

@@ -15,15 +15,28 @@ namespace Sylius\Behat\Context\Transform;
 
 use Behat\Behat\Context\Context;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Component\Core\Model\AdminUserInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Webmozart\Assert\Assert;
 
 final class AdminUserContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
+    public function __construct(
+        private RepositoryInterface $adminUserRepository,
+        private SharedStorageInterface $sharedStorage,
+    ) {
+    }
 
-    public function __construct(SharedStorageInterface $sharedStorage)
+    /**
+     * @Transform :adminUser
+     */
+    public function getAdminUserByEmail(string $email): AdminUserInterface
     {
-        $this->sharedStorage = $sharedStorage;
+        $adminUser = $this->adminUserRepository->findOneBy(['email' => $email]);
+
+        Assert::notNull($adminUser, sprintf('Administrator with email "%s" does not exist', $email));
+
+        return $adminUser;
     }
 
     /**

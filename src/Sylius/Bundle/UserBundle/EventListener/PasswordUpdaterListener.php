@@ -13,19 +13,15 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\UserBundle\EventListener;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Sylius\Component\User\Model\UserInterface;
 use Sylius\Component\User\Security\PasswordUpdaterInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
 class PasswordUpdaterListener
 {
-    /** @var PasswordUpdaterInterface */
-    private $passwordUpdater;
-
-    public function __construct(PasswordUpdaterInterface $passwordUpdater)
+    public function __construct(private PasswordUpdaterInterface $passwordUpdater)
     {
-        $this->passwordUpdater = $passwordUpdater;
     }
 
     public function genericEventUpdater(GenericEvent $event): void
@@ -35,7 +31,7 @@ class PasswordUpdaterListener
 
     public function prePersist(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
 
         if (!$user instanceof UserInterface) {
             return;
@@ -46,7 +42,7 @@ class PasswordUpdaterListener
 
     public function preUpdate(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
 
         if (!$user instanceof UserInterface) {
             return;

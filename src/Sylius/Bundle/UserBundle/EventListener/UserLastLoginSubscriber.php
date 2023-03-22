@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\UserBundle\EventListener;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Bundle\UserBundle\Event\UserEvent;
 use Sylius\Bundle\UserBundle\UserEvents;
 use Sylius\Component\User\Model\UserInterface;
@@ -23,21 +23,16 @@ use Symfony\Component\Security\Http\SecurityEvents;
 
 final class UserLastLoginSubscriber implements EventSubscriberInterface
 {
-    /** @var ObjectManager */
-    private $userManager;
+    private ?\DateInterval $trackInterval;
 
-    /** @var string */
-    private $userClass;
-
-    public function __construct(ObjectManager $userManager, string $userClass)
-    {
-        $this->userManager = $userManager;
-        $this->userClass = $userClass;
+    public function __construct(
+        private ObjectManager $userManager,
+        private string $userClass,
+        ?string $trackInterval,
+    ) {
+        $this->trackInterval = null === $trackInterval ? null : new \DateInterval($trackInterval);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -56,18 +51,31 @@ final class UserLastLoginSubscriber implements EventSubscriberInterface
         $this->updateUserLastLogin($event->getUser());
     }
 
-    private function updateUserLastLogin($user): void
+    private function updateUserLastLogin(mixed $user): void
+    {
+        if (!$this->shouldUserBeUpdated($user)) {
+            return;
+        }
+
+        $user->setLastLogin(new \DateTime());
+        $this->userManager->persist($user);
+        $this->userManager->flush();
+    }
+
+    private function shouldUserBeUpdated(mixed $user): bool
     {
         if (!$user instanceof $this->userClass) {
-            return;
+            return false;
         }
 
         if (!$user instanceof UserInterface) {
             throw new \UnexpectedValueException('In order to use this subscriber, your class has to implement UserInterface');
         }
 
-        $user->setLastLogin(new \DateTime());
-        $this->userManager->persist($user);
-        $this->userManager->flush();
+        if (null === $this->trackInterval || null === $user->getLastLogin()) {
+            return true;
+        }
+
+        return $user->getLastLogin() <= (new \DateTime())->sub($this->trackInterval);
     }
 }

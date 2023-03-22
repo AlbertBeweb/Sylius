@@ -20,57 +20,44 @@ use Webmozart\Assert\Assert;
 
 final class ZoneContext implements Context
 {
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
-    public function __construct(RepositoryInterface $zoneRepository)
+    public function __construct(private RepositoryInterface $zoneRepository)
     {
-        $this->zoneRepository = $zoneRepository;
     }
 
     /**
      * @Transform /^"([^"]+)" zone$/
      * @Transform /^zone "([^"]+)"$/
-     * @Transform :zone
-     */
-    public function getZoneByCode($code)
-    {
-        return $this->getZoneBy(['code' => $code]);
-    }
-
-    /**
      * @Transform /^zone named "([^"]+)"$/
+     * @Transform :zone
+     * @Transform :otherZone
      */
-    public function getZoneByName($name)
+    public function getZone(string $codeOrName): ZoneInterface
     {
-        return $this->getZoneBy(['name' => $name]);
-    }
+        $zone = $this->zoneRepository->findOneBy(['code' => $codeOrName]);
+        if (null !== $zone) {
+            return $zone;
+        }
 
-    /**
-     * @Transform /^rest of the world$/
-     */
-    public function getRestOfTheWorldZone()
-    {
-        $zone = $this->zoneRepository->findOneBy(['code' => 'RoW']);
+        $zone = $this->zoneRepository->findOneBy(['name' => $codeOrName]);
         Assert::notNull(
             $zone,
-            'Rest of the world zone does not exist.'
+            'Zone does not exist.',
         );
 
         return $zone;
     }
 
     /**
-     * @return ZoneInterface
+     * @Transform /^rest of the world$/
      */
-    private function getZoneBy(array $parameters)
+    public function getRestOfTheWorldZone(): ZoneInterface
     {
-        $existingZone = $this->zoneRepository->findOneBy($parameters);
+        $zone = $this->zoneRepository->findOneBy(['code' => 'RoW']);
         Assert::notNull(
-            $existingZone,
-            'Zone does not exist.'
+            $zone,
+            'Rest of the world zone does not exist.',
         );
 
-        return $existingZone;
+        return $zone;
     }
 }

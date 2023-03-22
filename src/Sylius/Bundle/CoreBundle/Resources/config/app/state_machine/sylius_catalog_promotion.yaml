@@ -1,0 +1,20 @@
+winzou_state_machine:
+    sylius_catalog_promotion:
+        class: "%sylius.model.catalog_promotion.class%"
+        property_path: state
+        graph: sylius_catalog_promotion
+        state_machine_class: "%sylius.state_machine.class%"
+        states:
+            active: ~
+            inactive: ~
+            processing: ~
+        transitions:
+            activate:
+                from: [processing]
+                to: active
+            deactivate:
+                from: [processing]
+                to: inactive
+            process:
+                from: [inactive, active]
+                to: processing

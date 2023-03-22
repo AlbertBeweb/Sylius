@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class ProductOptionContext implements Context
 {
-    /** @var ProductOptionRepositoryInterface */
-    private $productOptionRepository;
-
-    public function __construct(ProductOptionRepositoryInterface $productOptionRepository)
+    public function __construct(private ProductOptionRepositoryInterface $productOptionRepository)
     {
-        $this->productOptionRepository = $productOptionRepository;
     }
 
     /**
@@ -39,7 +35,7 @@ final class ProductOptionContext implements Context
         Assert::eq(
             count($productOptions),
             1,
-            sprintf('%d product options has been found with name "%s".', count($productOptions), $productOptionName)
+            sprintf('%d product options has been found with name "%s".', count($productOptions), $productOptionName),
         );
 
         return $productOptions[0];

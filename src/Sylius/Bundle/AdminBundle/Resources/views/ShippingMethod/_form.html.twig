@@ -28,10 +28,13 @@
             {% endfor %}
             <div class="ui segment configuration">
                 {% if form.configuration is defined %}
-                    {% for field in form.configuration %}
-                        {{ form_row(field) }}
-                    {% endfor %}
+                    {{ form_widget(form.configuration) }}
                 {% endif %}
+            </div>
+
+            <h4 class="ui dividing header">{{ 'sylius.ui.rules'|trans }}</h4>
+            <div id="rules">
+                {% include '@SyliusAdmin/ShippingMethod/_rules.html.twig' %}
             </div>
         </div>
     </div>

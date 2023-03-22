@@ -21,27 +21,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class ChannelContext implements ChannelContextInterface
 {
-    /** @var RequestResolverInterface */
-    private $requestResolver;
-
-    /** @var RequestStack */
-    private $requestStack;
-
-    public function __construct(RequestResolverInterface $requestResolver, RequestStack $requestStack)
+    public function __construct(private RequestResolverInterface $requestResolver, private RequestStack $requestStack)
     {
-        $this->requestResolver = $requestResolver;
-        $this->requestStack = $requestStack;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannel(): ChannelInterface
     {
         try {
-            return $this->getChannelForRequest($this->getMasterRequest());
+            return $this->getChannelForRequest($this->getMainRequest());
         } catch (\UnexpectedValueException $exception) {
-            throw new ChannelNotFoundException($exception);
+            throw new ChannelNotFoundException(null, $exception);
         }
     }
 
@@ -54,14 +43,14 @@ final class ChannelContext implements ChannelContextInterface
         return $channel;
     }
 
-    private function getMasterRequest(): Request
+    private function getMainRequest(): Request
     {
-        $masterRequest = $this->requestStack->getMasterRequest();
-        if (null === $masterRequest) {
+        $mainRequest = $this->requestStack->getMainRequest();
+        if (null === $mainRequest) {
             throw new \UnexpectedValueException('There are not any requests on request stack');
         }
 
-        return $masterRequest;
+        return $mainRequest;
     }
 
     private function assertChannelWasFound(?ChannelInterface $channel): void

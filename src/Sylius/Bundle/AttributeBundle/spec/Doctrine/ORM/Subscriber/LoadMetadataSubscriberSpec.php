@@ -62,7 +62,7 @@ final class LoadMetadataSubscriberSpec extends ObjectBehavior
         LoadClassMetadataEventArgs $eventArgs,
         ClassMetadataInfo $metadata,
         EntityManager $entityManager,
-        ClassMetadataFactory $classMetadataFactory
+        ClassMetadataFactory $classMetadataFactory,
     ): void {
         $eventArgs->getEntityManager()->willReturn($entityManager);
         $entityManager->getMetadataFactory()->willReturn($classMetadataFactory);
@@ -80,7 +80,7 @@ final class LoadMetadataSubscriberSpec extends ObjectBehavior
         ClassMetadataInfo $metadata,
         EntityManager $entityManager,
         ClassMetadataFactory $classMetadataFactory,
-        ClassMetadataInfo $classMetadataInfo
+        ClassMetadataInfo $classMetadataInfo,
     ): void {
         $eventArgs->getEntityManager()->willReturn($entityManager);
         $entityManager->getMetadataFactory()->willReturn($classMetadataFactory);
@@ -115,7 +115,6 @@ final class LoadMetadataSubscriberSpec extends ObjectBehavior
                 'name' => 'attribute_id',
                 'referencedColumnName' => 'id',
                 'nullable' => false,
-                'onDelete' => 'CASCADE',
             ]],
         ];
 
@@ -129,7 +128,7 @@ final class LoadMetadataSubscriberSpec extends ObjectBehavior
         LoadClassMetadataEventArgs $eventArgs,
         ClassMetadataInfo $metadata,
         EntityManager $entityManager,
-        ClassMetadataFactory $classMetadataFactory
+        ClassMetadataFactory $classMetadataFactory,
     ): void {
         $eventArgs->getEntityManager()->willReturn($entityManager);
         $entityManager->getMetadataFactory()->willReturn($classMetadataFactory);

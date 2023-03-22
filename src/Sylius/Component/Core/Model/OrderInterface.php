@@ -17,6 +17,7 @@ use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Channel\Model\ChannelAwareInterface;
 use Sylius\Component\Channel\Model\ChannelInterface as BaseChannelInterface;
 use Sylius\Component\Customer\Model\CustomerAwareInterface;
+use Sylius\Component\Customer\Model\CustomerInterface as BaseCustomerInterface;
 use Sylius\Component\Order\Model\OrderInterface as BaseOrderInterface;
 use Sylius\Component\Payment\Model\PaymentsSubjectInterface;
 use Sylius\Component\Promotion\Model\CountablePromotionSubjectInterface;
@@ -52,11 +53,15 @@ interface OrderInterface extends
 
     /**
      * @return Collection|OrderItemUnitInterface[]
+     *
+     * @psalm-return Collection<array-key, OrderItemUnitInterface>
      */
     public function getItemUnits(): Collection;
 
     /**
      * @return Collection|OrderItemUnitInterface[]
+     *
+     * @psalm-return Collection<array-key, OrderItemUnitInterface>
      */
     public function getItemUnitsByVariant(ProductVariantInterface $variant): Collection;
 
@@ -64,6 +69,8 @@ interface OrderInterface extends
 
     /**
      * @return Collection|ShipmentInterface[]
+     *
+     * @psalm-return Collection<array-key, ShipmentInterface>
      */
     public function getShipments(): Collection;
 
@@ -95,6 +102,10 @@ interface OrderInterface extends
 
     public function getTaxTotal(): int;
 
+    public function getTaxExcludedTotal(): int;
+
+    public function getTaxIncludedTotal(): int;
+
     public function getShippingTotal(): int;
 
     public function getOrderPromotionTotal(): int;
@@ -107,8 +118,22 @@ interface OrderInterface extends
 
     public function setCustomerIp(?string $customerIp): void;
 
+    public function setCustomerWithAuthorization(?BaseCustomerInterface $customer): void;
+
+    public function isCreatedByGuest(): bool;
+
+    public function getCreatedByGuest(): bool;
+
+    public function setCreatedByGuest(bool $createdByGuest): void;
+
     /**
      * @return Collection|OrderItemInterface[]
+     *
+     * @psalm-return Collection<array-key, OrderItemInterface>
+     *
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     *
+     * @phpstan-ignore-next-line
      */
     public function getItems(): Collection;
 
@@ -116,4 +141,6 @@ interface OrderInterface extends
      * @return ChannelInterface|null
      */
     public function getChannel(): ?BaseChannelInterface;
+
+    public function getNonDiscountedItemsTotal(): int;
 }

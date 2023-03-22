@@ -18,7 +18,13 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 
 interface ShowPageInterface extends SymfonyPageInterface
 {
+    public function getAppliedCatalogPromotionsLinks(string $variantName, string $channelName): array;
+
+    public function getAppliedCatalogPromotionsNames(string $variantName, string $channelName): array;
+
     public function getName(): string;
+
+    public function getBreadcrumb(): string;
 
     public function isSimpleProductPage(): bool;
 

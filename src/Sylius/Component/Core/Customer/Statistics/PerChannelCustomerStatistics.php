@@ -17,23 +17,11 @@ use Sylius\Component\Core\Model\ChannelInterface;
 
 final class PerChannelCustomerStatistics
 {
-    /** @var int */
-    private $ordersCount;
-
-    /** @var int */
-    private $ordersValue;
-
-    /** @var ChannelInterface */
-    private $channel;
-
     /**
      * @throws \InvalidArgumentException
      */
-    public function __construct(int $ordersCount, int $ordersValue, ChannelInterface $channel)
+    public function __construct(private int $ordersCount, private int $ordersValue, private ChannelInterface $channel)
     {
-        $this->ordersCount = $ordersCount;
-        $this->ordersValue = $ordersValue;
-        $this->channel = $channel;
     }
 
     public function getOrdersCount(): int

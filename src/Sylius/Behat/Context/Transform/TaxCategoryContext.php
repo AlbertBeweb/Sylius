@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class TaxCategoryContext implements Context
 {
-    /** @var TaxCategoryRepositoryInterface */
-    private $taxCategoryRepository;
-
-    public function __construct(TaxCategoryRepositoryInterface $taxCategoryRepository)
+    public function __construct(private TaxCategoryRepositoryInterface $taxCategoryRepository)
     {
-        $this->taxCategoryRepository = $taxCategoryRepository;
     }
 
     /**
@@ -39,7 +35,7 @@ final class TaxCategoryContext implements Context
         Assert::eq(
             count($taxCategories),
             1,
-            sprintf('%d tax categories has been found with name "%s".', count($taxCategories), $taxCategoryName)
+            sprintf('%d tax categories has been found with name "%s".', count($taxCategories), $taxCategoryName),
         );
 
         return $taxCategories[0];

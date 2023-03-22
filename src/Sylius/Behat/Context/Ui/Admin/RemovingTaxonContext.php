@@ -21,21 +21,16 @@ use Sylius\Component\Core\Model\PromotionInterface;
 
 final class RemovingTaxonContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    public function __construct(CreatePageInterface $createPage, NotificationCheckerInterface $notificationChecker)
-    {
-        $this->createPage = $createPage;
-        $this->notificationChecker = $notificationChecker;
+    public function __construct(
+        private CreatePageInterface $createPage,
+        private NotificationCheckerInterface $notificationChecker,
+    ) {
     }
 
     /**
      * @When I remove taxon named :name
      * @When I delete taxon named :name
+     * @When I try to delete taxon named :name
      */
     public function iRemoveTaxonNamed(string $name): void
     {
@@ -50,7 +45,7 @@ final class RemovingTaxonContext implements Context
     {
         $this->notificationChecker->checkNotification(
             sprintf('Some rules of the promotions with codes %s have been updated.', $promotion->getCode()),
-            NotificationType::info()
+            NotificationType::info(),
         );
     }
 }

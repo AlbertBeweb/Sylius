@@ -20,12 +20,8 @@ use Webmozart\Assert\Assert;
 
 final class CustomerReviewsDeleteListener
 {
-    /** @var ReviewerReviewsRemoverInterface */
-    private $reviewerReviewsRemover;
-
-    public function __construct(ReviewerReviewsRemoverInterface $reviewerReviewsRemover)
+    public function __construct(private ReviewerReviewsRemoverInterface $reviewerReviewsRemover)
     {
-        $this->reviewerReviewsRemover = $reviewerReviewsRemover;
     }
 
     /**

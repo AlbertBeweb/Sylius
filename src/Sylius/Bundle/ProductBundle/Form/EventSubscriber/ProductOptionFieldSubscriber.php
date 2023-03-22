@@ -23,17 +23,10 @@ use Webmozart\Assert\Assert;
 
 final class ProductOptionFieldSubscriber implements EventSubscriberInterface
 {
-    /** @var ProductVariantResolverInterface */
-    private $variantResolver;
-
-    public function __construct(ProductVariantResolverInterface $variantResolver)
+    public function __construct(private ProductVariantResolverInterface $variantResolver)
     {
-        $this->variantResolver = $variantResolver;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -43,9 +36,9 @@ final class ProductOptionFieldSubscriber implements EventSubscriberInterface
 
     public function preSetData(FormEvent $event): void
     {
-        /** @var ProductInterface $product */
         $product = $event->getData();
 
+        /** @var ProductInterface $product */
         Assert::isInstanceOf($product, ProductInterface::class);
 
         $form = $event->getForm();

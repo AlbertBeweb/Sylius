@@ -14,37 +14,24 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Bundle\ApiBundle\Command\Account\ChangeShopUserPassword;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
 use Sylius\Component\User\Model\UserInterface;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UserContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var UserRepositoryInterface */
-    private $userRepository;
-
-    /** @var ExampleFactoryInterface */
-    private $userFactory;
-
-    /** @var ObjectManager */
-    private $userManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        UserRepositoryInterface $userRepository,
-        ExampleFactoryInterface $userFactory,
-        ObjectManager $userManager
+        private SharedStorageInterface $sharedStorage,
+        private UserRepositoryInterface $userRepository,
+        private ExampleFactoryInterface $userFactory,
+        private ObjectManager $userManager,
+        private MessageBusInterface $messageBus,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->userRepository = $userRepository;
-        $this->userFactory = $userFactory;
-        $this->userManager = $userManager;
     }
 
     /**
@@ -56,6 +43,21 @@ final class UserContext implements Context
     {
         $user = $this->userFactory->create(['email' => $email, 'password' => $password, 'enabled' => true]);
 
+        $this->sharedStorage->set('user', $user);
+
+        $this->userRepository->add($user);
+    }
+
+    /**
+     * @Given I registered with previously used :email email and :password password
+     * @Given I have already registered :email account
+     */
+    public function theCustomerCreatedAccountWithPassword(string $email, string $password = 'sylius'): void
+    {
+        /** @var ShopUserInterface $user */
+        $user = $this->userFactory->create(['email' => $email, 'password' => $password, 'enabled' => true]);
+
+        $user->setCustomer($this->sharedStorage->get('customer'));
         $this->sharedStorage->set('user', $user);
 
         $this->userRepository->add($user);
@@ -83,6 +85,7 @@ final class UserContext implements Context
         $user = $this->sharedStorage->get('user');
 
         $this->userRepository->remove($user);
+        $this->userManager->clear();
     }
 
     /**
@@ -127,7 +130,7 @@ final class UserContext implements Context
     /**
      * @Given /^(?:(I) have|(this user) has) already received a resetting password email$/
      */
-    public function iHaveReceivedResettingPasswordEmail(UserInterface $user)
+    public function iHaveReceivedResettingPasswordEmail(UserInterface $user): void
     {
         $this->prepareUserPasswordResetToken($user);
     }
@@ -142,7 +145,7 @@ final class UserContext implements Context
         $this->userManager->flush();
     }
 
-    private function prepareUserPasswordResetToken(UserInterface $user)
+    private function prepareUserPasswordResetToken(UserInterface $user): void
     {
         $token = 'itotallyforgotmypassword';
 
@@ -150,5 +153,17 @@ final class UserContext implements Context
         $user->setPasswordRequestedAt(new \DateTime());
 
         $this->userManager->flush();
+    }
+
+    /**
+     * @Given /^(I)'ve changed my password from "([^"]+)" to "([^"]+)"$/
+     */
+    public function iveChangedMyPasswordFromTo(UserInterface $user, string $currentPassword, string $newPassword): void
+    {
+        $changeShopUserPassword = new ChangeShopUserPassword($newPassword, $newPassword, $currentPassword);
+
+        $changeShopUserPassword->setShopUserId($user->getId());
+
+        $this->messageBus->dispatch($changeShopUserPassword);
     }
 }

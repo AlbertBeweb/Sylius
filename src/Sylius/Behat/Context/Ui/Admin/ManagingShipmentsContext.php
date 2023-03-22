@@ -15,8 +15,9 @@ namespace Sylius\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
 use Sylius\Behat\NotificationType;
-use Sylius\Behat\Page\Admin\Order\ShowPageInterface;
+use Sylius\Behat\Page\Admin\Order\ShowPageInterface as OrderShowPageInterface;
 use Sylius\Behat\Page\Admin\Shipment\IndexPageInterface;
+use Sylius\Behat\Page\Admin\Shipment\ShowPageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Component\Core\Model\Channel;
 use Sylius\Component\Core\Model\CustomerInterface;
@@ -25,20 +26,12 @@ use Webmozart\Assert\Assert;
 
 final class ManagingShipmentsContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var ShowPageInterface */
-    private $orderShowPage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    public function __construct(IndexPageInterface $indexPage, ShowPageInterface $orderShowPage, NotificationCheckerInterface $notificationChecker)
-    {
-        $this->indexPage = $indexPage;
-        $this->orderShowPage = $orderShowPage;
-        $this->notificationChecker = $notificationChecker;
+    public function __construct(
+        private IndexPageInterface $indexPage,
+        private OrderShowPageInterface $orderShowPage,
+        private NotificationCheckerInterface $notificationChecker,
+        private ShowPageInterface $showPage,
+    ) {
     }
 
     /**
@@ -57,7 +50,7 @@ final class ManagingShipmentsContext implements Context
         string $orderNumber,
         string $shippingState,
         CustomerInterface $customer,
-        Channel $channel = null
+        Channel $channel = null,
     ): void {
         $parameters = [
             'number' => $orderNumber,
@@ -89,11 +82,27 @@ final class ManagingShipmentsContext implements Context
     }
 
     /**
+     * @When I choose :shippingMethodName as a shipping method filter
+     */
+    public function iChooseAsAShippingMethodFilter(string $shippingMethodName): void
+    {
+        $this->indexPage->chooseShippingMethodFilter($shippingMethodName);
+    }
+
+    /**
      * @When I filter
      */
     public function iFilter(): void
     {
         $this->indexPage->filter();
+    }
+
+    /**
+     * @When I view the first shipment of the order :order
+     */
+    public function iViewTheShipmentOfTheOrder(OrderInterface $order): void
+    {
+        $this->showPage->open(['id' => $order->getShipments()->first()->getId()]);
     }
 
     /**
@@ -154,6 +163,14 @@ final class ManagingShipmentsContext implements Context
     }
 
     /**
+     * @When I ship the shipment of order :orderNumber with :trackingCode tracking code
+     */
+    public function iShipTheShipmentOfOrderWithTrackingCode(string $orderNumber, string $trackingCode): void
+    {
+        $this->indexPage->shipShipmentOfOrderWithTrackingCode($orderNumber, $trackingCode);
+    }
+
+    /**
      * @Then I should see order page with details of order :order
      */
     public function iShouldSeeOrderPageWithDetailsOfOrder(OrderInterface $order): void
@@ -167,5 +184,21 @@ final class ManagingShipmentsContext implements Context
     public function iShouldSeeShipmentForTheOrderInTheList(string $orderNumber, int $position): void
     {
         Assert::true($this->indexPage->isShipmentWithOrderNumberInPosition($orderNumber, $position));
+    }
+
+    /**
+     * @Then I should see :amount :product units in the list
+     */
+    public function iShouldSeeUnitsInTheList(int $amount, string $productName): void
+    {
+        Assert::same($this->showPage->getAmountOfUnits($productName), $amount);
+    }
+
+    /**
+     * @Then I should see the shipment of order :orderNumber shipped at :dateTime
+     */
+    public function iShouldSeeTheShippingDateAs(string $orderNumber, string $dateTime): void
+    {
+        Assert::same($this->indexPage->getShippedAtDate($orderNumber), $dateTime);
     }
 }

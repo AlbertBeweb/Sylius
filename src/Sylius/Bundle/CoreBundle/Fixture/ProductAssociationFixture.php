@@ -17,24 +17,22 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 class ProductAssociationFixture extends AbstractResourceFixture
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'product_association';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureResourceNode(ArrayNodeDefinition $resourceNode): void
     {
         $resourceNode
             ->children()
                 ->scalarNode('type')->cannotBeEmpty()->end()
                 ->scalarNode('owner')->cannotBeEmpty()->end()
-                ->arrayNode('associated_products')->scalarPrototype()->end()->end()
+                ->variableNode('associated_products')
+                    ->beforeNormalization()
+                        ->ifNull()->thenUnset()
+                    ->end()
+                ->end()
         ;
     }
 }

@@ -3,6 +3,10 @@
 
 sylius:
     form:
+        catalog_promotion:
+            description: Opis
+            name: Nazwa
+            priority: Priorytet
         promotion:
             actions: Akcje
             add_action: Dodaj akcje
@@ -34,6 +38,8 @@ sylius:
             amount: Wartość
             code_length: Długość kodu
             expires_at: Wygasa
+            prefix: Przedrostek
+            suffix: Przyrostek
             usage_limit: Limit użycia
         promotion_filter:
             price_range: Zakres ceny
@@ -61,5 +67,5 @@ sylius:
                 country: Kraj
             taxonomy_configuration:
                 exclude: Nie zawiera
-                taxons: Taksonomie
+                taxons: Kategorie
             type: Typ

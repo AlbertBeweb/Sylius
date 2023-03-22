@@ -9,15 +9,15 @@ Feature: Browsing promotions
         And there is a promotion "Basic promotion"
         And I am logged in as an administrator
 
-    @ui
+    @ui @api
     Scenario: Browsing promotions
-        Given I want to browse promotions
+        When I want to browse promotions
         Then I should see a single promotion in the list
         And the "Basic promotion" promotion should exist in the registry
 
-    @ui
+    @ui @api
     Scenario: Browsing manage button for coupon based promotion
         Given the store has promotion "Christmas sale" with coupon "Santa's gift"
-        And I want to browse promotions
+        When I want to browse promotions
         Then this promotion should be coupon based
         And I should be able to manage coupons for this promotion

@@ -19,17 +19,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class PromotionRuleChoiceType extends AbstractType
 {
-    /** @var array */
-    private $rules;
-
-    public function __construct(array $rules)
+    public function __construct(private array $rules)
     {
-        $this->rules = $rules;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -37,17 +30,11 @@ final class PromotionRuleChoiceType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_promotion_rule_choice';

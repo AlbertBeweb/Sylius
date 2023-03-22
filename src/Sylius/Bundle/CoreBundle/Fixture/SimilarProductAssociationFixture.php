@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture;
 
+use Faker\Factory;
+use Faker\Generator;
 use Sylius\Bundle\FixturesBundle\Fixture\AbstractFixture;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Repository\ProductRepositoryInterface;
@@ -21,31 +23,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class SimilarProductAssociationFixture extends AbstractFixture
 {
-    /** @var AbstractResourceFixture */
-    private $productAssociationTypeFixture;
+    private Generator $faker;
 
-    /** @var AbstractResourceFixture */
-    private $productAssociationFixture;
-
-    /** @var ProductRepositoryInterface */
-    private $productRepository;
-
-    /** @var \Faker\Generator */
-    private $faker;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
 
     public function __construct(
-        AbstractResourceFixture $productAssociationTypeFixture,
-        AbstractResourceFixture $productAssociationFixture,
-        ProductRepositoryInterface $productRepository
+        private AbstractResourceFixture $productAssociationTypeFixture,
+        private AbstractResourceFixture $productAssociationFixture,
+        private ProductRepositoryInterface $productRepository,
     ) {
-        $this->productAssociationTypeFixture = $productAssociationTypeFixture;
-        $this->productAssociationFixture = $productAssociationFixture;
-        $this->productRepository = $productRepository;
-
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver =
             (new OptionsResolver())
                 ->setRequired('amount')
@@ -53,17 +40,11 @@ class SimilarProductAssociationFixture extends AbstractFixture
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'similar_product_association';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function load(array $options): void
     {
         $options = $this->optionsResolver->resolve($options);
@@ -89,9 +70,6 @@ class SimilarProductAssociationFixture extends AbstractFixture
         $this->productAssociationFixture->load(['custom' => $productAssociations]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptionsNode(ArrayNodeDefinition $optionsNode): void
     {
         $optionsNode

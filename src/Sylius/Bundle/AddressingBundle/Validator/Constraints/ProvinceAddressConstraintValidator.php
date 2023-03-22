@@ -23,26 +23,15 @@ use Webmozart\Assert\Assert;
 
 class ProvinceAddressConstraintValidator extends ConstraintValidator
 {
-    /** @var RepositoryInterface */
-    private $countryRepository;
-
-    /** @var RepositoryInterface */
-    private $provinceRepository;
-
-    public function __construct(RepositoryInterface $countryRepository, RepositoryInterface $provinceRepository)
+    public function __construct(private RepositoryInterface $countryRepository, private RepositoryInterface $provinceRepository)
     {
-        $this->countryRepository = $countryRepository;
-        $this->provinceRepository = $provinceRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate($value, Constraint $constraint): void
     {
         if (!$value instanceof AddressInterface) {
             throw new \InvalidArgumentException(
-                'ProvinceAddressConstraintValidator can only validate instances of "Sylius\Component\Addressing\Model\AddressInterface"'
+                'ProvinceAddressConstraintValidator can only validate instances of "Sylius\Component\Addressing\Model\AddressInterface"',
             );
         }
 
@@ -52,7 +41,7 @@ class ProvinceAddressConstraintValidator extends ConstraintValidator
         $propertyPath = $this->context->getPropertyPath();
 
         foreach (iterator_to_array($this->context->getViolations()) as $violation) {
-            if (0 === strpos($violation->getPropertyPath(), $propertyPath)) {
+            if (str_starts_with($violation->getPropertyPath(), $propertyPath)) {
                 return;
             }
         }
@@ -71,6 +60,10 @@ class ProvinceAddressConstraintValidator extends ConstraintValidator
 
         if (null === $country) {
             return true;
+        }
+
+        if (!$country->hasProvinces() && null !== $address->getProvinceCode()) {
+            return false;
         }
 
         if (!$country->hasProvinces()) {

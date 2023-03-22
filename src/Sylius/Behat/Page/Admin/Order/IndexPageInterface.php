@@ -23,9 +23,15 @@ interface IndexPageInterface extends BaseIndexPageInterface
 
     public function chooseChannelFilter(string $channelName): void;
 
+    public function chooseShippingMethodFilter(string $methodName): void;
+
     public function chooseCurrencyFilter(string $currencyName): void;
 
     public function specifyFilterTotalGreaterThan(string $total): void;
 
     public function specifyFilterTotalLessThan(string $total): void;
+
+    public function specifyFilterProduct(string $productName): void;
+
+    public function specifyFilterVariant(string $variantName): void;
 }

@@ -18,6 +18,7 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\UnitOfWork;
 use Sylius\Component\Core\Model\CustomerInterface;
+use Sylius\Component\Core\Model\ShopUserInterface;
 
 /**
  * Keeps user's username synchronized with email.
@@ -26,7 +27,7 @@ final class DefaultUsernameORMListener
 {
     public function onFlush(OnFlushEventArgs $onFlushEventArgs)
     {
-        $entityManager = $onFlushEventArgs->getEntityManager();
+        $entityManager = $onFlushEventArgs->getObjectManager();
         $unitOfWork = $entityManager->getUnitOfWork();
 
         $this->processEntities($unitOfWork->getScheduledEntityInsertions(), $entityManager, $unitOfWork);
@@ -35,16 +36,26 @@ final class DefaultUsernameORMListener
 
     private function processEntities(array $entities, EntityManagerInterface $entityManager, UnitOfWork $unitOfWork): void
     {
-        foreach ($entities as $customer) {
-            if (!$customer instanceof CustomerInterface) {
+        foreach ($entities as $entity) {
+            if (!$entity instanceof ShopUserInterface && !$entity instanceof CustomerInterface) {
                 continue;
             }
 
-            $user = $customer->getUser();
-            if (null === $user) {
+            if ($entity instanceof ShopUserInterface) {
+                $user = $entity;
+                $customer = $user->getCustomer();
+            } else {
+                $customer = $entity;
+                $user = $customer->getUser();
+            }
+
+            if (!$customer || !$user) {
                 continue;
             }
 
+            if (!method_exists($user, 'getUsername')) {
+                continue;
+            }
             if ($customer->getEmail() === $user->getUsername() && $customer->getEmailCanonical() === $user->getUsernameCanonical()) {
                 continue;
             }
@@ -53,7 +64,7 @@ final class DefaultUsernameORMListener
             $user->setUsernameCanonical($customer->getEmailCanonical());
 
             /** @var ClassMetadata $userMetadata */
-            $userMetadata = $entityManager->getClassMetadata(get_class($user));
+            $userMetadata = $entityManager->getClassMetadata($user::class);
             $unitOfWork->recomputeSingleEntityChangeSet($userMetadata, $user);
         }
     }

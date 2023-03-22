@@ -16,7 +16,7 @@ namespace Sylius\Component\Product\Model;
 use Sylius\Component\Resource\Model\TranslatableTrait;
 use Sylius\Component\Resource\Model\TranslationInterface;
 
-class ProductOptionValue implements ProductOptionValueInterface
+class ProductOptionValue implements ProductOptionValueInterface, \Stringable
 {
     use TranslatableTrait {
         __construct as private initializeTranslationCollection;
@@ -26,10 +26,10 @@ class ProductOptionValue implements ProductOptionValueInterface
     /** @var mixed */
     protected $id;
 
-    /** @var string */
+    /** @var string|null */
     protected $code;
 
-    /** @var ProductOptionInterface */
+    /** @var ProductOptionInterface|null */
     protected $option;
 
     public function __construct()
@@ -37,80 +37,54 @@ class ProductOptionValue implements ProductOptionValueInterface
         $this->initializeTranslationCollection();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function __toString(): string
     {
         return (string) $this->getValue();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCode(): ?string
     {
         return $this->code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setCode(?string $code): void
     {
         $this->code = $code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOption(): ?ProductOptionInterface
     {
         return $this->option;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setOption(?ProductOptionInterface $option): void
     {
         $this->option = $option;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getValue(): ?string
     {
         return $this->getTranslation()->getValue();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setValue(?string $value): void
     {
         $this->getTranslation()->setValue($value);
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \BadMethodCallException
      */
     public function getOptionCode(): ?string
     {
         if (null === $this->option) {
             throw new \BadMethodCallException(
-                'The option have not been created yet so you cannot access proxy methods.'
+                'The option have not been created yet so you cannot access proxy methods.',
             );
         }
 
@@ -118,15 +92,13 @@ class ProductOptionValue implements ProductOptionValueInterface
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \BadMethodCallException
      */
     public function getName(): ?string
     {
         if (null === $this->option) {
             throw new \BadMethodCallException(
-                'The option have not been created yet so you cannot access proxy methods.'
+                'The option have not been created yet so you cannot access proxy methods.',
             );
         }
 
@@ -144,9 +116,6 @@ class ProductOptionValue implements ProductOptionValueInterface
         return $translation;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function createTranslation(): ProductOptionValueTranslationInterface
     {
         return new ProductOptionValueTranslation();

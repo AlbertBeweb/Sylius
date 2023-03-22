@@ -20,26 +20,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class RequestBasedLocaleContext implements LocaleContextInterface
 {
-    /** @var RequestStack */
-    private $requestStack;
-
-    /** @var LocaleProviderInterface */
-    private $localeProvider;
-
-    public function __construct(RequestStack $requestStack, LocaleProviderInterface $localeProvider)
+    public function __construct(private RequestStack $requestStack, private LocaleProviderInterface $localeProvider)
     {
-        $this->requestStack = $requestStack;
-        $this->localeProvider = $localeProvider;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLocaleCode(): string
     {
-        $request = $this->requestStack->getMasterRequest();
+        $request = $this->requestStack->getMainRequest();
         if (null === $request) {
-            throw new LocaleNotFoundException('No master request available.');
+            throw new LocaleNotFoundException('No main request available.');
         }
 
         $localeCode = $request->attributes->get('_locale');

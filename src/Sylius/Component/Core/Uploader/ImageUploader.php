@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Core\Uploader;
 
-use Gaufrette\Filesystem;
+use enshrined\svgSanitize\Sanitizer;
+use Gaufrette\FilesystemInterface;
+use Sylius\Component\Core\Filesystem\Adapter\FilesystemAdapterInterface;
+use Sylius\Component\Core\Filesystem\Adapter\GaufretteFilesystemAdapter;
+use Sylius\Component\Core\Filesystem\Exception\FileNotFoundException;
 use Sylius\Component\Core\Generator\ImagePathGeneratorInterface;
 use Sylius\Component\Core\Generator\UploadedImagePathGenerator;
 use Sylius\Component\Core\Model\ImageInterface;
@@ -22,30 +26,39 @@ use Webmozart\Assert\Assert;
 
 class ImageUploader implements ImageUploaderInterface
 {
-    /** @var Filesystem */
-    protected $filesystem;
+    private const MIME_SVG_XML = 'image/svg+xml';
 
-    /** @var ImagePathGeneratorInterface */
-    protected $imagePathGenerator;
+    private const MIME_SVG = 'image/svg';
+
+    /** @var Sanitizer */
+    protected $sanitizer;
 
     public function __construct(
-        Filesystem $filesystem,
-        ?ImagePathGeneratorInterface $imagePathGenerator = null
+        /** @var FilesystemAdapterInterface $filesystem */
+        protected FilesystemAdapterInterface|FilesystemInterface $filesystem,
+        protected ?ImagePathGeneratorInterface $imagePathGenerator = null,
     ) {
-        $this->filesystem = $filesystem;
+        if ($this->filesystem instanceof FilesystemInterface) {
+            @trigger_error(sprintf(
+                'Passing Gaufrette\FilesystemInterface as a first argument in %s constructor is deprecated since Sylius 1.12 and will be not possible in Sylius 2.0.',
+                self::class,
+            ), \E_USER_DEPRECATED);
+
+            /** @psalm-suppress DeprecatedClass */
+            $this->filesystem = new GaufretteFilesystemAdapter($this->filesystem);
+        }
 
         if ($imagePathGenerator === null) {
             @trigger_error(sprintf(
-                'Not passing an $imagePathGenerator to %s constructor is deprecated since Sylius 1.6 and will be not possible in Sylius 2.0.', self::class
+                'Not passing an $imagePathGenerator to %s constructor is deprecated since Sylius 1.6 and will be not possible in Sylius 2.0.',
+                self::class,
             ), \E_USER_DEPRECATED);
         }
 
         $this->imagePathGenerator = $imagePathGenerator ?? new UploadedImagePathGenerator();
+        $this->sanitizer = new Sanitizer();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function upload(ImageInterface $image): void
     {
         if (!$image->hasFile()) {
@@ -57,7 +70,9 @@ class ImageUploader implements ImageUploaderInterface
 
         Assert::isInstanceOf($file, File::class);
 
-        if (null !== $image->getPath() && $this->has($image->getPath())) {
+        $fileContent = $this->sanitizeContent(file_get_contents($file->getPathname()), $file->getMimeType());
+
+        if (null !== $image->getPath() && $this->filesystem->has($image->getPath())) {
             $this->remove($image->getPath());
         }
 
@@ -67,27 +82,27 @@ class ImageUploader implements ImageUploaderInterface
 
         $image->setPath($path);
 
-        $this->filesystem->write(
-            $image->getPath(),
-            file_get_contents($image->getFile()->getPathname())
-        );
+        $this->filesystem->write($image->getPath(), $fileContent);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function remove(string $path): bool
     {
-        if ($this->filesystem->has($path)) {
-            return $this->filesystem->delete($path);
+        try {
+            $this->filesystem->delete($path);
+        } catch (FileNotFoundException) {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
-    private function has(string $path): bool
+    protected function sanitizeContent(string $fileContent, string $mimeType): string
     {
-        return $this->filesystem->has($path);
+        if (self::MIME_SVG_XML === $mimeType || self::MIME_SVG === $mimeType) {
+            $fileContent = $this->sanitizer->sanitize($fileContent);
+        }
+
+        return $fileContent;
     }
 
     /**
@@ -95,6 +110,6 @@ class ImageUploader implements ImageUploaderInterface
      */
     private function isAdBlockingProne(string $path): bool
     {
-        return strpos($path, 'ad') !== false;
+        return str_contains($path, 'ad');
     }
 }

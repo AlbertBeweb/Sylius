@@ -18,6 +18,8 @@ use GuzzleHttp\Exception\ConnectException;
 use Http\Message\MessageFactory;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 use Prophecy\Prophecy\ProphecyInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -28,17 +30,15 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class NotificationControllerTest extends TestCase
 {
-    /** @var ProphecyInterface|ClientInterface */
-    private $client;
+    use ProphecyTrait;
 
-    /** @var ProphecyInterface|MessageFactory */
-    private $messageFactory;
+    private ObjectProphecy $client;
 
-    /** @var NotificationController */
-    private $controller;
+    private ObjectProphecy $messageFactory;
 
-    /** @var string */
-    private static $hubUri = 'www.doesnotexist.test.com';
+    private NotificationController $controller;
+
+    private static string $hubUri = 'www.doesnotexist.test.com';
 
     /**
      * @test
@@ -84,9 +84,6 @@ final class NotificationControllerTest extends TestCase
         $this->assertEquals($content, $response->getContent());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function setUp(): void
     {
         $this->client = $this->prophesize(ClientInterface::class);
@@ -96,7 +93,7 @@ final class NotificationControllerTest extends TestCase
             $this->client->reveal(),
             $this->messageFactory->reveal(),
             self::$hubUri,
-            'environment'
+            'environment',
         );
 
         parent::setUp();

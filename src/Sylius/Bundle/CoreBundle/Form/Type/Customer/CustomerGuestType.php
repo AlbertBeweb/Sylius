@@ -17,6 +17,7 @@ use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
@@ -24,27 +25,16 @@ use Symfony\Component\Form\FormEvents;
 
 final class CustomerGuestType extends AbstractResourceType
 {
-    /** @var RepositoryInterface */
-    private $customerRepository;
-
-    /** @var FactoryInterface */
-    private $customerFactory;
-
     public function __construct(
         string $dataClass,
         array $validationGroups,
-        RepositoryInterface $customerRepository,
-        FactoryInterface $customerFactory
+        private RepositoryInterface $customerRepository,
+        private FactoryInterface $customerFactory,
+        private CanonicalizerInterface $canonicalizer,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->customerRepository = $customerRepository;
-        $this->customerFactory = $customerFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options = []): void
     {
         $builder
@@ -58,8 +48,10 @@ final class CustomerGuestType extends AbstractResourceType
                     return;
                 }
 
-                /** @var CustomerInterface $customer */
-                $customer = $this->customerRepository->findOneBy(['email' => $data['email']]);
+                $emailCanonical = $this->canonicalizer->canonicalize($data['email']);
+
+                /** @var CustomerInterface|null $customer */
+                $customer = $this->customerRepository->findOneBy(['emailCanonical' => $emailCanonical]);
 
                 // assign existing customer or create a new one
                 $form = $event->getForm();
@@ -79,9 +71,6 @@ final class CustomerGuestType extends AbstractResourceType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_customer_guest';

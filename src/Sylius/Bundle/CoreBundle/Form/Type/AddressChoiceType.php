@@ -21,17 +21,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class AddressChoiceType extends AbstractType
 {
-    /** @var AddressRepositoryInterface */
-    private $addressRepository;
-
-    public function __construct(AddressRepositoryInterface $addressRepository)
+    public function __construct(private AddressRepositoryInterface $addressRepository)
     {
-        $this->addressRepository = $addressRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -50,17 +43,11 @@ final class AddressChoiceType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_address_choice';

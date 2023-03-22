@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Addressing\Model\CountryInterface;
 use Sylius\Component\Core\Model\AddressInterface;
@@ -26,38 +26,14 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class CustomerContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var CustomerRepositoryInterface */
-    private $customerRepository;
-
-    /** @var ObjectManager */
-    private $customerManager;
-
-    /** @var FactoryInterface */
-    private $customerFactory;
-
-    /** @var FactoryInterface */
-    private $userFactory;
-
-    /** @var FactoryInterface */
-    private $addressFactory;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        CustomerRepositoryInterface $customerRepository,
-        ObjectManager $customerManager,
-        FactoryInterface $customerFactory,
-        FactoryInterface $userFactory,
-        FactoryInterface $addressFactory
+        private SharedStorageInterface $sharedStorage,
+        private CustomerRepositoryInterface $customerRepository,
+        private ObjectManager $customerManager,
+        private FactoryInterface $customerFactory,
+        private FactoryInterface $userFactory,
+        private FactoryInterface $addressFactory,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->customerRepository = $customerRepository;
-        $this->customerManager = $customerManager;
-        $this->customerFactory = $customerFactory;
-        $this->userFactory = $userFactory;
-        $this->addressFactory = $addressFactory;
     }
 
     /**
@@ -68,6 +44,8 @@ final class CustomerContext implements Context
         $partsOfName = explode(' ', $name);
         $customer = $this->createCustomer($email, $partsOfName[0], $partsOfName[1]);
         $this->customerRepository->add($customer);
+
+        $this->sharedStorage->set('customer', $customer);
     }
 
     /**
@@ -94,7 +72,7 @@ final class CustomerContext implements Context
      * @Given the store has customer :email with name :fullName since :since
      * @Given the store has customer :email with name :fullName and phone number :phoneNumber since :since
      */
-    public function theStoreHasCustomerWithNameAndRegistrationDate($email, $fullName, $phoneNumber = null, $since)
+    public function theStoreHasCustomerWithNameAndRegistrationDate($email, $fullName, $since, $phoneNumber = null)
     {
         $names = explode(' ', $fullName);
         $customer = $this->createCustomer($email, $names[0], $names[1], new \DateTime($since), $phoneNumber);
@@ -126,14 +104,17 @@ final class CustomerContext implements Context
      * @Given there is a customer :name identified by an email :email and a password :password
      * @Given there is a customer :name with an email :email and a password :password
      */
-    public function theStoreHasCustomerAccountWithEmailAndPassword($name, $email, $password)
+    public function theStoreHasCustomerAccountWithEmailAndPassword(string $name, string $email, string $password): void
     {
-        $names = explode(' ', $name);
-        $firstName = $names[0];
-        $lastName = count($names) > 1 ? $names[1] : null;
+        $this->createCustomerWithFullNameEmailAndPassword($name, $email, $password);
+    }
 
-        $customer = $this->createCustomerWithUserAccount($email, $password, true, $firstName, $lastName);
-        $this->customerRepository->add($customer);
+    /**
+     * @Given there is a customer :name with an email :email
+     */
+    public function theStoreHasCustomerAccountWithEmailAndName(string $name, string $email): void
+    {
+        $this->createCustomerWithFullNameEmailAndPassword($name, $email, 'sylius');
     }
 
     /**
@@ -158,6 +139,7 @@ final class CustomerContext implements Context
 
     /**
      * @Given /^(the customer) belongs to (group "([^"]+)")$/
+     * @Given /^(this customer) belongs to (group "([^"]+)")$/
      */
     public function theCustomerBelongsToGroup(CustomerInterface $customer, CustomerGroupInterface $customerGroup)
     {
@@ -199,7 +181,7 @@ final class CustomerContext implements Context
         $firstName = null,
         $lastName = null,
         \DateTimeInterface $createdAt = null,
-        $phoneNumber = null
+        $phoneNumber = null,
     ) {
         /** @var CustomerInterface $customer */
         $customer = $this->customerFactory->createNew();
@@ -233,7 +215,7 @@ final class CustomerContext implements Context
         $enabled = true,
         $firstName = null,
         $lastName = null,
-        $role = null
+        $role = null,
     ) {
         /** @var ShopUserInterface $user */
         $user = $this->userFactory->createNew();
@@ -257,5 +239,15 @@ final class CustomerContext implements Context
         $this->sharedStorage->set('customer', $customer);
 
         return $customer;
+    }
+
+    private function createCustomerWithFullNameEmailAndPassword(string $name, string $email, string $password): void
+    {
+        $names = explode(' ', $name);
+        $firstName = $names[0];
+        $lastName = count($names) > 1 ? $names[1] : null;
+
+        $customer = $this->createCustomerWithUserAccount($email, $password, true, $firstName, $lastName);
+        $this->customerRepository->add($customer);
     }
 }

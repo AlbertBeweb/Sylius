@@ -6,12 +6,15 @@ default:
         ui_applying_promotion_coupon:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.address
+                - sylius.behat.context.transform.channel
                 - sylius.behat.context.transform.coupon
                 - sylius.behat.context.transform.lexical
                 - sylius.behat.context.transform.payment
                 - sylius.behat.context.transform.product
+                - sylius.behat.context.transform.product_variant
                 - sylius.behat.context.transform.shared_storage
                 - sylius.behat.context.transform.shipping_method
                 - sylius.behat.context.transform.taxon
@@ -21,6 +24,7 @@ default:
                 - sylius.behat.context.setup.order
                 - sylius.behat.context.setup.payment
                 - sylius.behat.context.setup.product
+                - sylius.behat.context.setup.product_taxon
                 - sylius.behat.context.setup.promotion
                 - sylius.behat.context.setup.shop_security
                 - sylius.behat.context.setup.shipping
@@ -29,4 +33,4 @@ default:
                 - sylius.behat.context.ui.shop.cart
 
             filters:
-                tags: "@applying_promotion_coupon && @ui"
+                tags: "@applying_promotion_coupon&&@ui"

@@ -18,13 +18,13 @@ use PhpSpec\ObjectBehavior;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItem;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentDescriptionProviderSpec extends ObjectBehavior
 {
     function let(TranslatorInterface $translator): void
     {
-        $translator->transChoice('sylius.payum_action.payment.description', 2, [
+        $translator->trans('sylius.payum_action.payment.description', [
             '%items%' => 2,
             '%total%' => 100.00,
         ])->willReturn('Payment contains 2 items for a total of 100');

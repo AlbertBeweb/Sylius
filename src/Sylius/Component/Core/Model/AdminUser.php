@@ -14,19 +14,21 @@ declare(strict_types=1);
 namespace Sylius\Component\Core\Model;
 
 use Sylius\Component\User\Model\User;
+use Symfony\Component\Security\Core\User\EquatableInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
-class AdminUser extends User implements AdminUserInterface
+class AdminUser extends User implements AdminUserInterface, EquatableInterface
 {
-    /** @var string */
+    /** @var string|null */
     protected $firstName;
 
-    /** @var string */
+    /** @var string|null */
     protected $lastName;
 
-    /** @var string */
+    /** @var string|null */
     protected $localeCode;
 
-    /** @var ImageInterface */
+    /** @var ImageInterface|null */
     protected $avatar;
 
     public function __construct()
@@ -36,49 +38,31 @@ class AdminUser extends User implements AdminUserInterface
         $this->roles = [AdminUserInterface::DEFAULT_ADMIN_ROLE];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFirstName(): ?string
     {
         return $this->firstName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setFirstName(?string $firstName): void
     {
         $this->firstName = $firstName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLastName(): ?string
     {
         return $this->lastName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setLastName(?string $lastName): void
     {
         $this->lastName = $lastName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLocaleCode(): ?string
     {
         return $this->localeCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setLocaleCode(?string $code): void
     {
         $this->localeCode = $code;
@@ -103,5 +87,10 @@ class AdminUser extends User implements AdminUserInterface
     public function setAvatar(?ImageInterface $avatar): void
     {
         $this->setImage($avatar);
+    }
+
+    public function isEqualTo(UserInterface $user): bool
+    {
+        return $user instanceof AdminUserInterface && $this->isEnabled() === $user->isEnabled();
     }
 }

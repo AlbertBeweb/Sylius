@@ -20,8 +20,8 @@ letters. Example usage:
 
 .. code-block:: php
 
-    // File example: src/script.php
     <?php
+    // src/script.php
 
     // update this to the path to the "vendor/"
     // directory, relative to this file
@@ -38,5 +38,5 @@ letters. Example usage:
     $canonicalEmail = $canonicalizer->canonicalize($user->getEmail());
     $user->setEmailCanonical($canonicalEmail);
 
-    $user->getEmail() // returns 'MyEmail@eXample.Com'
-    $user->getEmailCanonical() // returns 'myemail@example.com'
+    $user->getEmail(); // returns 'MyEmail@eXample.Com'
+    $user->getEmailCanonical(); // returns 'myemail@example.com'

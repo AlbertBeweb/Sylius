@@ -18,6 +18,7 @@ use PhpSpec\ObjectBehavior;
 use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Channel\Model\Channel as BaseChannel;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\TaxonInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Locale\Model\LocaleInterface;
 
@@ -137,6 +138,17 @@ final class ChannelSpec extends ObjectBehavior
         $this->getContactEmail()->shouldReturn('contact@example.com');
     }
 
+    function it_has_no_contact_phone_number_by_default(): void
+    {
+        $this->getContactPhoneNumber()->shouldReturn(null);
+    }
+
+    function its_contact_phone_number_is_mutable(): void
+    {
+        $this->setContactPhoneNumber('113321122');
+        $this->getContactPhoneNumber()->shouldReturn('113321122');
+    }
+
     function it_can_allow_to_skip_shipping_step_if_only_a_single_shipping_method_is_resolved(): void
     {
         $this->setSkippingShippingStepAllowed(true);
@@ -158,5 +170,22 @@ final class ChannelSpec extends ObjectBehavior
     {
         $this->setAccountVerificationRequired(false);
         $this->isAccountVerificationRequired()->shouldReturn(false);
+    }
+
+    function it_does_not_have_shipping_address_in_checkout_required_by_default(): void
+    {
+        $this->isShippingAddressInCheckoutRequired()->shouldReturn(false);
+    }
+
+    function it_can_set_shipping_address_in_checkout_required(): void
+    {
+        $this->setShippingAddressInCheckoutRequired(true);
+        $this->isShippingAddressInCheckoutRequired()->shouldReturn(true);
+    }
+
+    function its_menu_taxon_is_mutable(TaxonInterface $taxon): void
+    {
+        $this->setMenuTaxon($taxon);
+        $this->getMenuTaxon()->shouldReturn($taxon);
     }
 }

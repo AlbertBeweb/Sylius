@@ -36,9 +36,6 @@ interface CreatePageInterface extends BaseCreatePageInterface
 
     public function specifySlug(string $slug, string $languageCode): void;
 
-    /**
-     * @param string $type
-     */
     public function attachImage(string $path, string $type = null): void;
 
     /**
@@ -49,4 +46,10 @@ interface CreatePageInterface extends BaseCreatePageInterface
     public function getLeaves(TaxonInterface $parentTaxon = null): array;
 
     public function activateLanguageTab(string $locale): void;
+
+    public function moveUpTaxon(string $name): void;
+
+    public function moveDownTaxon(string $name): void;
+
+    public function getFirstTaxonOnTheList(): string;
 }

@@ -1,10 +1,13 @@
 imports:
     - { resource: "@SyliusUiBundle/Resources/config/app/config.yml" }
 
+    - { resource: "@SyliusAdminBundle/Resources/config/app/events.yaml" }
     - { resource: "@SyliusAdminBundle/Resources/config/app/sylius/sylius_mailer.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/address_log_entry.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/admin_user.yml" }
+    - { resource: "@SyliusAdminBundle/Resources/config/grids/catalog_promotion.yaml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/channel.yml" }
+    - { resource: "@SyliusAdminBundle/Resources/config/grids/channel_pricing_log_entry.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/country.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/currency.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/customer.yml" }
@@ -23,6 +26,7 @@ imports:
     - { resource: "@SyliusAdminBundle/Resources/config/grids/product_option.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/product_review.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/product_variant.yml" }
+    - { resource: "@SyliusAdminBundle/Resources/config/grids/product_variant_with_catalog_promotion.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/promotion.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/promotion_coupon.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/shipment.yml" }
@@ -33,14 +37,27 @@ imports:
     - { resource: "@SyliusAdminBundle/Resources/config/grids/taxon.yml" }
     - { resource: "@SyliusAdminBundle/Resources/config/grids/zone.yml" }
 
+parameters:
+    env(SYLIUS_ADMIN_ROUTING_PATH_NAME): admin
+    sylius_admin.path_name: '%env(resolve:SYLIUS_ADMIN_ROUTING_PATH_NAME)%'
+    sylius.security.admin_regex: "^/%sylius_admin.path_name%"
+
+webpack_encore:
+    builds:
+        admin: '%kernel.project_dir%/public/build/admin'
+
 sylius_grid:
     templates:
         action:
             create_payment_method: "@SyliusAdmin/PaymentMethod/Grid/Action/create.html.twig"
             create_product_attribute: "@SyliusAdmin/ProductAttribute/Grid/Action/create.html.twig"
             generate_variants: "@SyliusAdmin/Product/Grid/Action/generateVariants.html.twig"
+            ship_with_tracking_code: "@SyliusAdmin/Shipment/Grid/Action/shipWithTrackingCode.html.twig"
             update_product_positions: "@SyliusAdmin/Product/Grid/Action/updatePositions.html.twig"
             update_product_variant_positions: "@SyliusAdmin/ProductVariant/Grid/Action/updatePositions.html.twig"
+        filter:
+            entities: '@SyliusUi/Grid/Filter/entities.html.twig'
+            resource_autocomplete: '@SyliusUi/Grid/Filter/resourceAutocomplete.html.twig'
 
 liip_imagine:
     filter_sets:

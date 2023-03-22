@@ -21,29 +21,22 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 final class CustomerContext implements CustomerContextInterface
 {
-    /** @var TokenStorageInterface */
-    private $tokenStorage;
-
-    /** @var AuthorizationCheckerInterface */
-    private $authorizationChecker;
-
-    public function __construct(TokenStorageInterface $tokenStorage, AuthorizationCheckerInterface $authorizationChecker)
+    public function __construct(private TokenStorageInterface $tokenStorage, private AuthorizationCheckerInterface $authorizationChecker)
     {
-        $this->tokenStorage = $tokenStorage;
-        $this->authorizationChecker = $authorizationChecker;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCustomer(): ?BaseCustomerInterface
     {
         if (null === $token = $this->tokenStorage->getToken()) {
             return null;
         }
 
-        if ($token->getUser() instanceof ShopUserInterface && $this->authorizationChecker->isGranted('IS_AUTHENTICATED_REMEMBERED')) {
-            return $token->getUser()->getCustomer();
+        $user = $token->getUser();
+        if (
+            $user instanceof ShopUserInterface &&
+            $this->authorizationChecker->isGranted('IS_AUTHENTICATED_REMEMBERED')
+        ) {
+            return $user->getCustomer();
         }
 
         return null;

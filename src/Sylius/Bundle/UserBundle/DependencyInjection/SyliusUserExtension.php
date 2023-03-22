@@ -37,12 +37,9 @@ use Symfony\Component\Security\Http\SecurityEvents;
 
 final class SyliusUserExtension extends AbstractResourceExtension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function load(array $config, ContainerBuilder $container): void
+    public function load(array $configs, ContainerBuilder $container): void
     {
-        $config = $this->processConfiguration($this->getConfiguration([], $container), $config);
+        $config = $this->processConfiguration($this->getConfiguration([], $container), $configs);
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
 
         $loader->load(sprintf('services/integrations/%s.xml', $config['driver']));
@@ -51,6 +48,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
 
         $loader->load('services.xml');
 
+        $this->createParameters($config['resources'], $container);
         $this->createServices($config['resources'], $container);
         $this->loadEncodersAwareServices($config['encoder'], $config['resources'], $container);
     }
@@ -78,9 +76,16 @@ final class SyliusUserExtension extends AbstractResourceExtension
 
             $this->createTokenGenerators($userType, $config['user'], $container);
             $this->createReloaders($userType, $container);
-            $this->createLastLoginListeners($userType, $userClass, $container);
+            $this->createLastLoginListeners($userType, $userClass, $config['user'], $container);
             $this->createProviders($userType, $userClass, $container);
             $this->createUserDeleteListeners($userType, $container);
+        }
+    }
+
+    private function createParameters(array $resources, ContainerBuilder $container): void
+    {
+        foreach ($resources as $userType => $config) {
+            $this->createResettingTokenParameters($userType, $config['user'], $container);
         }
     }
 
@@ -110,8 +115,8 @@ final class SyliusUserExtension extends AbstractResourceExtension
                     new Reference('sylius.random_generator'),
                     new Reference(sprintf('sylius.%s_user.token_uniqueness_checker.password_reset', $userType)),
                     $config['resetting']['token']['length'],
-                ]
-            )
+                ],
+            ),
         )->setPublic(true);
 
         $container->setDefinition(
@@ -122,8 +127,8 @@ final class SyliusUserExtension extends AbstractResourceExtension
                     new Reference('sylius.random_generator'),
                     new Reference(sprintf('sylius.%s_user.pin_uniqueness_checker.password_reset', $userType)),
                     $config['resetting']['pin']['length'],
-                ]
-            )
+                ],
+            ),
         )->setPublic(true);
 
         $container->setDefinition(
@@ -134,8 +139,8 @@ final class SyliusUserExtension extends AbstractResourceExtension
                     new Reference('sylius.random_generator'),
                     new Reference(sprintf('sylius.%s_user.token_uniqueness_checker.email_verification', $userType)),
                     $config['verification']['token']['length'],
-                ]
-            )
+                ],
+            ),
         )->setPublic(true);
     }
 
@@ -156,7 +161,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
         $resetPasswordTokenUniquenessCheckerDefinition->addArgument($config['resetting']['token']['field_name']);
         $container->setDefinition(
             sprintf('sylius.%s_user.token_uniqueness_checker.password_reset', $userType),
-            $resetPasswordTokenUniquenessCheckerDefinition
+            $resetPasswordTokenUniquenessCheckerDefinition,
         );
 
         $resetPasswordPinUniquenessCheckerDefinition = new Definition(TokenUniquenessChecker::class);
@@ -164,7 +169,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
         $resetPasswordPinUniquenessCheckerDefinition->addArgument($config['resetting']['pin']['field_name']);
         $container->setDefinition(
             sprintf('sylius.%s_user.pin_uniqueness_checker.password_reset', $userType),
-            $resetPasswordPinUniquenessCheckerDefinition
+            $resetPasswordPinUniquenessCheckerDefinition,
         );
 
         $emailVerificationTokenUniquenessCheckerDefinition = new Definition(TokenUniquenessChecker::class);
@@ -172,7 +177,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
         $emailVerificationTokenUniquenessCheckerDefinition->addArgument($config['verification']['token']['field_name']);
         $container->setDefinition(
             sprintf('sylius.%s_user.token_uniqueness_checker.email_verification', $userType),
-            $emailVerificationTokenUniquenessCheckerDefinition
+            $emailVerificationTokenUniquenessCheckerDefinition,
         );
     }
 
@@ -193,13 +198,17 @@ final class SyliusUserExtension extends AbstractResourceExtension
         $container->setDefinition($reloaderListenerServiceId, $userReloaderListenerDefinition);
     }
 
-    private function createLastLoginListeners(string $userType, string $userClass, ContainerBuilder $container): void
+    private function createLastLoginListeners(string $userType, string $userClass, array $config, ContainerBuilder $container): void
     {
         $managerServiceId = sprintf('sylius.manager.%s_user', $userType);
         $lastLoginListenerServiceId = sprintf('sylius.listener.%s_user_last_login', $userType);
 
         $lastLoginListenerDefinition = new Definition(UserLastLoginSubscriber::class);
-        $lastLoginListenerDefinition->setArguments([new Reference($managerServiceId), $userClass]);
+        $lastLoginListenerDefinition->setArguments([
+            new Reference($managerServiceId),
+            $userClass,
+            $config['login_tracking_interval'] ?? null,
+        ]);
         $lastLoginListenerDefinition->addTag('kernel.event_subscriber');
         $container->setDefinition($lastLoginListenerServiceId, $lastLoginListenerDefinition);
     }
@@ -211,7 +220,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
 
         $userDeleteListenerDefinition = new Definition(UserDeleteListener::class);
         $userDeleteListenerDefinition->addArgument(new Reference('security.token_storage'));
-        $userDeleteListenerDefinition->addArgument(new Reference('session'));
+        $userDeleteListenerDefinition->addArgument(new Reference('request_stack'));
         $userDeleteListenerDefinition->addTag('kernel.event_listener', ['event' => $userPreDeleteEventName, 'method' => 'deleteUser']);
         $container->setDefinition($userDeleteListenerServiceId, $userDeleteListenerDefinition);
     }
@@ -254,7 +263,7 @@ final class SyliusUserExtension extends AbstractResourceExtension
             [
                 $container->getDefinition($factoryServiceId),
                 $encoder,
-            ]
+            ],
         );
         $factoryDefinition->setPublic(true);
 
@@ -274,7 +283,12 @@ final class SyliusUserExtension extends AbstractResourceExtension
 
         $container->setDefinition(
             sprintf('sylius.%s_user.listener.update_user_encoder', $userType),
-            $updateUserEncoderListenerDefinition
+            $updateUserEncoderListenerDefinition,
         );
+    }
+
+    private function createResettingTokenParameters(string $userType, array $config, ContainerBuilder $container)
+    {
+        $container->setParameter(sprintf('sylius.%s_user.token.password_reset.ttl', $userType), $config['resetting']['token']['ttl']);
     }
 }

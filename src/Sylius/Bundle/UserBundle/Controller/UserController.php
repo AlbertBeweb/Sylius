@@ -51,7 +51,7 @@ class UserController extends ResourceController
         $formType = $this->getSyliusAttribute($request, 'form', UserChangePasswordType::class);
         $form = $this->createResourceForm($configuration, $formType, $changePassword);
 
-        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isValid()) {
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             return $this->handleChangePassword($request, $configuration, $user, $changePassword->getNewPassword());
         }
 
@@ -59,10 +59,10 @@ class UserController extends ResourceController
             return $this->viewHandler->handle($configuration, View::create($form, Response::HTTP_BAD_REQUEST));
         }
 
-        return $this->container->get('templating')->renderResponse(
+        return new Response($this->container->get('twig')->render(
             $configuration->getTemplate('changePassword.html'),
-            ['form' => $form->createView()]
-        );
+            ['form' => $form->createView()],
+        ));
     }
 
     public function requestPasswordResetTokenAction(Request $request): Response
@@ -84,7 +84,7 @@ class UserController extends ResourceController
     public function resetPasswordAction(Request $request, string $token): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
-        /** @var UserInterface $user */
+        /** @var UserInterface|null $user */
         $user = $this->repository->findOneBy(['passwordResetToken' => $token]);
         if (null === $user) {
             throw new NotFoundHttpException('Token not found.');
@@ -100,7 +100,7 @@ class UserController extends ResourceController
         $formType = $this->getSyliusAttribute($request, 'form', UserResetPasswordType::class);
         $form = $this->createResourceForm($configuration, $formType, $passwordReset);
 
-        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isValid()) {
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             return $this->handleResetPassword($request, $configuration, $user, $passwordReset->getPassword());
         }
 
@@ -108,13 +108,13 @@ class UserController extends ResourceController
             return $this->viewHandler->handle($configuration, View::create($form, Response::HTTP_BAD_REQUEST));
         }
 
-        return $this->container->get('templating')->renderResponse(
+        return new Response($this->container->get('twig')->render(
             $configuration->getTemplate('resetPassword.html'),
             [
                 'form' => $form->createView(),
                 'user' => $user,
-            ]
-        );
+            ],
+        ));
     }
 
     public function verifyAction(Request $request, string $token): Response
@@ -124,7 +124,7 @@ class UserController extends ResourceController
 
         $response = $this->redirectToRoute($redirectRoute);
 
-        /** @var UserInterface $user */
+        /** @var UserInterface|null $user */
         $user = $this->repository->findOneBy(['emailVerificationToken' => $token]);
         if (null === $user) {
             if (!$configuration->isHtmlRequest()) {
@@ -141,11 +141,11 @@ class UserController extends ResourceController
         $user->enable();
 
         $eventDispatcher = $this->container->get('event_dispatcher');
-        $eventDispatcher->dispatch(UserEvents::PRE_EMAIL_VERIFICATION, new GenericEvent($user));
+        $eventDispatcher->dispatch(new GenericEvent($user), UserEvents::PRE_EMAIL_VERIFICATION);
 
         $this->manager->flush();
 
-        $eventDispatcher->dispatch(UserEvents::POST_EMAIL_VERIFICATION, new GenericEvent($user));
+        $eventDispatcher->dispatch(new GenericEvent($user), UserEvents::POST_EMAIL_VERIFICATION);
 
         if (!$configuration->isHtmlRequest()) {
             return $this->viewHandler->handle($configuration, View::create($user));
@@ -190,7 +190,7 @@ class UserController extends ResourceController
         $this->manager->flush();
 
         $eventDispatcher = $this->container->get('event_dispatcher');
-        $eventDispatcher->dispatch(UserEvents::REQUEST_VERIFICATION_TOKEN, new GenericEvent($user));
+        $eventDispatcher->dispatch(new GenericEvent($user), UserEvents::REQUEST_VERIFICATION_TOKEN);
 
         if (!$configuration->isHtmlRequest()) {
             return $this->viewHandler->handle($configuration, View::create(null, Response::HTTP_NO_CONTENT));
@@ -213,9 +213,10 @@ class UserController extends ResourceController
             Assert::notNull($template, 'Template is not configured.');
         }
 
-        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isValid()) {
-            /** @var UserRepositoryInterface $userRepository */
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true) && $form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             $userRepository = $this->repository;
+
+            /** @var UserRepositoryInterface $userRepository */
             Assert::isInstanceOf($userRepository, UserRepositoryInterface::class);
 
             $user = $userRepository->findOneByEmail($passwordReset->getEmail());
@@ -235,7 +236,7 @@ class UserController extends ResourceController
                 return $this->redirectHandler->redirectToRoute(
                     $configuration,
                     $configuration->getParameters()->get('redirect')['route'],
-                    $configuration->getParameters()->get('redirect')['parameters']
+                    $configuration->getParameters()->get('redirect')['parameters'],
                 );
             }
 
@@ -246,21 +247,18 @@ class UserController extends ResourceController
             return $this->viewHandler->handle($configuration, View::create($form, Response::HTTP_BAD_REQUEST));
         }
 
-        return $this->container->get('templating')->renderResponse(
+        return new Response($this->container->get('twig')->render(
             $template,
             [
                 'form' => $form->createView(),
-            ]
-        );
+            ],
+        ));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function addTranslatedFlash(string $type, string $message): void
     {
         $translator = $this->container->get('translator');
-        $this->container->get('session')->getFlashBag()->add($type, $translator->trans($message, [], 'flashes'));
+        $this->container->get('request_stack')->getSession()->getFlashBag()->add($type, $translator->trans($message, [], 'flashes'));
     }
 
     /**
@@ -269,7 +267,7 @@ class UserController extends ResourceController
     protected function createResourceForm(
         RequestConfiguration $configuration,
         string $type,
-        $object
+        $object,
     ): FormInterface {
         if (!$configuration->isHtmlRequest()) {
             return $this->container->get('form.factory')->createNamed('', $type, $object, ['csrf_protection' => false]);
@@ -300,7 +298,7 @@ class UserController extends ResourceController
     protected function handleResetPasswordRequest(
         GeneratorInterface $generator,
         UserInterface $user,
-        string $senderEvent
+        string $senderEvent,
     ): void {
         $user->setPasswordResetToken($generator->generate());
         $user->setPasswordRequestedAt(new \DateTime());
@@ -311,26 +309,26 @@ class UserController extends ResourceController
         $manager->flush();
 
         $dispatcher = $this->container->get('event_dispatcher');
-        $dispatcher->dispatch($senderEvent, new GenericEvent($user));
+        $dispatcher->dispatch(new GenericEvent($user), $senderEvent);
     }
 
     protected function handleResetPassword(
         Request $request,
         RequestConfiguration $configuration,
         UserInterface $user,
-        string $newPassword
+        string $newPassword,
     ): Response {
         $user->setPlainPassword($newPassword);
         $user->setPasswordResetToken(null);
         $user->setPasswordRequestedAt(null);
 
         $dispatcher = $this->container->get('event_dispatcher');
-        $dispatcher->dispatch(UserEvents::PRE_PASSWORD_RESET, new GenericEvent($user));
+        $dispatcher->dispatch(new GenericEvent($user), UserEvents::PRE_PASSWORD_RESET);
 
         $this->manager->flush();
         $this->addTranslatedFlash('success', 'sylius.user.reset_password');
 
-        $dispatcher->dispatch(UserEvents::POST_PASSWORD_RESET, new GenericEvent($user));
+        $dispatcher->dispatch(new GenericEvent($user), UserEvents::POST_PASSWORD_RESET);
 
         if (!$configuration->isHtmlRequest()) {
             return $this->viewHandler->handle($configuration, View::create(null, Response::HTTP_NO_CONTENT));
@@ -346,17 +344,17 @@ class UserController extends ResourceController
         Request $request,
         RequestConfiguration $configuration,
         UserInterface $user,
-        string $newPassword
+        string $newPassword,
     ): Response {
         $user->setPlainPassword($newPassword);
 
         $dispatcher = $this->container->get('event_dispatcher');
-        $dispatcher->dispatch(UserEvents::PRE_PASSWORD_CHANGE, new GenericEvent($user));
+        $dispatcher->dispatch(new GenericEvent($user), UserEvents::PRE_PASSWORD_CHANGE);
 
         $this->manager->flush();
         $this->addTranslatedFlash('success', 'sylius.user.change_password');
 
-        $dispatcher->dispatch(UserEvents::POST_PASSWORD_CHANGE, new GenericEvent($user));
+        $dispatcher->dispatch(new GenericEvent($user), UserEvents::POST_PASSWORD_CHANGE);
 
         if (!$configuration->isHtmlRequest()) {
             return $this->viewHandler->handle($configuration, View::create(null, Response::HTTP_NO_CONTENT));

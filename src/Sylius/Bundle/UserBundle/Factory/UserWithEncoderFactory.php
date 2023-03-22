@@ -19,22 +19,15 @@ use Webmozart\Assert\Assert;
 
 final class UserWithEncoderFactory implements FactoryInterface
 {
-    /** @var FactoryInterface */
-    private $decoratedUserFactory;
-
-    /** @var string */
-    private $encoderName;
-
-    public function __construct(FactoryInterface $decoratedUserFactory, string $encoderName)
+    public function __construct(private FactoryInterface $decoratedUserFactory, private string $encoderName)
     {
-        $this->decoratedUserFactory = $decoratedUserFactory;
-        $this->encoderName = $encoderName;
     }
 
     public function createNew(): UserInterface
     {
-        /** @var UserInterface $user */
         $user = $this->decoratedUserFactory->createNew();
+
+        /** @var UserInterface $user */
         Assert::isInstanceOf($user, UserInterface::class);
 
         $user->setEncoderName($this->encoderName);

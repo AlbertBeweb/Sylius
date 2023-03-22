@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Collector;
 
-use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
 use Sylius\Component\Channel\Context\ChannelNotFoundException;
 use Sylius\Component\Core\Context\ShopperContextInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -25,18 +25,13 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 
 final class SyliusCollector extends DataCollector
 {
-    /** @var ShopperContextInterface */
-    private $shopperContext;
-
     public function __construct(
-        ShopperContextInterface $shopperContext,
+        private ShopperContextInterface $shopperContext,
         array $bundles,
-        string $defaultLocaleCode
+        string $defaultLocaleCode,
     ) {
-        $this->shopperContext = $shopperContext;
-
         $this->data = [
-            'version' => Kernel::VERSION,
+            'version' => SyliusCoreBundle::VERSION,
             'base_currency_code' => null,
             'currency_code' => null,
             'default_locale_code' => $defaultLocaleCode,
@@ -97,10 +92,7 @@ final class SyliusCollector extends DataCollector
         return $this->data['default_locale_code'];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function collect(Request $request, Response $response, \Exception $exception = null): void
+    public function collect(Request $request, Response $response, \Throwable $exception = null): void
     {
         try {
             /** @var ChannelInterface $channel */
@@ -108,18 +100,15 @@ final class SyliusCollector extends DataCollector
 
             $this->data['base_currency_code'] = $channel->getBaseCurrency()->getCode();
             $this->data['currency_code'] = $this->shopperContext->getCurrencyCode();
-        } catch (ChannelNotFoundException | CurrencyNotFoundException $exception) {
+        } catch (ChannelNotFoundException | CurrencyNotFoundException) {
         }
 
         try {
             $this->data['locale_code'] = $this->shopperContext->getLocaleCode();
-        } catch (LocaleNotFoundException $exception) {
+        } catch (LocaleNotFoundException) {
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reset(): void
     {
         $this->data['base_currency_code'] = null;
@@ -127,9 +116,6 @@ final class SyliusCollector extends DataCollector
         $this->data['locale_code'] = null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'sylius_core';

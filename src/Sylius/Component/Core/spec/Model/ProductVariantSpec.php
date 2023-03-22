@@ -15,12 +15,15 @@ namespace spec\Sylius\Component\Core\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Comparable;
 use PhpSpec\ObjectBehavior;
+use Sylius\Component\Core\Model\CatalogPromotionInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ChannelPricingInterface;
 use Sylius\Component\Core\Model\Product;
 use Sylius\Component\Core\Model\ProductImageInterface;
 use Sylius\Component\Core\Model\ProductImagesAwareInterface;
+use Sylius\Component\Core\Model\ProductVariant;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Product\Model\ProductVariant as BaseProductVariant;
 use Sylius\Component\Resource\Model\VersionedInterface;
@@ -39,6 +42,11 @@ final class ProductVariantSpec extends ObjectBehavior
     function it_implements_a_taxable_interface(): void
     {
         $this->shouldImplement(TaxableInterface::class);
+    }
+
+    function it_implements_doctrine_comparable(): void
+    {
+        $this->shouldImplement(Comparable::class);
     }
 
     function it_extends_a_product_variant_model(): void
@@ -182,7 +190,7 @@ final class ProductVariantSpec extends ObjectBehavior
 
     function it_has_channel_pricings_collection(
         ChannelPricingInterface $firstChannelPricing,
-        ChannelPricingInterface $secondChannelPricing
+        ChannelPricingInterface $secondChannelPricing,
     ): void {
         $firstChannelPricing->getChannelCode()->willReturn('WEB');
         $secondChannelPricing->getChannelCode()->willReturn('MOB');
@@ -202,7 +210,7 @@ final class ProductVariantSpec extends ObjectBehavior
     function it_checks_if_contains_channel_pricing_for_given_channel(
         ChannelInterface $firstChannel,
         ChannelInterface $secondChannel,
-        ChannelPricingInterface $firstChannelPricing
+        ChannelPricingInterface $firstChannelPricing,
     ): void {
         $firstChannelPricing->getChannelCode()->willReturn('WEB');
         $firstChannel->getCode()->willReturn('WEB');
@@ -219,7 +227,7 @@ final class ProductVariantSpec extends ObjectBehavior
 
     function it_returns_channel_pricing_for_given_channel(
         ChannelInterface $channel,
-        ChannelPricingInterface $channelPricing
+        ChannelPricingInterface $channelPricing,
     ): void {
         $channelPricing->getChannelCode()->willReturn('WEB');
         $channel->getCode()->willReturn('WEB');
@@ -272,5 +280,32 @@ final class ProductVariantSpec extends ObjectBehavior
         $this->setProduct($product);
         $this->addImage($image);
         $this->getImagesByType('thumbnail')->shouldBeLike(new ArrayCollection([$image->getWrappedObject()]));
+    }
+
+    function it_returns_channel_pricing_applied_promotions(
+        ChannelPricingInterface $channelPricing,
+        ChannelInterface $channel,
+        CatalogPromotionInterface $catalogPromotion,
+    ): void {
+        $channel->getCode()->willReturn('CHANNEL_WEB');
+        $channelPricing->setProductVariant($this)->shouldBeCalled();
+        $channelPricing->getChannelCode()->willReturn('CHANNEL_WEB');
+        $channelPricing->getAppliedPromotions()->willReturn(new ArrayCollection([$catalogPromotion->getWrappedObject()]));
+
+        $this->addChannelPricing($channelPricing);
+
+        $this->getAppliedPromotionsForChannel($channel)->shouldBeLike(new ArrayCollection([$catalogPromotion->getWrappedObject()]));
+    }
+
+    function it_is_comparable(): void
+    {
+        $this->setCode('test');
+
+        $otherTaxon = new ProductVariant();
+        $otherTaxon->setCode('test');
+        $this->compareTo($otherTaxon)->shouldReturn(0);
+
+        $otherTaxon->setCode('other');
+        $this->compareTo($otherTaxon)->shouldReturn(1);
     }
 }

@@ -31,32 +31,16 @@ use Symfony\Component\Form\FormView;
 
 final class ShippingMethodType extends AbstractResourceType
 {
-    /** @var string */
-    private $shippingMethodTranslationType;
-
-    /** @var ServiceRegistryInterface */
-    private $calculatorRegistry;
-
-    /** @var FormTypeRegistryInterface */
-    private $formTypeRegistry;
-
     public function __construct(
         string $dataClass,
         array $validationGroups,
-        string $shippingMethodTranslationType,
-        ServiceRegistryInterface $calculatorRegistry,
-        FormTypeRegistryInterface $formTypeRegistry
+        private string $shippingMethodTranslationType,
+        private ServiceRegistryInterface $calculatorRegistry,
+        private FormTypeRegistryInterface $formTypeRegistry,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->shippingMethodTranslationType = $shippingMethodTranslationType;
-        $this->calculatorRegistry = $calculatorRegistry;
-        $this->formTypeRegistry = $formTypeRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -89,6 +73,11 @@ final class ShippingMethodType extends AbstractResourceType
             ])
             ->add('enabled', CheckboxType::class, [
                 'label' => 'sylius.form.locale.enabled',
+            ])
+            ->add('rules', ShippingMethodRuleCollectionType::class, [
+                'label' => 'sylius.form.shipping_method.rules',
+                'button_add_label' => 'sylius.form.shipping_method.add_rule',
+                'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
                 $method = $event->getData();
@@ -128,10 +117,12 @@ final class ShippingMethodType extends AbstractResourceType
     }
 
     /**
-     * {@inheritdoc}
+     * @psalm-suppress MissingPropertyType
      */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
+        $view->vars['rules_help'] = $options['rules_help'] ?? '';
+
         $view->vars['prototypes'] = [];
         foreach ($form->getConfig()->getAttribute('prototypes') as $group => $prototypes) {
             foreach ($prototypes as $type => $prototype) {
@@ -140,9 +131,6 @@ final class ShippingMethodType extends AbstractResourceType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_shipping_method';

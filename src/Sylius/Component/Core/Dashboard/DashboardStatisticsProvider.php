@@ -19,29 +19,29 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 
 class DashboardStatisticsProvider implements DashboardStatisticsProviderInterface
 {
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var CustomerRepositoryInterface */
-    private $customerRepository;
-
-    public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        CustomerRepositoryInterface $customerRepository
-    ) {
-        $this->orderRepository = $orderRepository;
-        $this->customerRepository = $customerRepository;
+    public function __construct(private OrderRepositoryInterface $orderRepository, private CustomerRepositoryInterface $customerRepository)
+    {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatisticsForChannel(ChannelInterface $channel): DashboardStatistics
     {
         return new DashboardStatistics(
-            $this->orderRepository->getTotalSalesForChannel($channel),
-            $this->orderRepository->countFulfilledByChannel($channel),
-            $this->customerRepository->countCustomers()
+            $this->orderRepository->getTotalPaidSalesForChannel($channel),
+            $this->orderRepository->countPaidByChannel($channel),
+            $this->customerRepository->countCustomers(),
+            $channel,
+        );
+    }
+
+    public function getStatisticsForChannelInPeriod(
+        ChannelInterface $channel,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): DashboardStatistics {
+        return new DashboardStatistics(
+            $this->orderRepository->getTotalPaidSalesForChannelInPeriod($channel, $startDate, $endDate),
+            $this->orderRepository->countPaidForChannelInPeriod($channel, $startDate, $endDate),
+            $this->customerRepository->countCustomersInPeriod($startDate, $endDate),
         );
     }
 }

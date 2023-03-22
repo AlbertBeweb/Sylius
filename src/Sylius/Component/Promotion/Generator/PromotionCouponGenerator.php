@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Promotion\Generator;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\Promotion\Exception\FailedGenerationException;
 use Sylius\Component\Promotion\Model\PromotionCouponInterface;
 use Sylius\Component\Promotion\Model\PromotionInterface;
@@ -23,35 +23,18 @@ use Webmozart\Assert\Assert;
 
 final class PromotionCouponGenerator implements PromotionCouponGeneratorInterface
 {
-    /** @var FactoryInterface */
-    private $couponFactory;
-
-    /** @var PromotionCouponRepositoryInterface */
-    private $couponRepository;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
-    /** @var GenerationPolicyInterface */
-    private $generationPolicy;
-
     public function __construct(
-        FactoryInterface $couponFactory,
-        PromotionCouponRepositoryInterface $couponRepository,
-        ObjectManager $objectManager,
-        GenerationPolicyInterface $generationPolicy
+        private FactoryInterface $couponFactory,
+        private PromotionCouponRepositoryInterface $couponRepository,
+        private ObjectManager $objectManager,
+        private GenerationPolicyInterface $generationPolicy,
     ) {
-        $this->couponFactory = $couponFactory;
-        $this->couponRepository = $couponRepository;
-        $this->objectManager = $objectManager;
-        $this->generationPolicy = $generationPolicy;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function generate(PromotionInterface $promotion, PromotionCouponGeneratorInstructionInterface $instruction): array
-    {
+    public function generate(
+        PromotionInterface $promotion,
+        PromotionCouponGeneratorInstructionInterface $instruction,
+    ): array {
         $generatedCoupons = [];
 
         $this->assertGenerationIsPossible($instruction);
@@ -60,7 +43,7 @@ final class PromotionCouponGenerator implements PromotionCouponGeneratorInterfac
                 $instruction->getCodeLength(),
                 $generatedCoupons,
                 $instruction->getPrefix(),
-                $instruction->getSuffix()
+                $instruction->getSuffix(),
             );
 
             /** @var PromotionCouponInterface $coupon */
@@ -87,7 +70,7 @@ final class PromotionCouponGenerator implements PromotionCouponGeneratorInterfac
         int $codeLength,
         array $generatedCoupons,
         ?string $prefix,
-        ?string $suffix
+        ?string $suffix,
     ): string {
         Assert::nullOrRange($codeLength, 1, 40, 'Invalid %d code length should be between %d and %d');
 

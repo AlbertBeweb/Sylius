@@ -19,6 +19,7 @@ use Sylius\Behat\Behaviour\NamesIt;
 use Sylius\Behat\Behaviour\SpecifiesItsCode;
 use Sylius\Behat\Behaviour\Toggles;
 use Sylius\Behat\Page\Admin\Crud\CreatePage as BaseCreatePage;
+use Sylius\Behat\Service\AutocompleteHelper;
 
 class CreatePage extends BaseCreatePage implements CreatePageInterface
 {
@@ -35,6 +36,11 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
     public function setContactEmail(string $contactEmail): void
     {
         $this->getDocument()->fillField('Contact email', $contactEmail);
+    }
+
+    public function setContactPhoneNumber(string $contactPhoneNumber): void
+    {
+        $this->getDocument()->fillField('Contact phone number', $contactPhoneNumber);
     }
 
     public function defineColor(string $color): void
@@ -64,6 +70,13 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
         }
     }
 
+    public function chooseOperatingCountries(array $countries): void
+    {
+        foreach ($countries as $country) {
+            $this->getElement('countries')->selectOption($country, true);
+        }
+    }
+
     public function chooseBaseCurrency(?string $currency): void
     {
         if (null !== $currency) {
@@ -87,6 +100,13 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
         $this->getDocument()->checkField('Skip payment step if only one payment method is available?');
     }
 
+    public function specifyMenuTaxon(string $menuTaxon): void
+    {
+        $menuTaxonElement = $this->getElement('menu_taxon')->getParent();
+
+        AutocompleteHelper::chooseValue($this->getSession(), $menuTaxonElement, $menuTaxon);
+    }
+
     protected function getToggleableElement(): NodeElement
     {
         return $this->getElement('enabled');
@@ -96,11 +116,13 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
     {
         return array_merge(parent::getDefinedElements(), [
             'code' => '#sylius_channel_code',
+            'countries' => '#sylius_channel_countries',
             'currencies' => '#sylius_channel_currencies',
             'base_currency' => '#sylius_channel_baseCurrency',
             'default_locale' => '#sylius_channel_defaultLocale',
             'enabled' => '#sylius_channel_enabled',
             'locales' => '#sylius_channel_locales',
+            'menu_taxon' => '#sylius_channel_menuTaxon',
             'name' => '#sylius_channel_name',
         ]);
     }

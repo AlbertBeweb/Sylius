@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class CustomerGroupChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $customerGroupRepository;
-
-    public function __construct(RepositoryInterface $customerGroupRepository)
+    public function __construct(private RepositoryInterface $customerGroupRepository)
     {
-        $this->customerGroupRepository = $customerGroupRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -41,15 +34,10 @@ final class CustomerGroupChoiceType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'choices' => function (Options $options): array {
-                return $this->customerGroupRepository->findAll();
-            },
+            'choices' => fn (Options $options): array => $this->customerGroupRepository->findAll(),
             'choice_value' => 'code',
             'choice_label' => 'name',
             'choice_translation_domain' => false,
@@ -57,17 +45,11 @@ final class CustomerGroupChoiceType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_customer_group_choice';

@@ -23,23 +23,14 @@ use Webmozart\Assert\Assert;
 
 class IndexPage extends SymfonyPage implements IndexPageInterface
 {
-    /** @var TableAccessorInterface */
-    private $tableAccessor;
-
-    /** @var string */
-    private $routeName;
-
     public function __construct(
         Session $session,
         $minkParameters,
         RouterInterface $router,
-        TableAccessorInterface $tableAccessor,
-        string $routeName
+        private TableAccessorInterface $tableAccessor,
+        private string $routeName,
     ) {
         parent::__construct($session, $minkParameters, $router);
-
-        $this->tableAccessor = $tableAccessor;
-        $this->routeName = $routeName;
     }
 
     public function isSingleResourceOnPage(array $parameters): bool
@@ -48,9 +39,9 @@ class IndexPage extends SymfonyPage implements IndexPageInterface
             $rows = $this->tableAccessor->getRowsWithFields($this->getElement('table'), $parameters);
 
             return 1 === count($rows);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException) {
             return false;
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return false;
         }
     }
@@ -78,9 +69,9 @@ class IndexPage extends SymfonyPage implements IndexPageInterface
             }
 
             return null !== $rows[0]->find('css', $element);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException) {
             return false;
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return false;
         }
     }
@@ -89,7 +80,7 @@ class IndexPage extends SymfonyPage implements IndexPageInterface
     {
         try {
             return $this->getTableAccessor()->countTableBodyRows($this->getElement('table'));
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return 0;
         }
     }
@@ -144,6 +135,16 @@ class IndexPage extends SymfonyPage implements IndexPageInterface
         $this->getDocument()->clickLink($order);
     }
 
+    public function chooseEnabledFilter(): void
+    {
+        $this->getElement('enabled_filter')->selectOption('Yes');
+    }
+
+    public function isEnabledFilterApplied(): bool
+    {
+        return $this->getElement('enabled_filter')->getValue() === 'true';
+    }
+
     public function getRouteName(): string
     {
         return $this->routeName;
@@ -159,6 +160,7 @@ class IndexPage extends SymfonyPage implements IndexPageInterface
         return array_merge(parent::getDefinedElements(), [
             'bulk_actions' => '.sylius-grid-nav__bulk',
             'confirmation_button' => '#confirmation-button',
+            'enabled_filter' => '#criteria_enabled',
             'filter' => 'button:contains("Filter")',
             'table' => '.table',
         ]);

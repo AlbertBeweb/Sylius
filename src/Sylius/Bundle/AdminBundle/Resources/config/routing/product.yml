@@ -20,7 +20,7 @@ sylius_admin_product_index:
     path: /products/
     methods: [GET]
     defaults:
-        _controller: sylius.controller.product:indexAction
+        _controller: sylius.controller.product::indexAction
         _sylius:
             section: admin
             permission: true
@@ -34,7 +34,7 @@ sylius_admin_product_update:
     path: /products/{id}/edit
     methods: [GET, PUT, PATCH]
     defaults:
-        _controller: sylius.controller.product:updateAction
+        _controller: sylius.controller.product::updateAction
         _sylius:
             section: admin
             permission: true
@@ -51,7 +51,7 @@ sylius_admin_product_per_taxon_index:
     path: /products/taxon/{taxonId}
     methods: [GET]
     defaults:
-        _controller: sylius.controller.product:indexAction
+        _controller: sylius.controller.product::indexAction
         _sylius:
             section: admin
             permission: true
@@ -65,7 +65,7 @@ sylius_admin_product_create:
     path: /products/new
     methods: [GET, POST]
     defaults:
-        _controller: sylius.controller.product:createAction
+        _controller: sylius.controller.product::createAction
         _sylius:
             section: admin
             permission: true
@@ -82,7 +82,7 @@ sylius_admin_product_create_simple:
     path: /products/new/simple
     methods: [GET, POST]
     defaults:
-        _controller: sylius.controller.product:createAction
+        _controller: sylius.controller.product::createAction
         _sylius:
             section: admin
             permission: true
@@ -101,8 +101,26 @@ sylius_admin_product_show:
     path: /products/{id}
     methods: [GET]
     defaults:
-        _controller: sylius.controller.product:showAction
+        _controller: sylius.controller.product::showAction
         _sylius:
             section: admin
             permission: true
             template: "@SyliusAdmin/Product/show.html.twig"
+
+sylius_admin_channel_pricing_log_entry_index:
+    path: products/{productId}/variants/{variantId}/channel-pricing/{channelPricingId}/channel-pricing-log-entries
+    methods: [GET]
+    defaults:
+        _controller: sylius.controller.channel_pricing_log_entry::indexAction
+        _sylius:
+            section: admin
+            permission: true
+            template: '@SyliusAdmin/Crud/index.html.twig'
+            grid: sylius_admin_channel_pricing_log_entry
+            vars:
+                icon: book
+                templates:
+                    breadcrumb: "@SyliusAdmin/ChannelPricingLogEntry/Index/_breadcrumb.html.twig"
+                header: sylius.ui.channel_pricing_history
+                subheader: sylius.ui.show_history_for_channel_pricing
+                product_variant: "expr:service('sylius.repository.product_variant').find($variantId)"

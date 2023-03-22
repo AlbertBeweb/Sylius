@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ProductOptionChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $productOptionRepository;
-
-    public function __construct(RepositoryInterface $productOptionRepository)
+    public function __construct(private RepositoryInterface $productOptionRepository)
     {
-        $this->productOptionRepository = $productOptionRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -41,32 +34,21 @@ final class ProductOptionChoiceType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'choices' => function (Options $options): array {
-                return $this->productOptionRepository->findAll();
-            },
+            'choices' => fn (Options $options): array => $this->productOptionRepository->findAll(),
             'choice_value' => 'code',
             'choice_label' => 'name',
             'choice_translation_domain' => false,
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product_option_choice';

@@ -23,25 +23,14 @@ use Symfony\Component\Form\FormEvents;
 
 final class GatewayConfigType extends AbstractResourceType
 {
-    /** @var FormTypeRegistryInterface */
-    private $gatewayConfigurationTypeRegistry;
-
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(
         string $dataClass,
-        array $validationGroups = [],
-        FormTypeRegistryInterface $gatewayConfigurationTypeRegistry
+        array $validationGroups,
+        private FormTypeRegistryInterface $gatewayConfigurationTypeRegistry,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->gatewayConfigurationTypeRegistry = $gatewayConfigurationTypeRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $factoryName = $options['data']->getFactoryName();
@@ -72,9 +61,6 @@ final class GatewayConfigType extends AbstractResourceType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_payum_gateway_config';

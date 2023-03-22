@@ -21,28 +21,12 @@ use Sylius\Behat\Service\Mocker\PaypalApiMocker;
 
 final class PaypalContext implements Context
 {
-    /** @var PaypalExpressCheckoutPageInterface */
-    private $paypalExpressCheckoutPage;
-
-    /** @var ShowPageInterface */
-    private $orderDetails;
-
-    /** @var CompletePageInterface */
-    private $summaryPage;
-
-    /** @var PaypalApiMocker */
-    private $paypalApiMocker;
-
     public function __construct(
-        PaypalExpressCheckoutPageInterface $paypalExpressCheckoutPage,
-        ShowPageInterface $orderDetails,
-        CompletePageInterface $summaryPage,
-        PaypalApiMocker $paypalApiMocker
+        private PaypalExpressCheckoutPageInterface $paypalExpressCheckoutPage,
+        private ShowPageInterface $orderDetails,
+        private CompletePageInterface $summaryPage,
+        private PaypalApiMocker $paypalApiMocker,
     ) {
-        $this->paypalExpressCheckoutPage = $paypalExpressCheckoutPage;
-        $this->orderDetails = $orderDetails;
-        $this->summaryPage = $summaryPage;
-        $this->paypalApiMocker = $paypalApiMocker;
     }
 
     /**

@@ -21,33 +21,20 @@ use Symfony\Component\Form\ReversedTransformer;
 
 final class ProvinceCodeChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $provinceRepository;
-
-    public function __construct(RepositoryInterface $provinceRepository)
+    public function __construct(private RepositoryInterface $provinceRepository)
     {
-        $this->provinceRepository = $provinceRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new ReversedTransformer(new ResourceToIdentifierTransformer($this->provinceRepository, 'code')));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ProvinceChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_province_code_choice';

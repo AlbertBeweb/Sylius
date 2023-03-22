@@ -18,9 +18,6 @@ use Sylius\Component\Shipping\Repository\ShippingMethodRepositoryInterface;
 
 class ShippingMethodRepository extends EntityRepository implements ShippingMethodRepositoryInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function findByName(string $name, string $locale): array
     {
         return $this->createQueryBuilder('o')
@@ -29,6 +26,18 @@ class ShippingMethodRepository extends EntityRepository implements ShippingMetho
             ->andWhere('translation.locale = :locale')
             ->setParameter('name', $name)
             ->setParameter('locale', $locale)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function findEnabledWithRules(): array
+    {
+        return $this->createQueryBuilder('o')
+            ->addSelect('rules')
+            ->leftJoin('o.rules', 'rules')
+            ->andWhere('o.enabled = :enabled')
+            ->setParameter('enabled', true)
             ->getQuery()
             ->getResult()
         ;

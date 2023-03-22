@@ -21,9 +21,6 @@ use Sylius\Component\Product\Repository\ProductVariantRepositoryInterface;
 
 class ProductVariantRepository extends EntityRepository implements ProductVariantRepositoryInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function createQueryBuilderByProductId(string $locale, $productId): QueryBuilder
     {
         return $this->createQueryBuilder('o')
@@ -35,9 +32,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createQueryBuilderByProductCode(string $locale, string $productCode): QueryBuilder
     {
         return $this->createQueryBuilder('o')
@@ -50,9 +44,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByName(string $name, string $locale): array
     {
         return $this->createQueryBuilder('o')
@@ -66,9 +57,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByNameAndProduct(string $name, string $locale, ProductInterface $product): array
     {
         return $this->createQueryBuilder('o')
@@ -84,9 +72,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findOneByCodeAndProductCode(string $code, string $productCode): ?ProductVariantInterface
     {
         return $this->createQueryBuilder('o')
@@ -100,9 +85,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByCodesAndProductCode(array $codes, string $productCode): array
     {
         return $this->createQueryBuilder('o')
@@ -116,9 +98,26 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findByCodes(array $codes): array
+    {
+        return $this->createQueryBuilder('o')
+            ->addSelect('product')
+            ->addSelect('channelPricings')
+            ->addSelect('appliedPromotions')
+            ->addSelect('productTaxon')
+            ->addSelect('taxon')
+            ->leftJoin('o.channelPricings', 'channelPricings')
+            ->leftJoin('channelPricings.appliedPromotions', 'appliedPromotions')
+            ->leftJoin('o.product', 'product')
+            ->leftJoin('product.productTaxons', 'productTaxon')
+            ->leftJoin('productTaxon.taxon', 'taxon')
+            ->andWhere('o.code IN (:codes)')
+            ->setParameter('codes', $codes)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
     public function findOneByIdAndProductId($id, $productId): ?ProductVariantInterface
     {
         return $this->createQueryBuilder('o')
@@ -131,9 +130,6 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByPhraseAndProductCode(string $phrase, string $locale, string $productCode): array
     {
         $expr = $this->getEntityManager()->getExpressionBuilder();
@@ -144,13 +140,42 @@ class ProductVariantRepository extends EntityRepository implements ProductVarian
             ->andWhere('product.code = :productCode')
             ->andWhere($expr->orX(
                 'translation.name LIKE :phrase',
-                'o.code LIKE :phrase'
+                'o.code LIKE :phrase',
             ))
             ->setParameter('phrase', '%' . $phrase . '%')
             ->setParameter('locale', $locale)
             ->setParameter('productCode', $productCode)
             ->getQuery()
             ->getResult()
+        ;
+    }
+
+    public function findByPhrase(string $phrase, string $locale, ?int $limit = null): array
+    {
+        $expr = $this->getEntityManager()->getExpressionBuilder();
+
+        return $this->createQueryBuilder('o')
+            ->innerJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
+            ->andWhere($expr->orX(
+                'translation.name LIKE :phrase',
+                'o.code LIKE :phrase',
+            ))
+            ->setParameter('phrase', '%' . $phrase . '%')
+            ->setParameter('locale', $locale)
+            ->orderBy('o.product', 'ASC')
+            ->addOrderBy('o.position', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function getCodesOfAllVariants(): array
+    {
+        return $this->createQueryBuilder('o')
+            ->select('o.code')
+            ->getQuery()
+            ->getArrayResult()
         ;
     }
 }

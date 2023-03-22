@@ -25,43 +25,32 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 final class ProductsToProductAssociationsTransformer implements DataTransformerInterface
 {
-    /** @var FactoryInterface */
-    private $productAssociationFactory;
-
-    /** @var ProductRepositoryInterface */
-    private $productRepository;
-
-    /** @var RepositoryInterface */
-    private $productAssociationTypeRepository;
-
-    /** @var Collection */
-    private $productAssociations;
+    /**
+     * @var Collection|ProductAssociationInterface[]
+     *
+     * @psalm-var Collection<array-key, ProductAssociationInterface>
+     */
+    private ?Collection $productAssociations = null;
 
     public function __construct(
-        FactoryInterface $productAssociationFactory,
-        ProductRepositoryInterface $productRepository,
-        RepositoryInterface $productAssociationTypeRepository
+        private FactoryInterface $productAssociationFactory,
+        private ProductRepositoryInterface $productRepository,
+        private RepositoryInterface $productAssociationTypeRepository,
     ) {
-        $this->productAssociationFactory = $productAssociationFactory;
-        $this->productRepository = $productRepository;
-        $this->productAssociationTypeRepository = $productAssociationTypeRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function transform($productAssociations)
+    public function transform($value)
     {
-        $this->setProductAssociations($productAssociations);
+        $this->setProductAssociations($value);
 
-        if (null === $productAssociations) {
+        if (null === $value) {
             return '';
         }
 
         $values = [];
 
         /** @var ProductAssociationInterface $productAssociation */
-        foreach ($productAssociations as $productAssociation) {
+        foreach ($value as $productAssociation) {
             $productCodesAsString = $this->getCodesAsStringFromProducts($productAssociation->getAssociatedProducts());
 
             $values[$productAssociation->getType()->getCode()] = $productCodesAsString;
@@ -70,17 +59,17 @@ final class ProductsToProductAssociationsTransformer implements DataTransformerI
         return $values;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function reverseTransform($values): ?Collection
+    public function reverseTransform($value): ?Collection
     {
-        if (null === $values || '' === $values || !is_array($values)) {
+        if (null === $value || '' === $value || !is_array($value)) {
             return null;
         }
 
+        /**
+         * @psalm-var Collection<array-key, ProductAssociationInterface> $productAssociations
+         */
         $productAssociations = new ArrayCollection();
-        foreach ($values as $productAssociationTypeCode => $productCodes) {
+        foreach ($value as $productAssociationTypeCode => $productCodes) {
             if (null === $productCodes) {
                 continue;
             }
@@ -134,7 +123,7 @@ final class ProductsToProductAssociationsTransformer implements DataTransformerI
 
     private function setAssociatedProductsByProductCodes(
         ProductAssociationInterface $productAssociation,
-        string $productCodes
+        string $productCodes,
     ): void {
         $products = $this->productRepository->findBy(['code' => explode(',', $productCodes)]);
 

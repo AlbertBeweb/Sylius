@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture\Factory;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
+use Faker\Factory;
+use Faker\Generator;
 use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
 use Sylius\Component\Addressing\Model\CountryInterface;
@@ -28,97 +30,43 @@ use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Core\Repository\PaymentMethodRepositoryInterface;
+use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Core\Repository\ShippingMethodRepositoryInterface;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
+use Sylius\Component\Payment\PaymentTransitions;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Sylius\Component\Shipping\ShipmentTransitions;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Webmozart\Assert\Assert;
 
 class OrderExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** @var FactoryInterface */
-    protected $orderFactory;
-
-    /** @var FactoryInterface */
-    protected $orderItemFactory;
-
-    /** @var OrderItemQuantityModifierInterface */
-    protected $orderItemQuantityModifier;
-
-    /** @var ObjectManager */
-    protected $orderManager;
-
-    /** @var RepositoryInterface */
-    protected $channelRepository;
-
-    /** @var RepositoryInterface */
-    protected $customerRepository;
-
-    /** @var RepositoryInterface */
-    protected $productRepository;
-
-    /** @var RepositoryInterface */
-    protected $countryRepository;
-
-    /** @var PaymentMethodRepositoryInterface */
-    protected $paymentMethodRepository;
-
-    /** @var ShippingMethodRepositoryInterface */
-    protected $shippingMethodRepository;
-
-    /** @var FactoryInterface */
-    protected $addressFactory;
-
-    /** @var StateMachineFactoryInterface */
-    protected $stateMachineFactory;
-
-    /** @var OrderShippingMethodSelectionRequirementCheckerInterface */
-    protected $orderShippingMethodSelectionRequirementChecker;
-
-    /** @var OrderPaymentMethodSelectionRequirementCheckerInterface */
-    protected $orderPaymentMethodSelectionRequirementChecker;
-
     /** @var OptionsResolver */
     protected $optionsResolver;
 
-    /** @var \Faker\Generator */
+    /** @var Generator */
     protected $faker;
 
     public function __construct(
-        FactoryInterface $orderFactory,
-        FactoryInterface $orderItemFactory,
-        OrderItemQuantityModifierInterface $orderItemQuantityModifier,
-        ObjectManager $orderManager,
-        RepositoryInterface $channelRepository,
-        RepositoryInterface $customerRepository,
-        RepositoryInterface $productRepository,
-        RepositoryInterface $countryRepository,
-        PaymentMethodRepositoryInterface $paymentMethodRepository,
-        ShippingMethodRepositoryInterface $shippingMethodRepository,
-        FactoryInterface $addressFactory,
-        StateMachineFactoryInterface $stateMachineFactory,
-        OrderShippingMethodSelectionRequirementCheckerInterface $orderShippingMethodSelectionRequirementChecker,
-        OrderPaymentMethodSelectionRequirementCheckerInterface $orderPaymentMethodSelectionRequirementChecker
+        protected FactoryInterface $orderFactory,
+        protected FactoryInterface $orderItemFactory,
+        protected OrderItemQuantityModifierInterface $orderItemQuantityModifier,
+        protected ObjectManager $orderManager,
+        protected RepositoryInterface $channelRepository,
+        protected RepositoryInterface $customerRepository,
+        protected ProductRepositoryInterface $productRepository,
+        protected RepositoryInterface $countryRepository,
+        protected PaymentMethodRepositoryInterface $paymentMethodRepository,
+        protected ShippingMethodRepositoryInterface $shippingMethodRepository,
+        protected FactoryInterface $addressFactory,
+        protected StateMachineFactoryInterface $stateMachineFactory,
+        protected OrderShippingMethodSelectionRequirementCheckerInterface $orderShippingMethodSelectionRequirementChecker,
+        protected OrderPaymentMethodSelectionRequirementCheckerInterface $orderPaymentMethodSelectionRequirementChecker,
     ) {
-        $this->orderFactory = $orderFactory;
-        $this->orderItemFactory = $orderItemFactory;
-        $this->orderItemQuantityModifier = $orderItemQuantityModifier;
-        $this->orderManager = $orderManager;
-        $this->channelRepository = $channelRepository;
-        $this->customerRepository = $customerRepository;
-        $this->productRepository = $productRepository;
-        $this->countryRepository = $countryRepository;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->shippingMethodRepository = $shippingMethodRepository;
-        $this->addressFactory = $addressFactory;
-        $this->stateMachineFactory = $stateMachineFactory;
-        $this->orderShippingMethodSelectionRequirementChecker = $orderShippingMethodSelectionRequirementChecker;
-        $this->orderPaymentMethodSelectionRequirementChecker = $orderPaymentMethodSelectionRequirementChecker;
-
         $this->optionsResolver = new OptionsResolver();
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->configureOptions($this->optionsResolver);
     }
 
@@ -128,6 +76,9 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
 
         $order = $this->createOrder($options['channel'], $options['customer'], $options['country'], $options['complete_date']);
         $this->setOrderCompletedDate($order, $options['complete_date']);
+        if ($options['fulfilled']) {
+            $this->fulfillOrder($order);
+        }
 
         return $order;
     }
@@ -139,20 +90,21 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
 
             ->setDefault('channel', LazyOption::randomOne($this->channelRepository))
             ->setAllowedTypes('channel', ['null', 'string', ChannelInterface::class])
-            ->setNormalizer('channel', LazyOption::findOneBy($this->channelRepository, 'code'))
+            ->setNormalizer('channel', LazyOption::getOneBy($this->channelRepository, 'code'))
 
             ->setDefault('customer', LazyOption::randomOne($this->customerRepository))
             ->setAllowedTypes('customer', ['null', 'string', CustomerInterface::class])
-            ->setNormalizer('customer', LazyOption::findOneBy($this->customerRepository, 'email'))
+            ->setNormalizer('customer', LazyOption::getOneBy($this->customerRepository, 'email'))
 
             ->setDefault('country', LazyOption::randomOne($this->countryRepository))
             ->setAllowedTypes('country', ['null', 'string', CountryInterface::class])
             ->setNormalizer('country', LazyOption::findOneBy($this->countryRepository, 'code'))
 
-            ->setDefault('complete_date', function (Options $options): \DateTimeInterface {
-                return $this->faker->dateTimeBetween('-1 years', 'now');
-            })
+            ->setDefault('complete_date', fn (Options $options): \DateTimeInterface => $this->faker->dateTimeBetween('-1 years', 'now'))
             ->setAllowedTypes('complete_date', ['null', \DateTime::class])
+
+            ->setDefault('fulfilled', false)
+            ->setAllowedTypes('fulfilled', ['bool'])
         ;
     }
 
@@ -188,7 +140,7 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
         if (0 === count($products)) {
             throw new \InvalidArgumentException(sprintf(
                 'You have no enabled products at the channel "%s", but they are required to create an orders for that channel',
-                $channel->getCode()
+                $channel->getCode(),
             ));
         }
 
@@ -247,7 +199,7 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
         if (count($shippingMethods) === 0) {
             throw new \InvalidArgumentException(sprintf(
                 'You have no shipping method available for the channel with code "%s", but they are required to proceed an order',
-                $channel->getCode()
+                $channel->getCode(),
             ));
         }
 
@@ -307,7 +259,10 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
         return sprintf(
             "No enabled %s method was found for the channel '%s'. " .
             "Set 'skipping_%s_step_allowed' option to true for this channel if you want to skip %s method selection.",
-            $type, $channelCode, $type, $type
+            $type,
+            $channelCode,
+            $type,
+            $type,
         );
     }
 
@@ -315,6 +270,32 @@ class OrderExampleFactory extends AbstractExampleFactory implements ExampleFacto
     {
         if ($order->getCheckoutState() === OrderCheckoutStates::STATE_COMPLETED) {
             $order->setCheckoutCompletedAt($date);
+        }
+    }
+
+    protected function fulfillOrder(OrderInterface $order): void
+    {
+        $this->completePayments($order);
+        $this->completeShipments($order);
+    }
+
+    protected function completePayments(OrderInterface $order): void
+    {
+        foreach ($order->getPayments() as $payment) {
+            $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
+            if ($stateMachine->can(PaymentTransitions::TRANSITION_COMPLETE)) {
+                $stateMachine->apply(PaymentTransitions::TRANSITION_COMPLETE);
+            }
+        }
+    }
+
+    protected function completeShipments(OrderInterface $order): void
+    {
+        foreach ($order->getShipments() as $shipment) {
+            $stateMachine = $this->stateMachineFactory->get($shipment, ShipmentTransitions::GRAPH);
+            if ($stateMachine->can(ShipmentTransitions::TRANSITION_SHIP)) {
+                $stateMachine->apply(ShipmentTransitions::TRANSITION_SHIP);
+            }
         }
     }
 }

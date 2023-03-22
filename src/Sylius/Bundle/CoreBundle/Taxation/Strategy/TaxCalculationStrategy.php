@@ -22,26 +22,15 @@ use Webmozart\Assert\Assert;
 
 final class TaxCalculationStrategy implements TaxCalculationStrategyInterface
 {
-    /** @var string */
-    private $type;
+    /** @var iterable|OrderTaxesApplicatorInterface[] */
+    private iterable $applicators;
 
-    /** @var array|OrderTaxesApplicatorInterface[] */
-    private $applicators;
-
-    /**
-     * @param array|OrderTaxesApplicatorInterface[] $applicators
-     */
-    public function __construct(string $type, array $applicators)
+    public function __construct(private string $type, iterable $applicators)
     {
-        $this->assertApplicatorsHaveCorrectType($applicators);
-
-        $this->type = $type;
+        Assert::allIsInstanceOf($applicators, OrderTaxesApplicatorInterface::class);
         $this->applicators = $applicators;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function applyTaxes(OrderInterface $order, ZoneInterface $zone): void
     {
         foreach ($this->applicators as $applicator) {
@@ -50,8 +39,6 @@ final class TaxCalculationStrategy implements TaxCalculationStrategyInterface
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \InvalidArgumentException
      */
     public function supports(OrderInterface $order, ZoneInterface $zone): bool
@@ -64,25 +51,8 @@ final class TaxCalculationStrategy implements TaxCalculationStrategyInterface
         return $channel->getTaxCalculationStrategy() === $this->type;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): string
     {
         return $this->type;
-    }
-
-    /**
-     * @param array|OrderTaxesApplicatorInterface[] $applicators
-     *
-     * @throws \InvalidArgumentException
-     */
-    private function assertApplicatorsHaveCorrectType(array $applicators): void
-    {
-        Assert::allIsInstanceOf(
-            $applicators,
-            OrderTaxesApplicatorInterface::class,
-            'Order taxes applicator should have type "%2$s". Got: %s'
-        );
     }
 }

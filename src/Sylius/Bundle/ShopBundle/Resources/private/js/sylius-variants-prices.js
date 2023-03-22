@@ -9,6 +9,23 @@
 
 import $ from 'jquery';
 
+function formatAppliedPromotions(appliedPromotions) {
+  let appliedPromotionsElement = '';
+  $('#appliedPromotions').html('');
+
+  if (appliedPromotions !== '[]') {
+    $.each(appliedPromotions, (index, promotion) => {
+      appliedPromotionsElement += `<div style="margin-top: 20px;">
+        <div class="ui label promotion_label">
+          <div class="row ui small sylius_catalog_promotion">${promotion.label}</div>
+        </div>
+        <span class="text-teal">${promotion.description}</span>
+      </div>`;
+    });
+    $('#appliedPromotions').html(appliedPromotionsElement);
+  }
+}
+
 const handleProductOptionsChange = function handleProductOptionsChange() {
   $('[name*="sylius_add_to_cart[cartItem][variant]"]').on('change', () => {
     let selector = '';
@@ -20,10 +37,23 @@ const handleProductOptionsChange = function handleProductOptionsChange() {
     });
 
     const price = $('#sylius-variants-pricing').find(selector).attr('data-value');
+    const originalPrice = $('#sylius-variants-pricing').find(selector).attr('data-original-price');
+    let appliedPromotions = $('#sylius-variants-pricing').find(selector).attr('data-applied_promotions');
+    if (appliedPromotions !== undefined) {
+      appliedPromotions = JSON.parse(appliedPromotions);
+    }
 
     if (price !== undefined) {
       $('#product-price').text(price);
       $('button[type=submit]').removeAttr('disabled');
+
+      if (originalPrice !== undefined) {
+        $('#product-original-price').css('display', 'inline').html(`<del>${originalPrice}</del>`);
+      } else {
+        $('#product-original-price').css('display', 'none');
+      }
+
+      formatAppliedPromotions(appliedPromotions);
     } else {
       $('#product-price').text($('#sylius-variants-pricing').attr('data-unavailable-text'));
       $('button[type=submit]').attr('disabled', 'disabled');
@@ -33,8 +63,22 @@ const handleProductOptionsChange = function handleProductOptionsChange() {
 
 const handleProductVariantsChange = function handleProductVariantsChange() {
   $('[name="sylius_add_to_cart[cartItem][variant]"]').on('change', (event) => {
-    const price = $(event.currentTarget).parents('tr').find('.sylius-product-variant-price').text();
+    const priceRow = $(event.currentTarget).parents('tr').find('.sylius-product-variant-price');
+    const price = priceRow.text();
+    const originalPrice = priceRow.attr('data-original-price');
+    let appliedPromotions = priceRow.attr('data-applied-promotions');
+    if (appliedPromotions !== '[]') {
+      appliedPromotions = JSON.parse(appliedPromotions);
+    }
+
     $('#product-price').text(price);
+    formatAppliedPromotions(appliedPromotions);
+
+    if (originalPrice !== undefined) {
+      $('#product-original-price').css('display', 'inline').html(`<del>${originalPrice}</del>`);
+    } else {
+      $('#product-original-price').css('display', 'none');
+    }
   });
 };
 

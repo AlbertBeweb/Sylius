@@ -21,12 +21,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ShopBillingDataType extends AbstractType
 {
-    /** @var string */
-    private $dataClass;
-
-    public function __construct(string $dataClass)
+    public function __construct(private string $dataClass)
     {
-        $this->dataClass = $dataClass;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void

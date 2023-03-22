@@ -9,6 +9,8 @@ sylius:
             title: Judul
         cart:
             coupon: Kupon
+        catalog_promotion:
+            channels: Saluran
         checkout:
             addressing:
                 different_billing_address: Menggunakan alamat berbeda untuk penagihan?
@@ -32,6 +34,7 @@ sylius:
                 postcode: Kode pos
                 street: Alamat
             contact_email: Kontak email
+            countries: Negara
             currencies: Mata Uang
             currency_base: Mata uang utama
             account_verification_required: Apakah diperlukan verifikasi akun?
@@ -100,9 +103,8 @@ sylius:
             file: Pilih Gambar
         user:
             billing_address: Alamat Penagihan
-            different_billing_address: Menggunakan alamat berbeda untuk penagihan?
             enabled: Diaktifkan
-            first_name: Nama Depan
+            first_name: Nama depan
             groups: Kelompok
             roles: Peran
             last_name: Nama belakang

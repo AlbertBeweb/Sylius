@@ -20,8 +20,6 @@ use Sylius\Component\Core\Model\PaymentInterface;
 final class ResolveNextRouteAction implements ActionInterface
 {
     /**
-     * {@inheritdoc}
-     *
      * @param ResolveNextRoute $request
      */
     public function execute($request): void
@@ -34,7 +32,7 @@ final class ResolveNextRouteAction implements ActionInterface
             $payment->getState() === PaymentInterface::STATE_AUTHORIZED
         ) {
             $request->setRouteName(
-                'sylius_shop_order_thank_you'
+                'sylius_shop_order_thank_you',
             );
 
             return;
@@ -44,9 +42,6 @@ final class ResolveNextRouteAction implements ActionInterface
         $request->setRouteParameters(['tokenValue' => $payment->getOrder()->getTokenValue()]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports($request): bool
     {
         return

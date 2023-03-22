@@ -17,26 +17,20 @@ use Behat\Behat\Context\Context;
 use Sylius\Bundle\CoreBundle\Command\InstallSampleDataCommand;
 use Sylius\Bundle\CoreBundle\Command\SetupCommand;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Webmozart\Assert\Assert;
 
 final class InstallerContext implements Context
 {
-    /** @var KernelInterface */
-    private $kernel;
+    private ?Application $application = null;
 
-    /** @var Application */
-    private $application;
+    private ?CommandTester $tester = null;
 
-    /** @var CommandTester */
-    private $tester;
+    private ?Command $command = null;
 
-    /** @var SetupCommand */
-    private $command;
-
-    /** @var array */
-    private $inputChoices = [
+    private array $inputChoices = [
         'currency' => 'USD',
         'locale' => 'en_US',
         'e-mail' => 'test@email.com',
@@ -45,9 +39,8 @@ final class InstallerContext implements Context
         'confirmation' => 'pswd',
     ];
 
-    public function __construct(KernelInterface $kernel)
+    public function __construct(private KernelInterface $kernel)
     {
-        $this->kernel = $kernel;
     }
 
     /**
@@ -131,7 +124,7 @@ final class InstallerContext implements Context
         try {
             $this->tester->setInputs($this->inputChoices);
             $this->tester->execute(['command' => $name]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
         }
     }
 
@@ -140,7 +133,7 @@ final class InstallerContext implements Context
         try {
             $this->tester->setInputs(['y']);
             $this->tester->execute(['command' => $name]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
         }
     }
 }

@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class ShippingMethodContext implements Context
 {
-    /** @var ShippingMethodRepositoryInterface */
-    private $shippingMethodRepository;
-
-    public function __construct(ShippingMethodRepositoryInterface $shippingMethodRepository)
+    public function __construct(private ShippingMethodRepositoryInterface $shippingMethodRepository)
     {
-        $this->shippingMethodRepository = $shippingMethodRepository;
     }
 
     /**
@@ -39,7 +35,7 @@ final class ShippingMethodContext implements Context
         Assert::eq(
             count($shippingMethods),
             1,
-            sprintf('%d shipping methods have been found with name "%s".', count($shippingMethods), $shippingMethodName)
+            sprintf('%d shipping methods have been found with name "%s".', count($shippingMethods), $shippingMethodName),
         );
 
         return $shippingMethods[0];

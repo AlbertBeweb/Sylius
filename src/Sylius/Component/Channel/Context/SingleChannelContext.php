@@ -15,20 +15,14 @@ namespace Sylius\Component\Channel\Context;
 
 use Sylius\Component\Channel\Model\ChannelInterface;
 use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
+use Webmozart\Assert\Assert;
 
 final class SingleChannelContext implements ChannelContextInterface
 {
-    /** @var ChannelRepositoryInterface */
-    private $channelRepository;
-
-    public function __construct(ChannelRepositoryInterface $channelRepository)
+    public function __construct(private ChannelRepositoryInterface $channelRepository)
     {
-        $this->channelRepository = $channelRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannel(): ChannelInterface
     {
         $channels = $this->channelRepository->findAll();
@@ -36,7 +30,9 @@ final class SingleChannelContext implements ChannelContextInterface
         if (1 !== count($channels)) {
             throw new ChannelNotFoundException();
         }
+        $channel = reset($channels);
+        Assert::isInstanceOf($channel, ChannelInterface::class);
 
-        return current($channels);
+        return $channel;
     }
 }

@@ -96,10 +96,42 @@ You should also have a look here if you are looking for Cart, which is in Sylius
 
 .. include:: /book/orders/map.rst.inc
 
+API
+---
+
+.. warning::
+
+    The new, unified Sylius API is still under development, that's why the whole ``ApiBundle`` is tagged with ``@experimental``.
+    This means that all code from ``ApiBundle`` is excluded from :doc:`Backward Compatibility Promise </book/organization/backward-compatibility-promise>`.
+
+This chapter will explain to you how to start with our new API, show concepts used in it, and you will inform you why we have decided to rebuild entire api from scratch.
+To use this API remember to generate JWT token. For more information, please visit `jwt package documentation <https://github.com/lexik/LexikJWTAuthenticationBundle/blob/master/Resources/doc/index.md#generate-the-ssh-keys/>`_
+
+This part of the documentation is about the currently developed unified API for the Sylius platform.
+
+.. toctree::
+    :hidden:
+
+    api/index
+
+.. include:: /book/api/map.rst.inc
+
+Frontend
+--------
+
+This chapter will introduce you to the world of Sylius' frontend.
+
+.. toctree::
+    :hidden:
+
+    frontend/index
+
+.. include:: /book/frontend/map.rst.inc
+
 Themes
 ------
 
-Here you will learn basics about the Theming concept of Sylius. How to change the theme of your shop? keep reading!
+Here you will learn basics about the theming concept of sylius. How to change the theme of your shop? keep reading!
 
 .. toctree::
     :hidden:
@@ -107,6 +139,35 @@ Here you will learn basics about the Theming concept of Sylius. How to change th
     themes/index
 
 .. include:: /book/themes/map.rst.inc
+
+.. rst-class:: plus-doc
+
+Sylius Plus
+-----------
+
+`Sylius Plus <https://sylius.com/plus/>`_, which is a licensed edition of Sylius, gives you all the power of Open Source and much more.
+It comes with a set of enterprise-grade features and technical support from its creators.
+As the state-of-the-art eCommerce platform, it reduces risks and increases your ROI.
+
+Documentation sections of The Book referring to Sylius Plus features are:
+
+.. toctree::
+    :maxdepth: 1
+
+    installation/sylius_plus_installation
+    architecture/emails
+    configuration/channels
+    customers/admin_user
+    customers/customer_pools
+    orders/shipments
+    orders/returns
+    products/multi_source_inventory
+    loyalty/loyalty_rule
+
+
+.. image:: ../_images/sylius_plus/banner.png
+    :align: center
+    :target: https://sylius.com/plus/?utm_source=docs
 
 Sylius Plugins
 --------------
@@ -119,3 +180,39 @@ The collection of Sylius Plugins and basic introduction to the concept of plugin
     plugins/index
 
 .. include:: /book/plugins/map.rst.inc
+
+Organization
+------------
+
+This chapter describes the rules and processes we use to organize our work.
+
+.. toctree::
+    :hidden:
+
+    organization/index
+
+.. include:: /book/organization/map.rst.inc
+
+Support
+-------
+
+How to get support for Sylius?
+
+.. toctree::
+   :hidden:
+
+   support/index
+
+.. include:: /book/support/map.rst.inc
+
+Contributing
+------------
+
+Guides you how to contribute to Sylius.
+
+.. toctree::
+   :hidden:
+
+   contributing/index
+
+.. include:: /book/contributing/map.rst.inc

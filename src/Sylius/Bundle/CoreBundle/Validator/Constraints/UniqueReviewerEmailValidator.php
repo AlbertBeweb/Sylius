@@ -13,12 +13,10 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Validator\Constraints;
 
-use Sylius\Bundle\UserBundle\Doctrine\ORM\UserRepository;
 use Sylius\Component\Review\Model\ReviewerInterface;
 use Sylius\Component\User\Model\UserInterface;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -26,43 +24,27 @@ use Webmozart\Assert\Assert;
 
 class UniqueReviewerEmailValidator extends ConstraintValidator
 {
-    /** @var UserRepository */
-    private $userRepository;
-
-    /** @var TokenStorageInterface */
-    private $tokenStorage;
-
-    /** @var AuthorizationCheckerInterface */
-    private $authorizationChecker;
-
     public function __construct(
-        UserRepositoryInterface $userRepository,
-        TokenStorageInterface $tokenStorage,
-        AuthorizationCheckerInterface $authorizationChecker
+        private UserRepositoryInterface $userRepository,
+        private TokenStorageInterface $tokenStorage,
+        private AuthorizationCheckerInterface $authorizationChecker,
     ) {
-        $this->userRepository = $userRepository;
-        $this->tokenStorage = $tokenStorage;
-        $this->authorizationChecker = $authorizationChecker;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function validate($review, Constraint $constraint): void
+    public function validate($value, Constraint $constraint): void
     {
         /** @var UniqueReviewerEmail $constraint */
         Assert::isInstanceOf($constraint, UniqueReviewerEmail::class);
 
         /** @var ReviewerInterface|null $customer */
-        $customer = $review->getAuthor();
+        $customer = $value->getAuthor();
 
-        $token = $this->tokenStorage->getToken();
         if (null !== $customer) {
             if (null === $customer->getEmail()) {
                 return;
             }
 
-            if ($customer->getEmail() === $this->getAuthenticatedUserEmail($token)) {
+            if ($customer->getEmail() === $this->getAuthenticatedUserEmail()) {
                 return;
             }
         }
@@ -72,8 +54,10 @@ class UniqueReviewerEmailValidator extends ConstraintValidator
         }
     }
 
-    private function getAuthenticatedUserEmail(TokenInterface $token): ?string
+    private function getAuthenticatedUserEmail(): ?string
     {
+        $token = $this->tokenStorage->getToken();
+
         if (null === $token) {
             return null;
         }

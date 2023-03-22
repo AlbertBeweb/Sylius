@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Bundle\ReviewBundle\Updater;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use PhpSpec\ObjectBehavior;
 use Sylius\Bundle\ReviewBundle\Updater\ReviewableRatingUpdaterInterface;
 use Sylius\Component\Review\Calculator\ReviewableRatingCalculatorInterface;
@@ -35,7 +35,7 @@ final class AverageRatingUpdaterSpec extends ObjectBehavior
     function it_updates_review_subject_average_rating(
         ReviewableRatingCalculatorInterface $averageRatingCalculator,
         ObjectManager $reviewSubjectManager,
-        ReviewableInterface $reviewSubject
+        ReviewableInterface $reviewSubject,
     ): void {
         $averageRatingCalculator->calculate($reviewSubject)->willReturn(4.5);
 
@@ -50,7 +50,7 @@ final class AverageRatingUpdaterSpec extends ObjectBehavior
         ReviewableRatingCalculatorInterface $averageRatingCalculator,
         ObjectManager $reviewSubjectManager,
         ReviewableInterface $reviewSubject,
-        ReviewInterface $review
+        ReviewInterface $review,
     ): void {
         $review->getReviewSubject()->willReturn($reviewSubject);
         $averageRatingCalculator->calculate($reviewSubject)->willReturn(4.5);

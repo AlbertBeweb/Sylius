@@ -124,7 +124,7 @@ final class OrderSpec extends ObjectBehavior
     function it_calculates_correct_items_total(
         OrderItemInterface $item1,
         OrderItemInterface $item2,
-        OrderItemInterface $item3
+        OrderItemInterface $item3,
     ): void {
         $item1->getTotal()->willReturn(29999);
         $item2->getTotal()->willReturn(45000);
@@ -175,11 +175,12 @@ final class OrderSpec extends ObjectBehavior
         $this->removeAdjustment($adjustment);
 
         $this->hasAdjustment($adjustment)->shouldReturn(false);
+        $this->getAdjustmentsTotal()->shouldReturn(0);
     }
 
     function it_removes_adjustments_recursively_properly(
         AdjustmentInterface $orderAdjustment,
-        OrderItemInterface $item
+        OrderItemInterface $item,
     ): void {
         $orderAdjustment->getAmount()->willReturn(420);
         $orderAdjustment->isNeutral()->willReturn(true);
@@ -197,12 +198,13 @@ final class OrderSpec extends ObjectBehavior
         $this->removeAdjustmentsRecursively();
 
         $this->hasAdjustment($orderAdjustment)->shouldReturn(false);
+        $this->getAdjustmentsTotal()->shouldReturn(0);
     }
 
     function it_removes_adjustments_recursively_by_type_properly(
         AdjustmentInterface $orderPromotionAdjustment,
         AdjustmentInterface $orderTaxAdjustment,
-        OrderItemInterface $item
+        OrderItemInterface $item,
     ): void {
         $orderPromotionAdjustment->getType()->willReturn('promotion');
         $orderPromotionAdjustment->isNeutral()->willReturn(true);
@@ -232,6 +234,7 @@ final class OrderSpec extends ObjectBehavior
 
         $this->hasAdjustment($orderPromotionAdjustment)->shouldReturn(true);
         $this->hasAdjustment($orderTaxAdjustment)->shouldReturn(false);
+        $this->getAdjustmentsTotal('tax')->shouldReturn(0);
     }
 
     function it_returns_adjustments_recursively(
@@ -239,7 +242,7 @@ final class OrderSpec extends ObjectBehavior
         AdjustmentInterface $itemAdjustment1,
         AdjustmentInterface $itemAdjustment2,
         OrderItemInterface $item1,
-        OrderItemInterface $item2
+        OrderItemInterface $item2,
     ): void {
         $item1->setOrder($this)->shouldBeCalled();
         $item1->getTotal()->willReturn(100);
@@ -268,7 +271,7 @@ final class OrderSpec extends ObjectBehavior
     function it_calculates_correct_adjustments_total(
         AdjustmentInterface $adjustment1,
         AdjustmentInterface $adjustment2,
-        AdjustmentInterface $adjustment3
+        AdjustmentInterface $adjustment3,
     ): void {
         $adjustment1->getAmount()->willReturn(10000);
         $adjustment2->getAmount()->willReturn(-4999);
@@ -292,7 +295,7 @@ final class OrderSpec extends ObjectBehavior
     function it_returns_adjustments_total_recursively(
         AdjustmentInterface $itemAdjustment,
         AdjustmentInterface $orderAdjustment,
-        OrderItemInterface $orderItem
+        OrderItemInterface $orderItem,
     ): void {
         $itemAdjustment->getAmount()->willReturn(10000);
         $orderAdjustment->getAmount()->willReturn(5000);
@@ -338,7 +341,7 @@ final class OrderSpec extends ObjectBehavior
         OrderItemInterface $item1,
         OrderItemInterface $item2,
         AdjustmentInterface $adjustment1,
-        AdjustmentInterface $adjustment2
+        AdjustmentInterface $adjustment2,
     ): void {
         $item1->getTotal()->willReturn(29999);
         $item2->getTotal()->willReturn(45000);
@@ -370,7 +373,7 @@ final class OrderSpec extends ObjectBehavior
         AdjustmentInterface $adjustment2,
         OrderItemInterface $item1,
         OrderItemInterface $item2,
-        OrderItemInterface $item3
+        OrderItemInterface $item3,
     ): void {
         $item1->getTotal()->willReturn(29999);
         $item2->getTotal()->willReturn(45000);
@@ -418,7 +421,7 @@ final class OrderSpec extends ObjectBehavior
         OrderItemInterface $item1,
         OrderItemInterface $item2,
         AdjustmentInterface $adjustment1,
-        AdjustmentInterface $adjustment2
+        AdjustmentInterface $adjustment2,
     ): void {
         $item1->getTotal()->willReturn(29999);
         $item2->getTotal()->willReturn(45000);
@@ -447,7 +450,7 @@ final class OrderSpec extends ObjectBehavior
 
     function it_calculates_correct_total_when_adjustment_is_bigger_than_cost(
         OrderItemInterface $item,
-        AdjustmentInterface $adjustment
+        AdjustmentInterface $adjustment,
     ): void {
         $item->getTotal()->willReturn(45000);
 

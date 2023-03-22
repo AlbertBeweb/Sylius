@@ -18,7 +18,7 @@ use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Resource\Model\TimestampableTrait;
 use Sylius\Component\Resource\Model\ToggleableTrait;
 
-class User implements UserInterface
+class User implements UserInterface, \Stringable
 {
     use TimestampableTrait, ToggleableTrait;
 
@@ -38,7 +38,7 @@ class User implements UserInterface
     /**
      * Random data that is used as an additional input to a function that hashes a password.
      *
-     * @var string
+     * @var string|null
      */
     protected $salt;
 
@@ -91,11 +91,15 @@ class User implements UserInterface
     /**
      * We need at least one role to be able to authenticate
      *
-     * @var array
+     * @var mixed[]
      */
     protected $roles = [UserInterface::DEFAULT_ROLE];
 
-    /** @var Collection|UserOAuth[] */
+    /**
+     * @var Collection|UserOAuthInterface[]
+     *
+     * @psalm-var Collection<array-key, UserOAuthInterface>
+     */
     protected $oauthAccounts;
 
     /** @var string|null */
@@ -110,253 +114,172 @@ class User implements UserInterface
     public function __construct()
     {
         $this->salt = base_convert(bin2hex(random_bytes(20)), 16, 36);
+
+        /** @var ArrayCollection<array-key, UserOAuthInterface> $this->oauthAccounts */
         $this->oauthAccounts = new ArrayCollection();
+
         $this->createdAt = new \DateTime();
 
         // Set here to overwrite default value from trait
         $this->enabled = false;
     }
 
+    /** @psalm-suppress RedundantCastGivenDocblockType */
     public function __toString(): string
     {
         return (string) $this->getUsername();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setEmail(?string $email): void
     {
         $this->email = $email;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEmailCanonical(): ?string
     {
         return $this->emailCanonical;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setEmailCanonical(?string $emailCanonical): void
     {
         $this->emailCanonical = $emailCanonical;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUsername(): ?string
     {
         return $this->username;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setUsername(?string $username): void
     {
         $this->username = $username;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUsernameCanonical(): ?string
     {
         return $this->usernameCanonical;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setUsernameCanonical(?string $usernameCanonical): void
     {
         $this->usernameCanonical = $usernameCanonical;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getSalt(): string
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->usernameCanonical;
+    }
+
+    public function getSalt(): ?string
     {
         return $this->salt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPlainPassword(): ?string
     {
         return $this->plainPassword;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setPlainPassword(?string $password): void
+    public function setPlainPassword(?string $plainPassword): void
     {
-        $this->plainPassword = $password;
+        $this->plainPassword = $plainPassword;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPassword(): ?string
     {
         return $this->password;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setPassword(?string $password): void
+    public function setPassword(?string $encodedPassword): void
     {
-        $this->password = $password;
+        $this->password = $encodedPassword;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getExpiresAt(): ?\DateTimeInterface
     {
         return $this->expiresAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setExpiresAt(?\DateTimeInterface $date): void
     {
         $this->expiresAt = $date;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCredentialsExpireAt(): ?\DateTimeInterface
     {
         return $this->credentialsExpireAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setCredentialsExpireAt(?\DateTimeInterface $date): void
     {
         $this->credentialsExpireAt = $date;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLastLogin(): ?\DateTimeInterface
     {
         return $this->lastLogin;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setLastLogin(?\DateTimeInterface $time): void
     {
         $this->lastLogin = $time;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEmailVerificationToken(): ?string
     {
         return $this->emailVerificationToken;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setEmailVerificationToken(?string $verificationToken): void
     {
         $this->emailVerificationToken = $verificationToken;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPasswordResetToken(): ?string
     {
         return $this->passwordResetToken;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setPasswordResetToken(?string $passwordResetToken): void
     {
         $this->passwordResetToken = $passwordResetToken;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isCredentialsNonExpired(): bool
     {
         return !$this->hasExpired($this->credentialsExpireAt);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isAccountNonExpired(): bool
     {
         return !$this->hasExpired($this->expiresAt);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setLocked(bool $locked): void
     {
         $this->locked = $locked;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isAccountNonLocked(): bool
     {
         return !$this->locked;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasRole(string $role): bool
     {
         return in_array(strtoupper($role), $this->getRoles(), true);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addRole(string $role): void
     {
         $role = strtoupper($role);
@@ -365,9 +288,6 @@ class User implements UserInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeRole(string $role): void
     {
         if (false !== $key = array_search(strtoupper($role), $this->roles, true)) {
@@ -376,17 +296,11 @@ class User implements UserInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRoles(): array
     {
         return $this->roles;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isPasswordRequestNonExpired(\DateInterval $ttl): bool
     {
         if (null === $this->passwordRequestedAt) {
@@ -399,65 +313,41 @@ class User implements UserInterface
         return $threshold <= $this->passwordRequestedAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPasswordRequestedAt(): ?\DateTimeInterface
     {
         return $this->passwordRequestedAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setPasswordRequestedAt(?\DateTimeInterface $date): void
     {
         $this->passwordRequestedAt = $date;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isVerified(): bool
     {
         return null !== $this->verifiedAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getVerifiedAt(): ?\DateTimeInterface
     {
         return $this->verifiedAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setVerifiedAt(?\DateTimeInterface $verifiedAt): void
     {
         $this->verifiedAt = $verifiedAt;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function eraseCredentials(): void
     {
         $this->plainPassword = null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOAuthAccounts(): Collection
     {
         return $this->oauthAccounts;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOAuthAccount(string $provider): ?UserOAuthInterface
     {
         if ($this->oauthAccounts->isEmpty()) {
@@ -475,9 +365,6 @@ class User implements UserInterface
         return $filtered->current();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addOAuthAccount(UserOAuthInterface $oauth): void
     {
         if (!$this->oauthAccounts->contains($oauth)) {
@@ -486,17 +373,11 @@ class User implements UserInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEncoderName(): ?string
     {
         return $this->encoderName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setEncoderName(?string $encoderName): void
     {
         $this->encoderName = $encoderName;
@@ -505,9 +386,9 @@ class User implements UserInterface
     /**
      * The serialized data have to contain the fields used by the equals method and the username.
      */
-    public function serialize(): string
+    public function __serialize(): array
     {
-        return serialize([
+        return [
             $this->password,
             $this->salt,
             $this->usernameCanonical,
@@ -516,18 +397,24 @@ class User implements UserInterface
             $this->enabled,
             $this->id,
             $this->encoderName,
-        ]);
+        ];
     }
 
     /**
-     * @param string $serialized
+     * @internal
+     *
+     * @deprecated since 1.11 and will be removed in Sylius 2.0, use \Sylius\Component\User\Model\User::__serialize() or \serialize($user) in PHP 8.1 instead
      */
-    public function unserialize($serialized): void
+    public function serialize(): string
     {
-        $data = unserialize($serialized);
+        return serialize($this->__serialize());
+    }
+
+    public function __unserialize(array $serialized): void
+    {
         // add a few extra elements in the array to ensure that we have enough keys when unserializing
         // older data which does not include all properties.
-        $data = array_merge($data, array_fill(0, 2, null));
+        $serialized = array_merge($serialized, array_fill(0, 2, null));
 
         [
             $this->password,
@@ -538,7 +425,19 @@ class User implements UserInterface
             $this->enabled,
             $this->id,
             $this->encoderName,
-        ] = $data;
+        ] = $serialized;
+    }
+
+    /**
+     * @param string $serialized
+     *
+     * @internal
+     *
+     * @deprecated since 1.11 and will be removed in Sylius 2.0, use \Sylius\Component\User\Model\User::__unserialize() or \unserialize($serialized) in PHP 8.1 instead
+     */
+    public function unserialize($serialized): void
+    {
+        $this->__unserialize(unserialize($serialized));
     }
 
     protected function hasExpired(?\DateTimeInterface $date): bool

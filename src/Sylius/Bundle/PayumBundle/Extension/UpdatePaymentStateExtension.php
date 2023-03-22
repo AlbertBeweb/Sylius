@@ -27,31 +27,18 @@ use Webmozart\Assert\Assert;
 
 final class UpdatePaymentStateExtension implements ExtensionInterface
 {
-    /** @var FactoryInterface */
-    private $factory;
-
-    public function __construct(FactoryInterface $factory)
+    public function __construct(private FactoryInterface $factory)
     {
-        $this->factory = $factory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onPreExecute(Context $context): void
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onExecute(Context $context): void
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function onPostExecute(Context $context): void
     {
         $previousStack = $context->getPrevious();
@@ -62,25 +49,25 @@ final class UpdatePaymentStateExtension implements ExtensionInterface
         }
 
         if ($previousStackSize === 1) {
-            $previousActionClassName = get_class($previousStack[0]->getAction());
+            $previousActionClassName = $previousStack[0]->getAction()::class;
             if (false === stripos($previousActionClassName, 'NotifyNullAction')) {
                 return;
             }
         }
 
-        /** @var Generic $request */
         $request = $context->getRequest();
-        if (false === $request instanceof Generic) {
+
+        if (!$request instanceof Generic) {
             return;
         }
 
-        if (false === $request instanceof GetStatusInterface && false === $request instanceof Notify) {
+        if (!$request instanceof GetStatusInterface && !$request instanceof Notify) {
             return;
         }
 
-        /** @var PaymentInterface $payment */
         $payment = $request->getFirstModel();
-        if (false === $payment instanceof PaymentInterface) {
+
+        if (!$payment instanceof PaymentInterface) {
             return;
         }
 
@@ -97,9 +84,9 @@ final class UpdatePaymentStateExtension implements ExtensionInterface
 
     private function updatePaymentState(PaymentInterface $payment, string $nextState): void
     {
-        /** @var StateMachineInterface $stateMachine */
         $stateMachine = $this->factory->get($payment, PaymentTransitions::GRAPH);
 
+        /** @var StateMachineInterface $stateMachine */
         Assert::isInstanceOf($stateMachine, StateMachineInterface::class);
 
         if (null !== $transition = $stateMachine->getTransitionToState($nextState)) {

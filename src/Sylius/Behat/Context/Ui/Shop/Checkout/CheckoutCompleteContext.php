@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Ui\Shop\Checkout;
 
 use Behat\Behat\Context\Context;
+use Behat\Mink\Exception\ElementNotFoundException;
+use FriendsOfBehat\PageObjectExtension\Page\UnexpectedPageException;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
@@ -21,29 +23,19 @@ use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Formatter\StringInflector;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\ProductInterface;
+use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Model\PromotionInterface;
 use Sylius\Component\Core\Model\ShippingMethodInterface;
+use Sylius\Component\Locale\Model\LocaleInterface;
 use Webmozart\Assert\Assert;
 
 final class CheckoutCompleteContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var CompletePageInterface */
-    private $completePage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        CompletePageInterface $completePage,
-        NotificationCheckerInterface $notificationChecker
+        private SharedStorageInterface $sharedStorage,
+        private CompletePageInterface $completePage,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->completePage = $completePage;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -83,6 +75,7 @@ final class CheckoutCompleteContext implements Context
     /**
      * @Given I have confirmed order
      * @When I confirm my order
+     * @When I try to confirm my order
      */
     public function iConfirmMyOrder()
     {
@@ -154,7 +147,7 @@ final class CheckoutCompleteContext implements Context
     /**
      * @Then /^the ("[^"]+" product) should have unit price discounted by ("\$\d+")$/
      */
-    public function theShouldHaveUnitPriceDiscountedFor(ProductInterface $product, $amount)
+    public function theShouldHaveUnitPriceDiscountedFor(ProductInterface $product, int $amount): void
     {
         Assert::true($this->completePage->hasProductDiscountedUnitPriceBy($product, $amount));
     }
@@ -162,7 +155,7 @@ final class CheckoutCompleteContext implements Context
     /**
      * @Then /^my order total should be ("(?:\£|\$)\d+(?:\.\d+)?")$/
      */
-    public function myOrderTotalShouldBe($total)
+    public function myOrderTotalShouldBe(int $total): void
     {
         Assert::true($this->completePage->hasOrderTotal($total));
     }
@@ -225,6 +218,7 @@ final class CheckoutCompleteContext implements Context
 
     /**
      * @Then /^I should be notified that (this product) does not have sufficient stock$/
+     * @Then I should be notified that product :product does not have sufficient stock
      */
     public function iShouldBeNotifiedThatThisProductDoesNotHaveSufficientStock(ProductInterface $product)
     {
@@ -242,9 +236,9 @@ final class CheckoutCompleteContext implements Context
     /**
      * @Then my order's locale should be :locale
      */
-    public function myOrderLocaleShouldBe($locale)
+    public function myOrderLocaleShouldBe(LocaleInterface $locale): void
     {
-        Assert::true($this->completePage->hasLocale($locale));
+        Assert::true($this->completePage->hasLocale($locale->getName($locale->getCode())));
     }
 
     /**
@@ -272,9 +266,9 @@ final class CheckoutCompleteContext implements Context
     }
 
     /**
-     * @Then I should not be able to confirm order because products does not fit :shippingMethod requirements
+     * @Then I should not be able to confirm order because products do not fit :shippingMethod requirements
      */
-    public function iShouldNotBeAbleToConfirmOrderBecauseDoesNotBelongsToShippingCategory(ShippingMethodInterface $shippingMethod)
+    public function iShouldNotBeAbleToConfirmOrderBecauseDoNotBelongsToShippingCategory(ShippingMethodInterface $shippingMethod)
     {
         $this->completePage->confirmOrder();
 
@@ -282,8 +276,8 @@ final class CheckoutCompleteContext implements Context
             $this->completePage->getValidationErrors(),
             sprintf(
                 'Product does not fit requirements for %s shipping method. Please reselect your shipping method.',
-                $shippingMethod->getName()
-            )
+                $shippingMethod->getName(),
+            ),
         );
     }
 
@@ -294,7 +288,7 @@ final class CheckoutCompleteContext implements Context
     {
         $this->notificationChecker->checkNotification(
             sprintf('You are no longer eligible for this promotion %s.', $promotion->getName()),
-            NotificationType::failure()
+            NotificationType::failure(),
         );
     }
 
@@ -307,8 +301,8 @@ final class CheckoutCompleteContext implements Context
             $this->completePage->getValidationErrors(),
             sprintf(
                 'This payment method %s has been disabled. Please reselect your payment method.',
-                $paymentMethod->getName()
-            )
+                $paymentMethod->getName(),
+            ),
         );
     }
 
@@ -321,8 +315,8 @@ final class CheckoutCompleteContext implements Context
             $this->completePage->getValidationErrors(),
             sprintf(
                 'This product %s has been disabled.',
-                $product->getName()
-            )
+                $product->getName(),
+            ),
         );
     }
 
@@ -333,7 +327,7 @@ final class CheckoutCompleteContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Your order total has been changed, check your order information and confirm it again.',
-            NotificationType::failure()
+            NotificationType::failure(),
         );
     }
 
@@ -343,5 +337,43 @@ final class CheckoutCompleteContext implements Context
     public function thisPromotionShouldGiveDiscountOnShipping(PromotionInterface $promotion, string $discount): void
     {
         Assert::true($this->completePage->hasShippingPromotionWithDiscount($promotion->getName(), $discount));
+    }
+
+    /**
+     * @Then /^I should be informed that (this variant) has been disabled$/
+     */
+    public function iShouldBeInformedThatThisVariantHasBeenDisabled(ProductVariantInterface $productVariant)
+    {
+        Assert::same(
+            $this->completePage->getValidationErrors(),
+            sprintf(
+                'This product %s has been disabled.',
+                $productVariant->getName(),
+            ),
+        );
+    }
+
+    /**
+     * @Then I should not be able to proceed checkout complete step
+     */
+    public function iShouldNotBeAbleToProceedCheckoutCompleteStep(): void
+    {
+        $this->completePage->tryToOpen();
+
+        try {
+            $this->completePage->confirmOrder();
+        } catch (ElementNotFoundException) {
+            return;
+        }
+
+        throw new UnexpectedPageException('It should not be possible to complete checkout complete step.');
+    }
+
+    /**
+     * @When /^I should see (product "[^"]+") with unit price ("[^"]+")$/
+     */
+    public function iShouldSeeWithUnitPrice(ProductInterface $product, int $unitPrice): void
+    {
+        Assert::same($this->completePage->getProductUnitPrice($product), $unitPrice);
     }
 }

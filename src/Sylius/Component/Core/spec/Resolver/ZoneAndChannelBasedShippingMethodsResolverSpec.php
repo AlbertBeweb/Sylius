@@ -23,7 +23,7 @@ use Sylius\Component\Core\Model\Scope;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Core\Model\ShippingMethodInterface;
 use Sylius\Component\Core\Repository\ShippingMethodRepositoryInterface;
-use Sylius\Component\Shipping\Checker\ShippingMethodEligibilityCheckerInterface;
+use Sylius\Component\Shipping\Checker\Eligibility\ShippingMethodEligibilityCheckerInterface;
 use Sylius\Component\Shipping\Model\ShippingSubjectInterface;
 use Sylius\Component\Shipping\Resolver\ShippingMethodsResolverInterface;
 
@@ -32,7 +32,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
     function let(
         ShippingMethodRepositoryInterface $shippingMethodRepository,
         ZoneMatcherInterface $zoneMatcher,
-        ShippingMethodEligibilityCheckerInterface $eligibilityChecker
+        ShippingMethodEligibilityCheckerInterface $eligibilityChecker,
     ): void {
         $this->beConstructedWith($shippingMethodRepository, $zoneMatcher, $eligibilityChecker);
     }
@@ -53,7 +53,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
         ShippingMethodRepositoryInterface $shippingMethodRepository,
         ZoneInterface $firstZone,
         ZoneInterface $secondZone,
-        ZoneMatcherInterface $zoneMatcher
+        ZoneMatcherInterface $zoneMatcher,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn($address);
@@ -73,12 +73,11 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
     }
 
     function it_returns_an_empty_array_if_zone_matcher_could_not_match_any_zone(
-        ShippingMethodEligibilityCheckerInterface $eligibilityChecker,
         OrderInterface $order,
         AddressInterface $address,
         ChannelInterface $channel,
         ShipmentInterface $shipment,
-        ZoneMatcherInterface $zoneMatcher
+        ZoneMatcherInterface $zoneMatcher,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn($address);
@@ -100,7 +99,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
         ShippingMethodRepositoryInterface $shippingMethodRepository,
         ZoneInterface $firstZone,
         ZoneInterface $secondZone,
-        ZoneMatcherInterface $zoneMatcher
+        ZoneMatcherInterface $zoneMatcher,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn($address);
@@ -123,7 +122,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
         OrderInterface $order,
         AddressInterface $address,
         ChannelInterface $channel,
-        ShipmentInterface $shipment
+        ShipmentInterface $shipment,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn($address);
@@ -135,7 +134,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
     function it_does_not_support_shipments_which_order_has_no_shipping_address_defined(
         OrderInterface $order,
         ChannelInterface $channel,
-        ShipmentInterface $shipment
+        ShipmentInterface $shipment,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn(null);
@@ -147,7 +146,7 @@ final class ZoneAndChannelBasedShippingMethodsResolverSpec extends ObjectBehavio
     function it_does_not_support_shipments_for_order_with_not_assigned_channel(
         OrderInterface $order,
         AddressInterface $address,
-        ShipmentInterface $shipment
+        ShipmentInterface $shipment,
     ): void {
         $shipment->getOrder()->willReturn($order);
         $order->getShippingAddress()->willReturn($address);

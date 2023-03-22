@@ -24,6 +24,10 @@ interface OrderItemInterface extends AdjustableInterface, OrderAwareInterface, R
 
     public function setUnitPrice(int $unitPrice): void;
 
+    public function getOriginalUnitPrice(): ?int;
+
+    public function setOriginalUnitPrice(?int $originalUnitPrice): void;
+
     public function getTotal(): int;
 
     /**
@@ -43,6 +47,8 @@ interface OrderItemInterface extends AdjustableInterface, OrderAwareInterface, R
 
     /**
      * @return Collection|OrderItemUnitInterface[]
+     *
+     * @psalm-return Collection<array-key, OrderItemUnitInterface>
      */
     public function getUnits(): Collection;
 
@@ -54,6 +60,8 @@ interface OrderItemInterface extends AdjustableInterface, OrderAwareInterface, R
 
     /**
      * @return Collection|AdjustmentInterface[]
+     *
+     * @psalm-return Collection<array-key, AdjustmentInterface>
      */
     public function getAdjustmentsRecursively(?string $type = null): Collection;
 

@@ -22,27 +22,15 @@ use Webmozart\Assert\Assert;
 
 final class ManagingCurrenciesContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
     }
 
     /**
-     * @Given I want to add a new currency
+     * @When I want to add a new currency
      */
     public function iWantToAddNewCurrency()
     {
@@ -78,7 +66,7 @@ final class ManagingCurrenciesContext implements Context
     }
 
     /**
-     * @Given /^I want to edit (this currency)$/
+     * @When /^I want to edit (this currency)$/
      */
     public function iWantToEditThisCurrency(CurrencyInterface $currency)
     {
@@ -137,7 +125,7 @@ final class ManagingCurrenciesContext implements Context
     }
 
     /**
-     * @Given I want to browse currencies of the store
+     * @When I want to browse currencies of the store
      */
     public function iWantToSeeAllCurrenciesInStore()
     {

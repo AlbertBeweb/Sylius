@@ -24,17 +24,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ProductVariantMatchType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new ProductVariantToProductOptionsTransformer($options['product']));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -46,15 +40,13 @@ final class ProductVariantMatchType extends AbstractType
                     return $product->getOptions();
                 },
                 'entry_type' => ProductOptionValueChoiceType::class,
-                'entry_name' => function (ProductOptionInterface $productOption) {
-                    return $productOption->getCode();
-                },
-                'entry_options' => function (ProductOptionInterface $productOption) {
-                    return [
-                        'label' => $productOption->getName(),
-                        'option' => $productOption,
-                    ];
-                },
+                'entry_name' => fn (ProductOptionInterface $productOption) => $productOption->getCode(),
+                'entry_options' => fn (Options $options) => fn (ProductOptionInterface $productOption) => [
+                    'label' => $productOption->getName(),
+                    'option' => $productOption,
+                    'only_available_values' => true,
+                    'product' => $options['product'],
+                ],
             ])
 
             ->setRequired('product')
@@ -62,17 +54,11 @@ final class ProductVariantMatchType extends AbstractType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return FixedCollectionType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product_variant_match';

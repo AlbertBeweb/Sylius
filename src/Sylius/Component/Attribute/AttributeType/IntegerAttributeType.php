@@ -22,29 +22,20 @@ final class IntegerAttributeType implements AttributeTypeInterface
 {
     public const TYPE = 'integer';
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStorageType(): string
     {
         return AttributeValueInterface::STORAGE_INTEGER;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): string
     {
         return self::TYPE;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate(
         AttributeValueInterface $attributeValue,
         ExecutionContextInterface $context,
-        array $configuration
+        array $configuration,
     ): void {
         if (!isset($configuration['required'])) {
             return;

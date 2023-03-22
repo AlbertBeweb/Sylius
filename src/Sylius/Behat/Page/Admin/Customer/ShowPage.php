@@ -186,9 +186,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
             ->findAll('css', '.row > .column > .statistic > .sylius-channel-name')
         ;
 
-        $statisticsRibs = array_filter($statisticsRibs, function (NodeElement $statistic) use ($channelName) {
-            return $channelName === trim($statistic->getText());
-        });
+        $statisticsRibs = array_filter($statisticsRibs, fn (NodeElement $statistic) => $channelName === trim($statistic->getText()));
 
         $actualStatisticsCount = count($statisticsRibs);
         Assert::same(
@@ -197,8 +195,8 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
             sprintf(
                 'Expected a single statistic for channel "%s", but %d were found.',
                 $channelName,
-                $actualStatisticsCount
-            )
+                $actualStatisticsCount,
+            ),
         );
 
         $statisticsContents = $this->getElement('statistics')->findAll('css', '.row');

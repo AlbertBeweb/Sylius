@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
-use Doctrine\Migrations\AbstractMigration;
+use Sylius\Bundle\CoreBundle\Doctrine\Migrations\AbstractMigration;
 use Sylius\Component\Attribute\AttributeType\SelectAttributeType;
 use Sylius\Component\Product\Model\ProductAttributeInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
@@ -32,12 +32,21 @@ class Version20171003103916 extends AbstractMigration implements ContainerAwareI
 
     public function up(Schema $schema): void
     {
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() != 'mysql', 'Migration can only be executed safely on \'mysql\'.');
-
         $defaultLocale = $this->container->getParameter('locale');
         $productAttributeRepository = $this->container->get('sylius.repository.product_attribute');
 
-        $productAttributes = $productAttributeRepository->findBy(['type' => SelectAttributeType::TYPE]);
+        $productAttributes = $productAttributeRepository
+            ->createQueryBuilder('o')
+                ->select([
+                    'o.id',
+                    'o.configuration',
+                ])
+                ->where('o.type = :type')
+                ->setParameter('type', SelectAttributeType::TYPE)
+                ->getQuery()
+            ->getResult()
+        ;
+
         /** @var ProductAttributeInterface $productAttribute */
         foreach ($productAttributes as $productAttribute) {
             $configuration = $productAttribute->getConfiguration();
@@ -64,8 +73,6 @@ class Version20171003103916 extends AbstractMigration implements ContainerAwareI
 
     public function down(Schema $schema): void
     {
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() != 'mysql', 'Migration can only be executed safely on \'mysql\'.');
-
         $defaultLocale = $this->container->getParameter('locale');
         $productAttributeRepository = $this->container->get('sylius.repository.product_attribute');
 

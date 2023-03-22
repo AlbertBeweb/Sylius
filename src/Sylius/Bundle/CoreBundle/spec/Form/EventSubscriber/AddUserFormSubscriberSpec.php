@@ -35,12 +35,12 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
 
     function it_adds_user_form_type_and_create_user_check(
         FormEvent $event,
-        Form $form
+        Form $form,
     ): void {
         $event->getForm()->willReturn($form);
 
-        $form->add('user', '\Fully\Qualified\ClassName', Argument::type('array'))->shouldBeCalled();
-        $form->add('createUser', Argument::type('string'), Argument::type('array'))->shouldBeCalled();
+        $form->add('user', '\Fully\Qualified\ClassName', Argument::type('array'))->willReturn($form)->shouldBeCalled();
+        $form->add('createUser', Argument::type('string'), Argument::type('array'))->willReturn($form)->shouldBeCalled();
 
         $this->preSetData($event);
     }
@@ -50,7 +50,7 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
         Form $form,
         Form $createUserCheckForm,
         UserAwareInterface $customer,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $event->getData()->willReturn($customer);
         $event->getForm()->willReturn($form);
@@ -64,8 +64,8 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
         $customer->setUser(null)->shouldBeCalled();
         $event->setData($customer)->shouldBeCalled();
 
-        $form->remove('user')->shouldBeCalled();
-        $form->add('user', '\Fully\Qualified\ClassName', Argument::type('array'))->shouldBeCalled();
+        $form->remove('user')->willReturn($form)->shouldBeCalled();
+        $form->add('user', '\Fully\Qualified\ClassName', Argument::type('array'))->willReturn($form)->shouldBeCalled();
 
         $this->submit($event);
     }
@@ -75,7 +75,7 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
         Form $form,
         Form $createUserCheckForm,
         UserAwareInterface $customer,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $event->getData()->willReturn($customer);
         $event->getForm()->willReturn($form);
@@ -100,7 +100,7 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
         Form $form,
         Form $createUserCheckForm,
         UserAwareInterface $customer,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $event->getData()->willReturn($customer);
         $event->getForm()->willReturn($form);
@@ -124,7 +124,7 @@ final class AddUserFormSubscriberSpec extends ObjectBehavior
         FormEvent $event,
         Form $form,
         Form $createUserCheckForm,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $event->getData()->willReturn($user);
         $event->getForm()->willReturn($form);

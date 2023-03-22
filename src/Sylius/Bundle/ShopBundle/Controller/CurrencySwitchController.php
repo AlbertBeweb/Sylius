@@ -18,35 +18,19 @@ use Sylius\Component\Core\Currency\CurrencyStorageInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Twig\Environment;
 
 final class CurrencySwitchController
 {
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var CurrencyContextInterface */
-    private $currencyContext;
-
-    /** @var CurrencyStorageInterface */
-    private $currencyStorage;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
     public function __construct(
-        EngineInterface $templatingEngine,
-        CurrencyContextInterface $currencyContext,
-        CurrencyStorageInterface $currencyStorage,
-        ChannelContextInterface $channelContext
+        private Environment $templatingEngine,
+        private CurrencyContextInterface $currencyContext,
+        private CurrencyStorageInterface $currencyStorage,
+        private ChannelContextInterface $channelContext,
     ) {
-        $this->templatingEngine = $templatingEngine;
-        $this->currencyContext = $currencyContext;
-        $this->currencyStorage = $currencyStorage;
-        $this->channelContext = $channelContext;
     }
 
     public function renderAction(): Response
@@ -55,16 +39,14 @@ final class CurrencySwitchController
         $channel = $this->channelContext->getChannel();
 
         $availableCurrencies = array_map(
-            function (CurrencyInterface $currency) {
-                return $currency->getCode();
-            },
-            $channel->getCurrencies()->toArray()
+            fn (CurrencyInterface $currency) => $currency->getCode(),
+            $channel->getCurrencies()->toArray(),
         );
 
-        return $this->templatingEngine->renderResponse('@SyliusShop/Menu/_currencySwitch.html.twig', [
+        return new Response($this->templatingEngine->render('@SyliusShop/Menu/_currencySwitch.html.twig', [
             'active' => $this->currencyContext->getCurrencyCode(),
             'currencies' => $availableCurrencies,
-        ]);
+        ]));
     }
 
     public function switchAction(Request $request, string $code): Response

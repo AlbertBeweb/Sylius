@@ -23,17 +23,10 @@ use Webmozart\Assert\Assert;
 
 class UniqueCurrencyPairValidator extends ConstraintValidator
 {
-    /** @var ExchangeRateRepositoryInterface */
-    private $exchangeRateRepository;
-
-    public function __construct(ExchangeRateRepositoryInterface $exchangeRateRepository)
+    public function __construct(private ExchangeRateRepositoryInterface $exchangeRateRepository)
     {
-        $this->exchangeRateRepository = $exchangeRateRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate($value, Constraint $constraint)
     {
         /** @var UniqueCurrencyPair $constraint */

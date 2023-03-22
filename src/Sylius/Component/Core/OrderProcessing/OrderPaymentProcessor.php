@@ -24,23 +24,12 @@ use Webmozart\Assert\Assert;
 
 final class OrderPaymentProcessor implements OrderProcessorInterface
 {
-    /** @var OrderPaymentProviderInterface */
-    private $orderPaymentProvider;
-
-    /** @var string */
-    private $targetState;
-
     public function __construct(
-        OrderPaymentProviderInterface $orderPaymentProvider,
-        string $targetState = PaymentInterface::STATE_CART
+        private OrderPaymentProviderInterface $orderPaymentProvider,
+        private string $targetState = PaymentInterface::STATE_CART,
     ) {
-        $this->orderPaymentProvider = $orderPaymentProvider;
-        $this->targetState = $targetState;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function process(BaseOrderInterface $order): void
     {
         /** @var OrderInterface $order */
@@ -73,7 +62,7 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
         try {
             $newPayment = $this->orderPaymentProvider->provideOrderPayment($order, $this->targetState);
             $order->addPayment($newPayment);
-        } catch (NotProvidedOrderPaymentException $exception) {
+        } catch (NotProvidedOrderPaymentException) {
             return;
         }
     }

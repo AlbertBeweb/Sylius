@@ -6,6 +6,7 @@ default:
         ui_managing_locales:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.locale
                 - sylius.behat.context.transform.shared_storage
@@ -21,4 +22,4 @@ default:
 
 
             filters:
-                tags: "@managing_locales && @ui"
+                tags: "@managing_locales&&@ui"

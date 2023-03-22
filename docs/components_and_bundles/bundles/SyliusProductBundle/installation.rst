@@ -15,14 +15,14 @@ If you have `Composer installed globally <http://getcomposer.org/doc/00-intro.md
 
 .. code-block:: bash
 
-    $ composer require sylius/product-bundle
+    composer require sylius/product-bundle
 
 Otherwise you have to download .phar file.
 
 .. code-block:: bash
 
-    $ curl -sS https://getcomposer.org/installer | php
-    $ php composer.phar require sylius/product-bundle
+    curl -sS https://getcomposer.org/installer | php
+    php composer.phar require sylius/product-bundle
 
 Adding required bundles to the kernel
 -------------------------------------
@@ -42,9 +42,9 @@ Don't worry, everything was automatically installed via Composer.
     {
         $bundles = array(
             new FOS\RestBundle\FOSRestBundle(),
-            new JMS\SerializerBundle\JMSSerializerBundle($this),
+            new JMS\SerializerBundle\JMSSerializerBundle(),
             new Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle(),
-            new WhiteOctober\PagerfantaBundle\WhiteOctoberPagerfantaBundle(),
+            new BabDev\PagerfantaBundle\BabDevPagerfantaBundle(),
             new winzou\Bundle\StateMachineBundle\winzouStateMachineBundle(),
             new Sylius\Bundle\ProductBundle\SyliusProductBundle(),
             new Sylius\Bundle\AttributeBundle\SyliusAttributeBundle(),
@@ -77,7 +77,7 @@ Run the following command.
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:schema:update --force
+    php bin/console doctrine:schema:update --force
 
 .. warning::
 

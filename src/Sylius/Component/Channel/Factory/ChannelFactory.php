@@ -18,28 +18,15 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class ChannelFactory implements ChannelFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $defaultFactory;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(FactoryInterface $defaultFactory)
+    public function __construct(private FactoryInterface $defaultFactory)
     {
-        $this->defaultFactory = $defaultFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNew(): ChannelInterface
     {
         return $this->defaultFactory->createNew();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNamed(string $name): ChannelInterface
     {
         /** @var ChannelInterface $channel */

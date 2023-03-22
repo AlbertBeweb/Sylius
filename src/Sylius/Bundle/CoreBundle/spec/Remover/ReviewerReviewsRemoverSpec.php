@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Bundle\CoreBundle\Remover;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use PhpSpec\ObjectBehavior;
 use Sylius\Bundle\CoreBundle\Remover\ReviewerReviewsRemoverInterface;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
@@ -27,7 +27,7 @@ final class ReviewerReviewsRemoverSpec extends ObjectBehavior
     function let(
         EntityRepository $reviewRepository,
         ObjectManager $reviewManager,
-        ReviewableRatingUpdaterInterface $averageRatingUpdater
+        ReviewableRatingUpdaterInterface $averageRatingUpdater,
     ): void {
         $this->beConstructedWith($reviewRepository, $reviewManager, $averageRatingUpdater);
     }
@@ -43,7 +43,7 @@ final class ReviewerReviewsRemoverSpec extends ObjectBehavior
         $reviewManager,
         ReviewerInterface $author,
         ReviewableInterface $reviewSubject,
-        ReviewInterface $review
+        ReviewInterface $review,
     ): void {
         $reviewRepository->findBy(['author' => $author])->willReturn([$review]);
         $review->getReviewSubject()->willReturn($reviewSubject);

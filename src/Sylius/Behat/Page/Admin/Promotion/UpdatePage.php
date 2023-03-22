@@ -15,13 +15,15 @@ namespace Sylius\Behat\Page\Admin\Promotion;
 
 use Behat\Mink\Element\NodeElement;
 use Sylius\Behat\Behaviour\ChecksCodeImmutability;
+use Sylius\Behat\Behaviour\CountsChannelBasedErrors;
 use Sylius\Behat\Behaviour\NamesIt;
 use Sylius\Behat\Page\Admin\Crud\UpdatePage as BaseUpdatePage;
 
 class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
 {
-    use NamesIt;
     use ChecksCodeImmutability;
+    use CountsChannelBasedErrors;
+    use NamesIt;
 
     public function setPriority(?int $priority): void
     {
@@ -80,16 +82,16 @@ class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
     {
         $timestamp = $dateTime->getTimestamp();
 
-        return $this->getElement('starts_at_date')->getValue() === date('Y-m-d', $timestamp)
-            && $this->getElement('starts_at_time')->getValue() === date('H:i', $timestamp);
+        return $this->getElement('starts_at_date')->getValue() === date('Y-m-d', $timestamp) &&
+            $this->getElement('starts_at_time')->getValue() === date('H:i', $timestamp);
     }
 
     public function hasEndsAt(\DateTimeInterface $dateTime): bool
     {
         $timestamp = $dateTime->getTimestamp();
 
-        return $this->getElement('ends_at_date')->getValue() === date('Y-m-d', $timestamp)
-            && $this->getElement('ends_at_time')->getValue() === date('H:i', $timestamp);
+        return $this->getElement('ends_at_date')->getValue() === date('Y-m-d', $timestamp) &&
+            $this->getElement('ends_at_time')->getValue() === date('H:i', $timestamp);
     }
 
     public function isCouponManagementAvailable(): bool
@@ -127,6 +129,26 @@ class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
         return false;
     }
 
+    public function removeActionFieldValue(string $channelCode, string $field): void
+    {
+        $this->getElement('action_field', ['%channelCode%' => $channelCode, '%field%' => $field])->setValue('');
+    }
+
+    public function removeRuleAmount(string $channelCode): void
+    {
+        $this->getElement('rule_amount', ['%channelCode%' => $channelCode])->setValue('');
+    }
+
+    public function getActionValidationErrorsCount(string $channelCode): int
+    {
+        return $this->countChannelErrors($this->getElement('actions'), $channelCode);
+    }
+
+    public function getRuleValidationErrorsCount(string $channelCode): int
+    {
+        return $this->countChannelErrors($this->getElement('rules'), $channelCode);
+    }
+
     protected function getCodeElement(): NodeElement
     {
         return $this->getElement('code');
@@ -135,14 +157,18 @@ class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
     protected function getDefinedElements(): array
     {
         return [
+            'action_field' => '[id^="sylius_promotion_actions_"][id$="_configuration_%channelCode%_%field%"]',
+            'actions' => '#actions',
+            'applies_to_discounted' => '#sylius_promotion_appliesToDiscounted',
             'code' => '#sylius_promotion_code',
-            'priority' => '#sylius_promotion_priority',
             'coupon_based' => '#sylius_promotion_couponBased',
             'ends_at' => '#sylius_promotion_endsAt',
             'ends_at_date' => '#sylius_promotion_endsAt_date',
             'ends_at_time' => '#sylius_promotion_endsAt_time',
             'exclusive' => '#sylius_promotion_exclusive',
             'name' => '#sylius_promotion_name',
+            'priority' => '#sylius_promotion_priority',
+            'rule_amount' => '[id^="sylius_promotion_rules_"][id$="_configuration_%channelCode%_amount"]',
             'rules' => '#rules',
             'starts_at' => '#sylius_promotion_startsAt',
             'starts_at_date' => '#sylius_promotion_startsAt_date',

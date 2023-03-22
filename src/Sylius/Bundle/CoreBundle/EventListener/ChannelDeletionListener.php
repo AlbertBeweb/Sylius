@@ -20,12 +20,8 @@ use Sylius\Component\Resource\Exception\UnexpectedTypeException;
 
 final class ChannelDeletionListener
 {
-    /** @var ChannelRepositoryInterface */
-    private $channelRepository;
-
-    public function __construct(ChannelRepositoryInterface $repository)
+    public function __construct(private ChannelRepositoryInterface $channelRepository)
     {
-        $this->channelRepository = $repository;
     }
 
     /**
@@ -38,7 +34,7 @@ final class ChannelDeletionListener
         if (!$channel instanceof ChannelInterface) {
             throw new UnexpectedTypeException(
                 $channel,
-                ChannelInterface::class
+                ChannelInterface::class,
             );
         }
 

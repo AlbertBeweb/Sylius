@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class ProductAssociationTypeContext implements Context
 {
-    /** @var ProductAssociationTypeRepositoryInterface */
-    private $productAssociationTypeRepository;
-
-    public function __construct(ProductAssociationTypeRepositoryInterface $productAssociationTypeRepository)
+    public function __construct(private ProductAssociationTypeRepositoryInterface $productAssociationTypeRepository)
     {
-        $this->productAssociationTypeRepository = $productAssociationTypeRepository;
     }
 
     /**
@@ -35,7 +31,7 @@ final class ProductAssociationTypeContext implements Context
     {
         $productAssociationTypes = $this->productAssociationTypeRepository->findByName(
             $productAssociationTypeName,
-            'en_US'
+            'en_US',
         );
 
         Assert::eq(
@@ -44,8 +40,8 @@ final class ProductAssociationTypeContext implements Context
             sprintf(
                 '%d product association types has been found with name "%s".',
                 count($productAssociationTypes),
-                $productAssociationTypeName
-            )
+                $productAssociationTypeName,
+            ),
         );
 
         return $productAssociationTypes[0];

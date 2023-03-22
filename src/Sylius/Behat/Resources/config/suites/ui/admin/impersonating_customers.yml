@@ -6,6 +6,7 @@ default:
         ui_impersonating_customers:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.address
                 - sylius.behat.context.transform.customer
@@ -30,4 +31,4 @@ default:
                 - sylius.behat.context.ui.shop.login
 
             filters:
-                tags: "@impersonating_customers && @ui"
+                tags: "@impersonating_customers&&@ui"

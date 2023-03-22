@@ -15,7 +15,7 @@ namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
 use Behat\Mink\Element\NodeElement;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\Core\Formatter\StringInflector;
 use Sylius\Component\Core\Model\ImageInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
@@ -28,56 +28,16 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class TaxonomyContext implements Context
 {
-    /** @var RepositoryInterface */
-    private $taxonRepository;
-
-    /** @var FactoryInterface */
-    private $taxonFactory;
-
-    /** @var FactoryInterface */
-    private $taxonTranslationFactory;
-
-    /** @var FactoryInterface */
-    private $taxonImageFactory;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
-    /** @var ImageUploaderInterface */
-    private $imageUploader;
-
-    /** @var TaxonSlugGeneratorInterface */
-    private $taxonSlugGenerator;
-
-    /** @var array */
-    private $minkParameters;
-
     public function __construct(
-        RepositoryInterface $taxonRepository,
-        FactoryInterface $taxonFactory,
-        FactoryInterface $taxonTranslationFactory,
-        FactoryInterface $taxonImageFactory,
-        ObjectManager $objectManager,
-        ImageUploaderInterface $imageUploader,
-        TaxonSlugGeneratorInterface $taxonSlugGenerator,
-        $minkParameters
+        private RepositoryInterface $taxonRepository,
+        private FactoryInterface $taxonFactory,
+        private FactoryInterface $taxonTranslationFactory,
+        private FactoryInterface $taxonImageFactory,
+        private ObjectManager $objectManager,
+        private ImageUploaderInterface $imageUploader,
+        private TaxonSlugGeneratorInterface $taxonSlugGenerator,
+        private \ArrayAccess $minkParameters,
     ) {
-        if (!is_array($minkParameters) && !$minkParameters instanceof \ArrayAccess) {
-            throw new \InvalidArgumentException(sprintf(
-                '"$minkParameters" passed to "%s" has to be an array or implement "%s".',
-                self::class,
-                \ArrayAccess::class
-            ));
-        }
-
-        $this->taxonRepository = $taxonRepository;
-        $this->taxonFactory = $taxonFactory;
-        $this->taxonTranslationFactory = $taxonTranslationFactory;
-        $this->taxonImageFactory = $taxonImageFactory;
-        $this->objectManager = $objectManager;
-        $this->imageUploader = $imageUploader;
-        $this->taxonSlugGenerator = $taxonSlugGenerator;
-        $this->minkParameters = $minkParameters;
     }
 
     /**
@@ -127,14 +87,38 @@ final class TaxonomyContext implements Context
     }
 
     /**
+     * @Given /^the ("[^"]+" taxon) has child taxon "([^"]+)"$/
      * @Given /^the ("[^"]+" taxon) has children taxon "([^"]+)" and "([^"]+)"$/
+     * @Given /^the ("[^"]+" taxon) has children taxons "([^"]+)" and "([^"]+)"$/
+     * @Given /^the ("[^"]+" taxon) has children taxons "([^"]+)", "([^"]+)" and "([^"]+)"$/
      */
-    public function theTaxonHasChildrenTaxonAnd(TaxonInterface $taxon, $firstTaxonName, $secondTaxonName)
+    public function theTaxonHasChildrenTaxonAnd(TaxonInterface $taxon, string ...$taxonsNames): void
     {
-        $taxon->addChild($this->createTaxon($firstTaxonName));
-        $taxon->addChild($this->createTaxon($secondTaxonName));
+        foreach ($taxonsNames as $taxonName) {
+            $taxon->addChild($this->createTaxon($taxonName));
+        }
 
         $this->objectManager->persist($taxon);
+        $this->objectManager->flush();
+    }
+
+    /**
+     * @Given /^the ("[^"]+" taxon)(?:| also) is enabled/
+     */
+    public function theTaxonIsEnabled(TaxonInterface $taxon): void
+    {
+        $taxon->setEnabled(true);
+
+        $this->objectManager->flush();
+    }
+
+    /**
+     * @Given /^the ("[^"]+" taxon)(?:| also) is disabled$/
+     */
+    public function theTaxonIsDisabled(TaxonInterface $taxon): void
+    {
+        $taxon->setEnabled(false);
+
         $this->objectManager->flush();
     }
 
@@ -148,7 +132,7 @@ final class TaxonomyContext implements Context
         /** @var TaxonInterface $taxon */
         $taxon = $this->taxonFactory->createNew();
         $taxon->setName($name);
-        $taxon->setCode(StringInflector::nameToCode($name));
+        $taxon->setCode(StringInflector::nameToLowercaseCode($name));
         $taxon->setSlug($this->taxonSlugGenerator->generate($taxon));
 
         return $taxon;

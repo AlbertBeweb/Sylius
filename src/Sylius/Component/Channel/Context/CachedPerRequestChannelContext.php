@@ -18,34 +18,19 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class CachedPerRequestChannelContext implements ChannelContextInterface
 {
-    /** @var ChannelContextInterface */
-    private $decoratedChannelContext;
+    private \SplObjectStorage $requestToChannelMap;
 
-    /** @var RequestStack */
-    private $requestStack;
+    private \SplObjectStorage $requestToExceptionMap;
 
-    /** @var \SplObjectStorage|ChannelInterface[] */
-    private $requestToChannelMap;
-
-    /** @var \SplObjectStorage|ChannelNotFoundException[] */
-    private $requestToExceptionMap;
-
-    public function __construct(ChannelContextInterface $decoratedChannelContext, RequestStack $requestStack)
+    public function __construct(private ChannelContextInterface $decoratedChannelContext, private RequestStack $requestStack)
     {
-        $this->decoratedChannelContext = $decoratedChannelContext;
-        $this->requestStack = $requestStack;
-
         $this->requestToChannelMap = new \SplObjectStorage();
         $this->requestToExceptionMap = new \SplObjectStorage();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannel(): ChannelInterface
     {
-        $objectIdentifier = $this->requestStack->getMasterRequest();
-
+        $objectIdentifier = $this->requestStack->getMainRequest();
         if (null === $objectIdentifier) {
             return $this->decoratedChannelContext->getChannel();
         }

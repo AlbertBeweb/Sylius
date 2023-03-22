@@ -23,74 +23,52 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class PromotionActionFactory implements PromotionActionFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $decoratedFactory;
-
-    public function __construct(FactoryInterface $decoratedFactory)
+    public function __construct(private FactoryInterface $decoratedFactory)
     {
-        $this->decoratedFactory = $decoratedFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNew(): PromotionActionInterface
     {
         return $this->decoratedFactory->createNew();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createFixedDiscount(int $amount, string $channelCode): PromotionActionInterface
     {
         return $this->createAction(
             FixedDiscountPromotionActionCommand::TYPE,
-            [$channelCode => ['amount' => $amount]]
+            [$channelCode => ['amount' => $amount]],
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createUnitFixedDiscount(int $amount, string $channelCode): PromotionActionInterface
     {
         return $this->createAction(
             UnitFixedDiscountPromotionActionCommand::TYPE,
-            [$channelCode => ['amount' => $amount]]
+            [$channelCode => ['amount' => $amount]],
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createPercentageDiscount(float $percentage): PromotionActionInterface
     {
         return $this->createAction(
             PercentageDiscountPromotionActionCommand::TYPE,
-            ['percentage' => $percentage]
+            ['percentage' => $percentage],
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createUnitPercentageDiscount(float $percentage, string $channelCode): PromotionActionInterface
     {
         return $this->createAction(
             UnitPercentageDiscountPromotionActionCommand::TYPE,
-            [$channelCode => ['percentage' => $percentage]]
+            [$channelCode => ['percentage' => $percentage]],
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createShippingPercentageDiscount(float $percentage): PromotionActionInterface
     {
         return $this->createAction(
             ShippingPercentageDiscountPromotionActionCommand::TYPE,
-            ['percentage' => $percentage]
+            ['percentage' => $percentage],
         );
     }
 

@@ -13,72 +13,73 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\AdminBundle\Controller;
 
+use Sylius\Bundle\AdminBundle\Provider\StatisticsDataProviderInterface;
 use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
-use Sylius\Component\Core\Dashboard\DashboardStatisticsProviderInterface;
+use Sylius\Component\Core\Dashboard\SalesDataProviderInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RouterInterface;
+use Twig\Environment;
+use Webmozart\Assert\Assert;
 
 final class DashboardController
 {
-    /** @var DashboardStatisticsProviderInterface */
-    private $statisticsProvider;
-
-    /** @var ChannelRepositoryInterface */
-    private $channelRepository;
-
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var RouterInterface */
-    private $router;
-
     public function __construct(
-        DashboardStatisticsProviderInterface $statisticsProvider,
-        ChannelRepositoryInterface $channelRepository,
-        EngineInterface $templatingEngine,
-        RouterInterface $router
+        private ChannelRepositoryInterface $channelRepository,
+        private Environment $templatingEngine,
+        private RouterInterface $router,
+        private ?SalesDataProviderInterface $salesDataProvider = null,
+        private ?StatisticsDataProviderInterface $statisticsDataProvider = null,
     ) {
-        $this->statisticsProvider = $statisticsProvider;
-        $this->channelRepository = $channelRepository;
-        $this->templatingEngine = $templatingEngine;
-        $this->router = $router;
     }
 
     public function indexAction(Request $request): Response
     {
-        $channelCode = $request->query->get('channel');
-
-        /** @var ChannelInterface $channel */
-        $channel = $this->findChannelByCodeOrFindFirst($channelCode);
+        /** @var ChannelInterface|null $channel */
+        $channel = $this->findChannelByCodeOrFindFirst($request->query->has('channel') ? (string) $request->query->get('channel') : null);
 
         if (null === $channel) {
             return new RedirectResponse($this->router->generate('sylius_admin_channel_create'));
         }
 
-        $statistics = $this->statisticsProvider->getStatisticsForChannel($channel);
+        return new Response($this->templatingEngine->render('@SyliusAdmin/Dashboard/index.html.twig', [
+            'channel' => $channel,
+        ]));
+    }
 
-        return $this->templatingEngine->renderResponse(
-            '@SyliusAdmin/Dashboard/index.html.twig',
-            ['statistics' => $statistics, 'channel' => $channel]
+    public function getRawData(Request $request): Response
+    {
+        /** @var ChannelInterface|null $channel */
+        $channel = $this->findChannelByCodeOrFindFirst((string) $request->query->get('channelCode'));
+
+        if (null === $channel) {
+            return new RedirectResponse($this->router->generate('sylius_admin_channel_create'));
+        }
+
+        return new JsonResponse(
+            $this->statisticsDataProvider->getRawData(
+                $channel,
+                (new \DateTime((string) $request->query->get('startDate'))),
+                (new \DateTime((string) $request->query->get('endDate'))),
+                (string) $request->query->get('interval'),
+            ),
         );
     }
 
     private function findChannelByCodeOrFindFirst(?string $channelCode): ?ChannelInterface
     {
-        $channel = null;
         if (null !== $channelCode) {
             $channel = $this->channelRepository->findOneByCode($channelCode);
+            Assert::nullOrIsInstanceOf($channel, ChannelInterface::class);
+
+            return $channel;
         }
 
-        if (null === $channel) {
-            $channels = $this->channelRepository->findAll();
-
-            $channel = current($channels) === false ? null : current($channels);
-        }
+        $channel = $this->channelRepository->findBy([], ['id' => 'ASC'], 1)[0] ?? null;
+        Assert::nullOrIsInstanceOf($channel, ChannelInterface::class);
 
         return $channel;
     }

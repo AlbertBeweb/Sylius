@@ -15,20 +15,12 @@ namespace Sylius\Bundle\UiBundle\Menu\Event;
 
 use Knp\Menu\FactoryInterface;
 use Knp\Menu\ItemInterface;
-use Symfony\Component\EventDispatcher\Event;
+use SyliusLabs\Polyfill\Symfony\EventDispatcher\Event;
 
 class MenuBuilderEvent extends Event
 {
-    /** @var FactoryInterface */
-    private $factory;
-
-    /** @var ItemInterface */
-    private $menu;
-
-    public function __construct(FactoryInterface $factory, ItemInterface $menu)
+    public function __construct(private FactoryInterface $factory, private ItemInterface $menu)
     {
-        $this->factory = $factory;
-        $this->menu = $menu;
     }
 
     public function getFactory(): FactoryInterface

@@ -19,22 +19,29 @@ use Sylius\Component\Locale\Provider\LocaleProviderInterface;
 use Symfony\Bundle\SecurityBundle\Security\FirewallConfig;
 use Symfony\Bundle\SecurityBundle\Security\FirewallMap;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Router;
+use Symfony\Component\Routing\RouterInterface;
 
 final class NonChannelLocaleListenerSpec extends ObjectBehavior
 {
-    function let(LocaleProviderInterface $localeProvider, FirewallMap $firewallMap): void
-    {
-        $this->beConstructedWith($localeProvider, $firewallMap, ['shop']);
+    function let(
+        RouterInterface $router,
+        LocaleProviderInterface $localeProvider,
+        FirewallMap $firewallMap,
+    ): void {
+        $this->beConstructedWith($router, $localeProvider, $firewallMap, ['shop']);
     }
 
     function it_throws_exception_on_instantiation_with_no_firewall_names(
+        RouterInterface $router,
         LocaleProviderInterface $localeProvider,
-        FirewallMap $firewallMap
+        FirewallMap $firewallMap,
     ): void {
-        $this->beConstructedWith($localeProvider, $firewallMap, []);
+        $this->beConstructedWith($router, $localeProvider, $firewallMap, []);
 
         $this
             ->shouldThrow(\InvalidArgumentException::class)
@@ -43,10 +50,11 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
     }
 
     function it_throws_exception_on_instantiation_with_non_string_firewall_names(
+        RouterInterface $router,
         LocaleProviderInterface $localeProvider,
-        FirewallMap $firewallMap
+        FirewallMap $firewallMap,
     ): void {
-        $this->beConstructedWith($localeProvider, $firewallMap, [new \DateTime(), 1, 5.0]);
+        $this->beConstructedWith($router, $localeProvider, $firewallMap, [new \DateTime(), 1, 5.0]);
 
         $this
             ->shouldThrow(\InvalidArgumentException::class)
@@ -57,9 +65,13 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
     function it_does_nothing_if_its_not_a_master_request(
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
-        GetResponseEvent $event
+        RequestEvent $event,
     ): void {
-        $event->isMasterRequest()->willReturn(false);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(false);
+        } else {
+            $event->isMasterRequest()->willReturn(false);
+        }
 
         $event->getRequest()->shouldNotBeCalled();
         $firewallMap->getFirewallConfig(Argument::any())->shouldNotBeCalled();
@@ -75,9 +87,13 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
         Request $request,
-        GetResponseEvent $event
+        RequestEvent $event,
     ): void {
-        $event->isMasterRequest()->willReturn(true);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(true);
+        } else {
+            $event->isMasterRequest()->willReturn(true);
+        }
         $event->getRequest()->willReturn($request);
         $firewallMap->getFirewallConfig($request)->willReturn(null);
 
@@ -93,12 +109,16 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
         Request $request,
-        GetResponseEvent $event
+        RequestEvent $event,
     ): void {
-        $event->isMasterRequest()->willReturn(true);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(true);
+        } else {
+            $event->isMasterRequest()->willReturn(true);
+        }
         $event->getRequest()->willReturn($request);
         $firewallMap->getFirewallConfig($request)->willReturn(
-            new FirewallConfig('lalaland', 'mock')
+            new FirewallConfig('lalaland', 'mock'),
         );
 
         $localeProvider->getAvailableLocalesCodes()->shouldNotBeCalled();
@@ -113,12 +133,16 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
         Request $request,
-        GetResponseEvent $event
+        RequestEvent $event,
     ): void {
-        $event->isMasterRequest()->willReturn(true);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(true);
+        } else {
+            $event->isMasterRequest()->willReturn(true);
+        }
         $event->getRequest()->willReturn($request);
         $firewallMap->getFirewallConfig($request)->willReturn(
-            new FirewallConfig('shop', 'mock')
+            new FirewallConfig('shop', 'mock'),
         );
 
         $request->getLocale()->willReturn('en');
@@ -135,12 +159,16 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
         Request $request,
-        GetResponseEvent $event
+        RequestEvent $event,
     ): void {
-        $event->isMasterRequest()->willReturn(true);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(true);
+        } else {
+            $event->isMasterRequest()->willReturn(true);
+        }
         $event->getRequest()->willReturn($request);
         $firewallMap->getFirewallConfig($request)->willReturn(
-            new FirewallConfig('shop', 'mock')
+            new FirewallConfig('shop', 'mock'),
         );
 
         $request->attributes = new ParameterBag(['_route' => '_wdt']);
@@ -160,25 +188,32 @@ final class NonChannelLocaleListenerSpec extends ObjectBehavior
         ;
     }
 
-    function it_throws_not_found_exception_if_request_locale_is_not_present_in_provider(
+    function it_redirect_to_default_locale_if_request_locale_is_not_present_in_provider(
         LocaleProviderInterface $localeProvider,
         FirewallMap $firewallMap,
         Request $request,
-        GetResponseEvent $event
+        RequestEvent $event,
+        Router $router,
     ): void {
-        $event->isMasterRequest()->willReturn(true);
+        if (\method_exists(RequestEvent::class, 'isMainRequest')) {
+            $event->isMainRequest()->willReturn(true);
+        } else {
+            $event->isMasterRequest()->willReturn(true);
+        }
         $event->getRequest()->willReturn($request);
         $firewallMap->getFirewallConfig($request)->willReturn(
-            new FirewallConfig('shop', 'mock')
+            new FirewallConfig('shop', 'mock'),
         );
 
         $request->getLocale()->willReturn('en');
+        $request->attributes = new ParameterBag();
 
         $localeProvider->getAvailableLocalesCodes()->willReturn(['ga', 'ga_IE']);
+        $localeProvider->getDefaultLocaleCode()->willReturn('ga');
 
-        $this
-            ->shouldThrow(NotFoundHttpException::class)
-            ->during('restrictRequestLocale', [$event])
-        ;
+        $router->generate('sylius_shop_homepage', ['_locale' => 'ga'])->willReturn('/ga/');
+
+        $this->restrictRequestLocale($event);
+        $event->setResponse(new RedirectResponse('/ga/'))->shouldHaveBeenCalledOnce();
     }
 }

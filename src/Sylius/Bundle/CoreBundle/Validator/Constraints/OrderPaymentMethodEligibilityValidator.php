@@ -21,25 +21,23 @@ use Webmozart\Assert\Assert;
 final class OrderPaymentMethodEligibilityValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
-     *
      * @throws \InvalidArgumentException
      */
-    public function validate($order, Constraint $constraint): void
+    public function validate($value, Constraint $constraint): void
     {
-        /** @var OrderInterface $order */
-        Assert::isInstanceOf($order, OrderInterface::class);
+        /** @var OrderInterface $value */
+        Assert::isInstanceOf($value, OrderInterface::class);
 
         /** @var OrderPaymentMethodEligibility $constraint */
         Assert::isInstanceOf($constraint, OrderPaymentMethodEligibility::class);
 
-        $payments = $order->getPayments();
+        $payments = $value->getPayments();
 
         foreach ($payments as $payment) {
             if (!$payment->getMethod()->isEnabled()) {
                 $this->context->addViolation(
                     $constraint->message,
-                    ['%paymentMethodName%' => $payment->getMethod()->getName()]
+                    ['%paymentMethodName%' => $payment->getMethod()->getName()],
                 );
             }
         }

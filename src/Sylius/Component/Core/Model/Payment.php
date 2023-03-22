@@ -15,23 +15,20 @@ namespace Sylius\Component\Core\Model;
 
 use Sylius\Component\Order\Model\OrderInterface as BaseOrderInterface;
 use Sylius\Component\Payment\Model\Payment as BasePayment;
+use Webmozart\Assert\Assert;
 
 class Payment extends BasePayment implements PaymentInterface
 {
     /** @var BaseOrderInterface */
     protected $order;
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOrder(): ?BaseOrderInterface
     {
+        Assert::isInstanceOf($this->order, OrderInterface::class);
+
         return $this->order;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setOrder(?BaseOrderInterface $order): void
     {
         $this->order = $order;

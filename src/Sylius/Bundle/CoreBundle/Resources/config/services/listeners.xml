@@ -15,12 +15,6 @@
     <services>
         <defaults public="true" />
 
-        <service id="sylius.listener.cart_blamer" class="Sylius\Bundle\CoreBundle\EventListener\CartBlamerListener">
-            <argument type="service" id="sylius.manager.order" />
-            <argument type="service" id="sylius.context.cart" />
-            <tag name="kernel.event_listener" event="sylius.user.security.implicit_login" method="onImplicitLogin" />
-            <tag name="kernel.event_listener" event="security.interactive_login" method="onInteractiveLogin" />
-        </service>
         <service id="sylius.listener.channel" class="Sylius\Bundle\CoreBundle\EventListener\ChannelDeletionListener">
             <argument type="service" id="sylius.repository.channel" />
             <tag name="kernel.event_listener" event="sylius.channel.pre_delete" method="onChannelPreDelete" />
@@ -48,12 +42,6 @@
             <argument type="service" id="sylius.order_processing.order_processor" />
             <tag name="kernel.event_listener" event="sylius.cart_change" method="recalculateOrder" />
         </service>
-        <service id="sylius.listener.user_cart_recalculation" class="Sylius\Bundle\CoreBundle\EventListener\UserCartRecalculationListener">
-            <argument type="service" id="sylius.context.cart" />
-            <argument type="service" id="sylius.order_processing.order_processor" />
-            <tag name="kernel.event_listener" event="sylius.user.security.implicit_login" method="recalculateCartWhileLogin" />
-            <tag name="kernel.event_listener" event="security.interactive_login" method="recalculateCartWhileLogin" />
-        </service>
         <service id="sylius.listener.default_username" class="Sylius\Bundle\CoreBundle\EventListener\DefaultUsernameORMListener">
             <tag name="doctrine.event_listener" event="onFlush" lazy="true" />
         </service>
@@ -71,11 +59,6 @@
             <tag name="doctrine.event_listener" event="prePersist" lazy="true" />
             <tag name="doctrine.event_listener" event="preUpdate" lazy="true" />
         </service>
-        <service id="sylius.translator.listener" class="Symfony\Component\HttpKernel\EventListener\TranslatorListener">
-            <argument type="service" id="translator" />
-            <argument type="service" id="request_stack" />
-            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="2" />
-        </service>
         <service id="sylius.listener.review_create" class="Sylius\Bundle\CoreBundle\EventListener\ReviewCreateListener">
             <argument type="service" id="sylius.context.customer" />
             <tag name="kernel.event_listener" event="sylius.product_review.pre_create" method="ensureReviewHasAuthor" />
@@ -88,7 +71,6 @@
 
         <service id="sylius.listener.simple_product_locking" class="Sylius\Bundle\CoreBundle\EventListener\SimpleProductLockingListener">
             <argument type="service" id="doctrine.orm.entity_manager" />
-            <argument type="service" id="sylius.product_variant_resolver.default" />
             <tag name="kernel.event_listener" event="sylius.product.initialize_update" method="lock" />
         </service>
 
@@ -96,11 +78,39 @@
             <tag name="kernel.event_listener" event="sylius.address.pre_create" method="preCreate" />
         </service>
 
+        <service id="Sylius\Bundle\CoreBundle\EventListener\LocaleAwareListener" decorates="locale_aware_listener">
+            <argument type="service" id="Sylius\Bundle\CoreBundle\EventListener\LocaleAwareListener.inner" />
+        </service>
+
+        <service id="Sylius\Bundle\CoreBundle\EventListener\XFrameOptionsSubscriber">
+            <tag name="kernel.event_subscriber" />
+        </service>
+
         <service id="sylius.listener.taxon_deletion" class="Sylius\Bundle\CoreBundle\EventListener\TaxonDeletionListener">
-            <argument type="service" id="session" />
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="sylius.repository.channel" />
             <argument type="service" id="sylius.promotion_rule_updater.total_of_items_from_taxon" />
             <argument type="service" id="sylius.promotion_rule_updater.has_taxon" />
+            <tag name="kernel.event_listener" event="sylius.taxon.pre_delete" method="protectFromRemovingMenuTaxon" />
             <tag name="kernel.event_listener" event="sylius.taxon.post_delete" method="removeTaxonFromPromotionRules" />
+            <tag name="kernel.event_listener" event="sylius.taxon.pre_delete" method="handleRemovingRootTaxonAtPositionZero" />
+        </service>
+
+        <service id="Sylius\Bundle\CoreBundle\PriceHistory\EntityObserver\CreateLogEntryOnPriceChangeObserver">
+            <argument type="service" id="Sylius\Bundle\CoreBundle\PriceHistory\Logger\PriceChangeLoggerInterface" />
+            <tag name="sylius.entity_observer" />
+        </service>
+
+        <service id="sylius.listener.channel_pricing_change" class="Sylius\Bundle\CoreBundle\PriceHistory\EventListener\OnFlushEntityObserverListener">
+            <argument type="tagged_iterator" tag="sylius.entity_observer" />
+            <tag name="doctrine.event_listener" event="onFlush" lazy="true" />
+        </service>
+
+        <service id="Sylius\Bundle\CoreBundle\PriceHistory\EventListener\BeforeDenormalizationChannelValidationListener">
+            <argument type="service" id="validator" />
+            <argument type="service" id="sylius.custom_factory.channel" />
+            <argument>%sylius.channel.validation_groups%</argument>
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="3" />
         </service>
     </services>
 </container>

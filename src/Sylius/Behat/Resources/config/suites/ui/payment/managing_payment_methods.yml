@@ -6,6 +6,7 @@ default:
         ui_managing_payment_methods:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.setup.channel
                 - sylius.behat.context.setup.currency
@@ -31,4 +32,4 @@ default:
                 - sylius.behat.context.ui.shop.locale
 
             filters:
-                tags: "@managing_payment_methods && @ui"
+                tags: "@managing_payment_methods&&@ui"

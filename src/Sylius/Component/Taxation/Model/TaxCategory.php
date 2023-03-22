@@ -17,27 +17,32 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Resource\Model\TimestampableTrait;
 
-class TaxCategory implements TaxCategoryInterface
+class TaxCategory implements TaxCategoryInterface, \Stringable
 {
     use TimestampableTrait;
 
     /** @var mixed */
     protected $id;
 
-    /** @var string */
+    /** @var string|null */
     protected $code;
 
-    /** @var string */
+    /** @var string|null */
     protected $name;
 
-    /** @var string */
+    /** @var string|null */
     protected $description;
 
-    /** @var Collection|TaxRateInterface[] */
+    /**
+     * @var Collection|TaxRateInterface[]
+     *
+     * @psalm-var Collection<array-key, TaxRateInterface>
+     */
     protected $rates;
 
     public function __construct()
     {
+        /** @var ArrayCollection<array-key, TaxRateInterface> $this->rates */
         $this->rates = new ArrayCollection();
         $this->createdAt = new \DateTime();
     }
@@ -47,73 +52,46 @@ class TaxCategory implements TaxCategoryInterface
         return (string) $this->getName();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCode(): ?string
     {
         return $this->code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setCode(?string $code): void
     {
         $this->code = $code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setName(?string $name): void
     {
         $this->name = $name;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setDescription(?string $description): void
     {
         $this->description = $description;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRates(): Collection
     {
         return $this->rates;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addRate(TaxRateInterface $rate): void
     {
         if (!$this->hasRate($rate)) {
@@ -122,9 +100,6 @@ class TaxCategory implements TaxCategoryInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeRate(TaxRateInterface $rate): void
     {
         if ($this->hasRate($rate)) {
@@ -133,9 +108,6 @@ class TaxCategory implements TaxCategoryInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasRate(TaxRateInterface $rate): bool
     {
         return $this->rates->contains($rate);

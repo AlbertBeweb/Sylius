@@ -20,15 +20,12 @@ use Webmozart\Assert\Assert;
 
 final class OrderInventoryOperator implements OrderInventoryOperatorInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function cancel(OrderInterface $order): void
     {
         if (in_array(
             $order->getPaymentState(),
             [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_REFUNDED],
-            true
+            true,
         )) {
             $this->giveBack($order);
 
@@ -38,9 +35,6 @@ final class OrderInventoryOperator implements OrderInventoryOperatorInterface
         $this->release($order);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hold(OrderInterface $order): void
     {
         /** @var OrderItemInterface $orderItem */
@@ -55,9 +49,6 @@ final class OrderInventoryOperator implements OrderInventoryOperatorInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function sell(OrderInterface $order): void
     {
         /** @var OrderItemInterface $orderItem */
@@ -73,8 +64,8 @@ final class OrderInventoryOperator implements OrderInventoryOperatorInterface
                 0,
                 sprintf(
                     'Not enough units to decrease on hold quantity from the inventory of a variant "%s".',
-                    $variant->getName()
-                )
+                    $variant->getName(),
+                ),
             );
 
             Assert::greaterThanEq(
@@ -82,8 +73,8 @@ final class OrderInventoryOperator implements OrderInventoryOperatorInterface
                 0,
                 sprintf(
                     'Not enough units to decrease on hand quantity from the inventory of a variant "%s".',
-                    $variant->getName()
-                )
+                    $variant->getName(),
+                ),
             );
 
             $variant->setOnHold($variant->getOnHold() - $orderItem->getQuantity());
@@ -109,8 +100,8 @@ final class OrderInventoryOperator implements OrderInventoryOperatorInterface
                 0,
                 sprintf(
                     'Not enough units to decrease on hold quantity from the inventory of a variant "%s".',
-                    $variant->getName()
-                )
+                    $variant->getName(),
+                ),
             );
 
             $variant->setOnHold($variant->getOnHold() - $orderItem->getQuantity());

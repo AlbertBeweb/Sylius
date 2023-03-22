@@ -22,27 +22,15 @@ use Webmozart\Assert\Assert;
 
 final class ProductVariantGenerator implements ProductVariantGeneratorInterface
 {
-    /** @var ProductVariantFactoryInterface */
-    private $productVariantFactory;
-
-    /** @var CartesianSetBuilder */
-    private $setBuilder;
-
-    /** @var ProductVariantsParityCheckerInterface */
-    private $variantsParityChecker;
+    private CartesianSetBuilder $setBuilder;
 
     public function __construct(
-        ProductVariantFactoryInterface $productVariantFactory,
-        ProductVariantsParityCheckerInterface $variantsParityChecker
+        private ProductVariantFactoryInterface $productVariantFactory,
+        private ProductVariantsParityCheckerInterface $variantsParityChecker,
     ) {
-        $this->productVariantFactory = $productVariantFactory;
         $this->setBuilder = new CartesianSetBuilder();
-        $this->variantsParityChecker = $variantsParityChecker;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function generate(ProductInterface $product): void
     {
         Assert::true($product->hasOptions(), 'Cannot generate variants for an object without options.');

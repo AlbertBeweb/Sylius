@@ -22,48 +22,21 @@ use Sylius\Behat\Page\Admin\Promotion\UpdatePageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\Resolver\CurrentPageResolverInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PromotionInterface;
 use Webmozart\Assert\Assert;
 
 final class ManagingPromotionsContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var IndexPageCouponInterface */
-    private $indexCouponPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        IndexPageInterface $indexPage,
-        IndexPageCouponInterface $indexCouponPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver,
-        NotificationCheckerInterface $notificationChecker
+        private SharedStorageInterface $sharedStorage,
+        private IndexPageInterface $indexPage,
+        private IndexPageCouponInterface $indexCouponPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->indexPage = $indexPage;
-        $this->indexCouponPage = $indexCouponPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -76,7 +49,7 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
-     * @Given I want to browse promotions
+     * @When I want to browse promotions
      * @When I browse promotions
      */
     public function iWantToBrowsePromotions()
@@ -135,6 +108,23 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
+     * @When I specify its label as :label in :localeCode locale
+     */
+    public function iSpecifyItsLabelInLocaleCode(string $label, string $localeCode): void
+    {
+        $this->createPage->specifyLabel($label, $localeCode);
+    }
+
+    /**
+     * @When the :promotion promotion should have a label :label in :localeCode locale
+     */
+    public function thePromotionShouldHaveLabelInLocale(PromotionInterface $promotion, string $label, string $localeCode): void
+    {
+        $this->updatePage->open(['id' => $promotion->getId()]);
+        $this->createPage->hasLabel($label, $localeCode);
+    }
+
+    /**
      * @When I add the "Has at least one from taxons" rule configured with :firstTaxon
      * @When I add the "Has at least one from taxons" rule configured with :firstTaxon and :secondTaxon
      */
@@ -146,69 +136,69 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
-     * @When /^I add the "Total price of items from taxon" rule configured with "([^"]+)" taxon and (?:€|£|\$)([^"]+) amount for "([^"]+)" channel$/
+     * @When /^I add the "Total price of items from taxon" rule configured with "([^"]+)" taxon and (?:€|£|\$)([^"]+) amount for ("[^"]+" channel)$/
      */
-    public function iAddTheRuleConfiguredWith($taxonName, $amount, $channelName)
+    public function iAddTheRuleConfiguredWith($taxonName, $amount, ChannelInterface $channel)
     {
         $this->createPage->addRule('Total price of items from taxon');
         $this->createPage->selectAutocompleteRuleOption('Taxon', $taxonName);
-        $this->createPage->fillRuleOptionForChannel($channelName, 'Amount', $amount);
+        $this->createPage->fillRuleOptionForChannel($channel->getCode(), 'Amount', $amount);
     }
 
     /**
-     * @When /^I add the "Item total" rule configured with (?:€|£|\$)([^"]+) amount for "([^"]+)" channel and (?:€|£|\$)([^"]+) amount for "([^"]+)" channel$/
+     * @When /^I add the "Item total" rule configured with (?:€|£|\$)([^"]+) amount for ("[^"]+" channel) and (?:€|£|\$)([^"]+) amount for ("[^"]+" channel)$/
      */
     public function iAddTheItemTotalRuleConfiguredWithTwoChannel(
         $firstAmount,
-        $firstChannelName,
+        ChannelInterface $firstChannel,
         $secondAmount,
-        $secondChannelName
+        ChannelInterface $secondChannel,
     ) {
         $this->createPage->addRule('Item total');
-        $this->createPage->fillRuleOptionForChannel($firstChannelName, 'Amount', $firstAmount);
-        $this->createPage->fillRuleOptionForChannel($secondChannelName, 'Amount', $secondAmount);
+        $this->createPage->fillRuleOptionForChannel($firstChannel->getCode(), 'Amount', $firstAmount);
+        $this->createPage->fillRuleOptionForChannel($secondChannel->getCode(), 'Amount', $secondAmount);
     }
 
     /**
-     * @When /^I add the "([^"]+)" action configured with amount of "(?:€|£|\$)([^"]+)" for "([^"]+)" channel$/
+     * @When /^I add the "([^"]+)" action configured with amount of "(?:€|£|\$)([^"]+)" for ("[^"]+" channel)$/
      */
-    public function iAddTheActionConfiguredWithAmountForChannel($actionType, $amount, $channelName)
+    public function iAddTheActionConfiguredWithAmountForChannel($actionType, $amount, ChannelInterface $channel)
     {
         $this->createPage->addAction($actionType);
-        $this->createPage->fillActionOptionForChannel($channelName, 'Amount', $amount);
+        $this->createPage->fillActionOptionForChannel($channel->getCode(), 'Amount', $amount);
     }
 
     /**
-     * @When /^it is(?:| also) configured with amount of "(?:€|£|\$)([^"]+)" for "([^"]+)" channel$/
+     * @When /^it is(?:| also) configured with amount of "(?:€|£|\$)([^"]+)" for ("[^"]+" channel)$/
      */
-    public function itIsConfiguredWithAmountForChannel($amount, $channelName)
+    public function itIsConfiguredWithAmountForChannel($amount, ChannelInterface $channel)
     {
-        $this->createPage->fillActionOptionForChannel($channelName, 'Amount', $amount);
+        $this->createPage->fillActionOptionForChannel($channel->getCode(), 'Amount', $amount);
     }
 
     /**
-     * @When /^I specify that on "([^"]+)" channel this action should be applied to items with price greater then "(?:€|£|\$)([^"]+)"$/
+     * @When /^I specify that on ("[^"]+" channel) this action should be applied to items with price greater then "(?:€|£|\$)([^"]+)"$/
      */
-    public function iAddAMinPriceFilterRangeForChannel($channelName, $minimum)
+    public function iAddAMinPriceFilterRangeForChannel(ChannelInterface $channel, $minimum)
     {
-        $this->createPage->fillActionOptionForChannel($channelName, 'Min', $minimum);
+        $this->createPage->fillActionOptionForChannel($channel->getCode(), 'Min', $minimum);
     }
 
     /**
-     * @When /^I specify that on "([^"]+)" channel this action should be applied to items with price lesser then "(?:€|£|\$)([^"]+)"$/
+     * @When /^I specify that on ("[^"]+" channel) this action should be applied to items with price lesser then "(?:€|£|\$)([^"]+)"$/
      */
-    public function iAddAMaxPriceFilterRangeForChannel($channelName, $maximum)
+    public function iAddAMaxPriceFilterRangeForChannel(ChannelInterface $channel, $maximum)
     {
-        $this->createPage->fillActionOptionForChannel($channelName, 'Max', $maximum);
+        $this->createPage->fillActionOptionForChannel($channel->getCode(), 'Max', $maximum);
     }
 
     /**
-     * @When /^I specify that on "([^"]+)" channel this action should be applied to items with price between "(?:€|£|\$)([^"]+)" and "(?:€|£|\$)([^"]+)"$/
+     * @When /^I specify that on ("[^"]+" channel) this action should be applied to items with price between "(?:€|£|\$)([^"]+)" and "(?:€|£|\$)([^"]+)"$/
      */
-    public function iAddAMinMaxPriceFilterRangeForChannel($channelName, $minimum, $maximum)
+    public function iAddAMinMaxPriceFilterRangeForChannel(ChannelInterface $channel, $minimum, $maximum)
     {
-        $this->iAddAMinPriceFilterRangeForChannel($channelName, $minimum);
-        $this->iAddAMaxPriceFilterRangeForChannel($channelName, $maximum);
+        $this->iAddAMinPriceFilterRangeForChannel($channel, $minimum);
+        $this->iAddAMaxPriceFilterRangeForChannel($channel, $maximum);
     }
 
     /**
@@ -220,15 +210,15 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
-     * @When /^I add the "([^"]+)" action configured with a percentage value of (?:|-)([^"]+)% for ("[^"]+") channel$/
+     * @When /^I add the "([^"]+)" action configured with a percentage value of (?:|-)([^"]+)% for ("[^"]+" channel)$/
      */
     public function iAddTheActionConfiguredWithAPercentageValueForChannel(
         string $actionType,
-        string $percentage = null,
-        string $channelName
+        string $percentage,
+        ChannelInterface $channel,
     ): void {
         $this->createPage->addAction($actionType);
-        $this->createPage->fillActionOptionForChannel($channelName, 'Percentage', $percentage);
+        $this->createPage->fillActionOptionForChannel($channel->getCode(), 'Percentage', $percentage);
     }
 
     /**
@@ -272,7 +262,7 @@ final class ManagingPromotionsContext implements Context
      */
     public function thereShouldBePromotion(int $amount = 1): void
     {
-        Assert::same($amount, $this->indexPage->countItems());
+        Assert::same($this->indexPage->countItems(), $amount);
     }
 
     /**
@@ -304,7 +294,7 @@ final class ManagingPromotionsContext implements Context
      */
     public function iShouldBeNotifiedThatAMinimalValueShouldBeNumeric($element)
     {
-        $this->assertFieldValidationMessage($element, 'This value is not valid.');
+        $this->assertFieldValidationMessage($element, 'Please enter a valid money amount.');
     }
 
     /**
@@ -368,11 +358,30 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
+     * @When I set it as not applies to discounted by catalog promotion items
+     */
+    public function iSetItAsNotAppliesToDiscountedByCatalogPromotionItems(): void
+    {
+        /** @var CreatePageInterface|UpdatePageInterface $currentPage */
+        $currentPage = $this->currentPageResolver->getCurrentPageWithForm([$this->createPage, $this->updatePage]);
+
+        $currentPage->makeNotAppliesToDiscountedItem();
+    }
+
+    /**
      * @Then the :promotion promotion should be exclusive
      */
     public function thePromotionShouldBeExclusive(PromotionInterface $promotion)
     {
         $this->assertIfFieldIsTrue($promotion, 'exclusive');
+    }
+
+    /**
+     * @Then the :promotion promotion should not applies to discounted items
+     */
+    public function thePromotionShouldNotAppliesToDiscountedItems(PromotionInterface $promotion): void
+    {
+        $this->assertIfFieldIsFalse($promotion, 'applies_to_discounted');
     }
 
     /**
@@ -416,8 +425,8 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
-     * @Given I want to modify a :promotion promotion
-     * @Given /^I want to modify (this promotion)$/
+     * @When I want to modify a :promotion promotion
+     * @When /^I want to modify (this promotion)$/
      * @When I modify a :promotion promotion
      */
     public function iWantToModifyAPromotion(PromotionInterface $promotion): void
@@ -470,8 +479,8 @@ final class ManagingPromotionsContext implements Context
     public function iShouldBeNotifiedOfFailure()
     {
         $this->notificationChecker->checkNotification(
-            'Cannot delete, the promotion is in use.',
-            NotificationType::failure()
+            'Cannot delete, the Promotion is in use.',
+            NotificationType::failure(),
         );
     }
 
@@ -517,29 +526,20 @@ final class ManagingPromotionsContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessageForAction(),
-            'This value should not be blank.'
+            'This value should not be blank.',
         );
     }
 
     /**
+     * @Then I should be notified that a percentage discount value must be between 0% and 100%
+     * @Then I should be notified that a percentage discount value must be at least 0%
      * @Then I should be notified that the maximum value of a percentage discount is 100%
      */
-    public function iShouldBeNotifiedThatTheMaximumValueOfAPercentageDiscountIs100()
+    public function iShouldBeNotifiedThatPercentageDiscountShouldBeBetween(): void
     {
         Assert::same(
             $this->createPage->getValidationMessageForAction(),
-            'The maximum value of a percentage discount is 100%.'
-        );
-    }
-
-    /**
-     * @Then I should be notified that a percentage discount value must be at least 0%
-     */
-    public function iShouldBeNotifiedThatAPercentageDiscountValueMustBeAtLeast0()
-    {
-        Assert::same(
-            $this->createPage->getValidationMessageForAction(),
-            'The value of a percentage discount must be at least 0%.'
+            'The percentage discount must be between 0% and 100%.',
         );
     }
 
@@ -552,7 +552,7 @@ final class ManagingPromotionsContext implements Context
         Assert::same(
             (int) $usage,
             $this->indexPage->getUsageNumber($promotion),
-            'Promotion should be used %s times, but is %2$s.'
+            'Promotion should be used %s times, but is %2$s.',
         );
     }
 
@@ -583,7 +583,7 @@ final class ManagingPromotionsContext implements Context
         Assert::same(
             (int) $count,
             $actualCount,
-            'There should be %s promotion, but there\'s %2$s.'
+            'There should be %s promotion, but there\'s %2$s.',
         );
     }
 
@@ -598,7 +598,7 @@ final class ManagingPromotionsContext implements Context
         Assert::same(
             $actualValue,
             $value,
-            sprintf('Expected first promotion\'s %s to be "%s", but it is "%s".', $field, $value, $actualValue)
+            sprintf('Expected first promotion\'s %s to be "%s", but it is "%s".', $field, $value, $actualValue),
         );
     }
 
@@ -613,7 +613,7 @@ final class ManagingPromotionsContext implements Context
         Assert::same(
             $actualValue,
             $value,
-            sprintf('Expected last promotion\'s %s to be "%s", but it is "%s".', $field, $value, $actualValue)
+            sprintf('Expected last promotion\'s %s to be "%s", but it is "%s".', $field, $value, $actualValue),
         );
     }
 
@@ -682,10 +682,81 @@ final class ManagingPromotionsContext implements Context
     }
 
     /**
-     * @param string $element
-     * @param string $expectedMessage
+     * @When /^I filter promotions by coupon code equal "([^"]+)"/
      */
-    private function assertFieldValidationMessage($element, $expectedMessage)
+    public function iFilterPromotionsByCouponCodeEqual(string $value): void
+    {
+        $this->indexPage->specifyFilterType('coupon_code', 'equal');
+        $this->indexPage->specifyFilterValue('coupon_code', $value);
+
+        $this->indexPage->filter();
+    }
+
+    /**
+     * @When I add a new rule
+     */
+    public function iAddANewRule()
+    {
+        $this->createPage->addRule(null);
+    }
+
+    /**
+     * @When I add a new action
+     */
+    public function iAddANewAction()
+    {
+        $this->createPage->addAction(null);
+    }
+
+    /**
+     * @When /^I remove the discount (amount|percentage) for ("[^"]+" channel)$/
+     */
+    public function iRemoveTheDiscountForChannel(string $field, ChannelInterface $channel): void
+    {
+        $this->updatePage->removeActionFieldValue($channel->getCode(), $field);
+    }
+
+    /**
+     * @When I remove the rule amount for :channel channel
+     */
+    public function iRemoveTheRuleAmountForChannel(ChannelInterface $channel): void
+    {
+        $this->updatePage->removeRuleAmount($channel->getCode());
+    }
+
+    /**
+     * @Then I should see the rule configuration form
+     */
+    public function iShouldSeeTheRuleConfigurationForm()
+    {
+        Assert::true($this->createPage->checkIfRuleConfigurationFormIsVisible(), 'Cart promotion rule configuration form is not visible.');
+    }
+
+    /**
+     * @Then I should see the action configuration form
+     */
+    public function iShouldSeeTheActionConfigurationForm()
+    {
+        Assert::true($this->createPage->checkIfActionConfigurationFormIsVisible(), 'Cart promotion action configuration form is not visible.');
+    }
+
+    /**
+     * @Then /^I should see that the rule for ("[^"]+" channel) has (\d+) validation errors?$/
+     */
+    public function iShouldSeeThatTheRuleForChannelHasCountValidationErrors(ChannelInterface $channel, int $count): void
+    {
+        Assert::same($this->updatePage->getRuleValidationErrorsCount($channel->getCode()), $count);
+    }
+
+    /**
+     * @Then /^I should see that the action for ("[^"]+" channel) has (\d+) validation errors?$/
+     */
+    public function iShouldSeeThatTheActionForChannelHasCountValidationErrors(ChannelInterface $channel, int $count): void
+    {
+        Assert::same($this->updatePage->getActionValidationErrorsCount($channel->getCode()), $count);
+    }
+
+    private function assertFieldValidationMessage(string $element, string $expectedMessage)
     {
         /** @var CreatePageInterface|UpdatePageInterface $currentPage */
         $currentPage = $this->currentPageResolver->getCurrentPageWithForm([$this->createPage, $this->updatePage]);
@@ -701,5 +772,12 @@ final class ManagingPromotionsContext implements Context
         $this->iWantToModifyAPromotion($promotion);
 
         Assert::true($this->updatePage->hasResourceValues([$field => 1]));
+    }
+
+    private function assertIfFieldIsFalse(PromotionInterface $promotion, $field): void
+    {
+        $this->iWantToModifyAPromotion($promotion);
+
+        Assert::false($this->updatePage->hasResourceValues([$field => 1]));
     }
 }

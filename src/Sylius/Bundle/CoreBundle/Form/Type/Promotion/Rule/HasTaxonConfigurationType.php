@@ -20,17 +20,10 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 final class HasTaxonConfigurationType extends AbstractType
 {
-    /** @var DataTransformerInterface */
-    private $taxonsToCodesTransformer;
-
-    public function __construct(DataTransformerInterface $taxonsToCodesTransformer)
+    public function __construct(private DataTransformerInterface $taxonsToCodesTransformer)
     {
-        $this->taxonsToCodesTransformer = $taxonsToCodesTransformer;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -43,9 +36,6 @@ final class HasTaxonConfigurationType extends AbstractType
         $builder->get('taxons')->addModelTransformer($this->taxonsToCodesTransformer);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_promotion_rule_has_taxon_configuration';

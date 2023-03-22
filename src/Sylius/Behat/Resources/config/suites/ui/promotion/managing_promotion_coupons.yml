@@ -6,6 +6,7 @@ default:
         ui_managing_promotion_coupons:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.address
                 - sylius.behat.context.transform.coupon
@@ -29,4 +30,4 @@ default:
                 - sylius.behat.context.ui.admin.notification
 
             filters:
-                tags: "@managing_promotion_coupons && @ui"
+                tags: "@managing_promotion_coupons&&@ui"

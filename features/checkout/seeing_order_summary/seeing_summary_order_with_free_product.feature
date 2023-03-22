@@ -12,26 +12,26 @@ Feature: Seeing a summary of the order with free product
         And the store has a product "Lannister Coat" priced at "$100.00"
         And it belongs to "Clothes" tax category
         And the store has "DHL" shipping method with "$0.00" fee
-        And the store allows paying "offline"
+        And the store allows paying "Offline"
         And there is a promotion "All year promotion"
         And it gives "$5.00" discount to every order
         And I am a logged in customer
 
-    @ui
-    Scenario: Seeing free order
-        Given I have product "Greyjoy Coat" in the cart
-        When I specified the shipping address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
+    @ui @api
+    Scenario: Seeing Free order
+        When I add "Greyjoy Coat" product to the cart
+        And I define the billing address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
         And I proceed with "DHL" shipping method
         Then I should be on the checkout summary step
         And my order total should be "$0.00"
         And there should be no discount
         And there should be no taxes charged
 
-    @ui
-    Scenario: Seeing order with both free and paid products
+    @ui @api
+    Scenario: Seeing order with both Free and paid products
         Given I have product "Greyjoy Coat" in the cart
         And I have product "Lannister Coat" in the cart
-        When I specified the shipping address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
+        When I specified the billing address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
         And I proceed with "DHL" shipping method and "Offline" payment
         Then I should be on the checkout summary step
         And my order total should be "$104.50"

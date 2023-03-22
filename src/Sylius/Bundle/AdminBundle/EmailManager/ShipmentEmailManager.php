@@ -17,28 +17,30 @@ use Sylius\Bundle\CoreBundle\Mailer\Emails;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Mailer\Sender\SenderInterface;
+use Webmozart\Assert\Assert;
 
 final class ShipmentEmailManager implements ShipmentEmailManagerInterface
 {
-    /** @var SenderInterface */
-    private $emailSender;
-
-    public function __construct(SenderInterface $emailSender)
+    public function __construct(private SenderInterface $emailSender)
     {
-        $this->emailSender = $emailSender;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function sendConfirmationEmail(ShipmentInterface $shipment): void
     {
         /** @var OrderInterface $order */
         $order = $shipment->getOrder();
+        $email = $order->getCustomer()->getEmail();
+        Assert::notNull($email);
 
-        $this->emailSender->send(Emails::SHIPMENT_CONFIRMATION, [$order->getCustomer()->getEmail()], [
-            'shipment' => $shipment,
-            'order' => $order,
-        ]);
+        $this->emailSender->send(
+            Emails::SHIPMENT_CONFIRMATION,
+            [$email],
+            [
+                'shipment' => $shipment,
+                'order' => $order,
+                'channel' => $order->getChannel(),
+                'localeCode' => $order->getLocaleCode(),
+            ],
+        );
     }
 }

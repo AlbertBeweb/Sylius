@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CustomerBundle\DependencyInjection;
 
+use Sylius\Bundle\CustomerBundle\Doctrine\ORM\CustomerGroupRepository;
 use Sylius\Bundle\CustomerBundle\Form\Type\CustomerGroupType;
 use Sylius\Bundle\CustomerBundle\Form\Type\CustomerType;
 use Sylius\Bundle\ResourceBundle\Controller\ResourceController;
@@ -28,19 +29,11 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        if (method_exists(TreeBuilder::class, 'getRootNode')) {
-            $treeBuilder = new TreeBuilder('sylius_customer');
-            $rootNode = $treeBuilder->getRootNode();
-        } else {
-            // BC layer for symfony/config 4.1 and older
-            $treeBuilder = new TreeBuilder();
-            $rootNode = $treeBuilder->root('sylius_customer');
-        }
+        $treeBuilder = new TreeBuilder('sylius_customer');
+        /** @var ArrayNodeDefinition $rootNode */
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->addDefaultsIfNotSet()
@@ -87,7 +80,7 @@ final class Configuration implements ConfigurationInterface
                                         ->scalarNode('model')->defaultValue(CustomerGroup::class)->cannotBeEmpty()->end()
                                         ->scalarNode('interface')->defaultValue(CustomerGroupInterface::class)->cannotBeEmpty()->end()
                                         ->scalarNode('controller')->defaultValue(ResourceController::class)->cannotBeEmpty()->end()
-                                        ->scalarNode('repository')->cannotBeEmpty()->end()
+                                        ->scalarNode('repository')->defaultValue(CustomerGroupRepository::class)->cannotBeEmpty()->end()
                                         ->scalarNode('factory')->defaultValue(Factory::class)->end()
                                         ->scalarNode('form')->defaultValue(CustomerGroupType::class)->cannotBeEmpty()->end()
                                     ->end()

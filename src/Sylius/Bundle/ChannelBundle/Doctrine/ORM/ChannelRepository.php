@@ -19,25 +19,21 @@ use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
 
 class ChannelRepository extends EntityRepository implements ChannelRepositoryInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function findOneByHostname(string $hostname): ?ChannelInterface
     {
         return $this->findOneBy(['hostname' => $hostname]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findOneEnabledByHostname(string $hostname): ?ChannelInterface
+    {
+        return $this->findOneBy(['hostname' => $hostname, 'enabled' => true]);
+    }
+
     public function findOneByCode(string $code): ?ChannelInterface
     {
         return $this->findOneBy(['code' => $code]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByName(string $name): iterable
     {
         return $this->findBy(['name' => $name]);

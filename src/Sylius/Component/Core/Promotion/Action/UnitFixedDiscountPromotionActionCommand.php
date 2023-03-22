@@ -25,31 +25,15 @@ final class UnitFixedDiscountPromotionActionCommand extends UnitDiscountPromotio
 {
     public const TYPE = 'unit_fixed_discount';
 
-    /** @var FilterInterface */
-    private $priceRangeFilter;
-
-    /** @var FilterInterface */
-    private $taxonFilter;
-
-    /** @var FilterInterface */
-    private $productFilter;
-
     public function __construct(
         FactoryInterface $adjustmentFactory,
-        FilterInterface $priceRangeFilter,
-        FilterInterface $taxonFilter,
-        FilterInterface $productFilter
+        private FilterInterface $priceRangeFilter,
+        private FilterInterface $taxonFilter,
+        private FilterInterface $productFilter,
     ) {
         parent::__construct($adjustmentFactory);
-
-        $this->priceRangeFilter = $priceRangeFilter;
-        $this->taxonFilter = $taxonFilter;
-        $this->productFilter = $productFilter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(PromotionSubjectInterface $subject, array $configuration, PromotionInterface $promotion): bool
     {
         if (!$subject instanceof OrderInterface) {
@@ -68,7 +52,7 @@ final class UnitFixedDiscountPromotionActionCommand extends UnitDiscountPromotio
 
         $filteredItems = $this->priceRangeFilter->filter(
             $subject->getItems()->toArray(),
-            array_merge(['channel' => $subject->getChannel()], $configuration[$channelCode])
+            array_merge(['channel' => $subject->getChannel()], $configuration[$channelCode]),
         );
         $filteredItems = $this->taxonFilter->filter($filteredItems, $configuration[$channelCode]);
         $filteredItems = $this->productFilter->filter($filteredItems, $configuration[$channelCode]);
@@ -90,7 +74,7 @@ final class UnitFixedDiscountPromotionActionCommand extends UnitDiscountPromotio
             $this->addAdjustmentToUnit(
                 $unit,
                 min($unit->getTotal(), $amount),
-                $promotion
+                $promotion,
             );
         }
     }

@@ -25,21 +25,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ProductTaxonAutocompleteChoiceType extends AbstractType
 {
-    /** @var FactoryInterface */
-    private $productTaxonFactory;
-
-    /** @var RepositoryInterface */
-    private $productTaxonRepository;
-
-    public function __construct(FactoryInterface $productTaxonFactory, RepositoryInterface $productTaxonRepository)
+    public function __construct(private FactoryInterface $productTaxonFactory, private RepositoryInterface $productTaxonRepository)
     {
-        $this->productTaxonFactory = $productTaxonFactory;
-        $this->productTaxonRepository = $productTaxonRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -48,9 +37,9 @@ final class ProductTaxonAutocompleteChoiceType extends AbstractType
                     new ProductTaxonToTaxonTransformer(
                         $this->productTaxonFactory,
                         $this->productTaxonRepository,
-                        $options['product']
-                    )
-                )
+                        $options['product'],
+                    ),
+                ),
             );
         }
 
@@ -59,15 +48,12 @@ final class ProductTaxonAutocompleteChoiceType extends AbstractType
                 new ProductTaxonToTaxonTransformer(
                     $this->productTaxonFactory,
                     $this->productTaxonRepository,
-                    $options['product']
-                )
+                    $options['product'],
+                ),
             );
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -82,17 +68,11 @@ final class ProductTaxonAutocompleteChoiceType extends AbstractType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ResourceAutocompleteChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product_taxon_autocomplete_choice';

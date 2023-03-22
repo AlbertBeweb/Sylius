@@ -19,12 +19,8 @@ use Symfony\Component\Templating\Helper\Helper;
 
 final class InventoryHelper extends Helper
 {
-    /** @var AvailabilityCheckerInterface */
-    private $checker;
-
-    public function __construct(AvailabilityCheckerInterface $checker)
+    public function __construct(private AvailabilityCheckerInterface $checker)
     {
-        $this->checker = $checker;
     }
 
     public function isStockAvailable(StockableInterface $stockable): bool
@@ -37,9 +33,6 @@ final class InventoryHelper extends Helper
         return $this->checker->isStockSufficient($stockable, $quantity);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'sylius_inventory';

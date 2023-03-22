@@ -18,25 +18,15 @@ use Sylius\Component\Taxonomy\Model\TaxonInterface;
 
 final class TaxonFactory implements TaxonFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $factory;
-
-    public function __construct(FactoryInterface $factory)
+    public function __construct(private FactoryInterface $factory)
     {
-        $this->factory = $factory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNew(): TaxonInterface
     {
         return $this->factory->createNew();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createForParent(TaxonInterface $parent): TaxonInterface
     {
         $taxon = $this->createNew();

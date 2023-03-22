@@ -14,35 +14,29 @@ declare(strict_types=1);
 namespace Sylius\Bundle\CoreBundle\Validator\Constraints;
 
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Shipping\Checker\ShippingMethodEligibilityCheckerInterface;
+use Sylius\Component\Shipping\Checker\Eligibility\ShippingMethodEligibilityCheckerInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Webmozart\Assert\Assert;
 
 final class OrderShippingMethodEligibilityValidator extends ConstraintValidator
 {
-    /** @var ShippingMethodEligibilityCheckerInterface */
-    private $methodEligibilityChecker;
-
-    public function __construct(ShippingMethodEligibilityCheckerInterface $methodEligibilityChecker)
+    public function __construct(private ShippingMethodEligibilityCheckerInterface $methodEligibilityChecker)
     {
-        $this->methodEligibilityChecker = $methodEligibilityChecker;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \InvalidArgumentException
      */
-    public function validate($order, Constraint $constraint): void
+    public function validate($value, Constraint $constraint): void
     {
-        /** @var OrderInterface $order */
-        Assert::isInstanceOf($order, OrderInterface::class);
+        /** @var OrderInterface $value */
+        Assert::isInstanceOf($value, OrderInterface::class);
 
         /** @var OrderShippingMethodEligibility $constraint */
         Assert::isInstanceOf($constraint, OrderShippingMethodEligibility::class);
 
-        $shipments = $order->getShipments();
+        $shipments = $value->getShipments();
         if ($shipments->isEmpty()) {
             return;
         }
@@ -51,7 +45,7 @@ final class OrderShippingMethodEligibilityValidator extends ConstraintValidator
             if (!$this->methodEligibilityChecker->isEligible($shipment, $shipment->getMethod())) {
                 $this->context->addViolation(
                     $constraint->message,
-                    ['%shippingMethodName%' => $shipment->getMethod()->getName()]
+                    ['%shippingMethodName%' => $shipment->getMethod()->getName()],
                 );
             }
         }

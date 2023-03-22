@@ -25,42 +25,18 @@ use Webmozart\Assert\Assert;
 
 final class ManagingPaymentMethodsContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    /** @var array */
-    private $gatewayFactories;
-
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver,
-        NotificationCheckerInterface $notificationChecker,
-        array $gatewayFactories
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private NotificationCheckerInterface $notificationChecker,
+        private array $gatewayFactories,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->notificationChecker = $notificationChecker;
-        $this->gatewayFactories = $gatewayFactories;
     }
 
     /**
-     * @Given I want to modify the :paymentMethod payment method
+     * @When I want to modify the :paymentMethod payment method
      */
     public function iWantToModifyAPaymentMethod(PaymentMethodInterface $paymentMethod)
     {
@@ -72,7 +48,7 @@ final class ManagingPaymentMethodsContext implements Context
      * @When I rename it to :name in :language
      * @When I remove its name from :language translation
      */
-    public function iNameItIn($name = null, $language)
+    public function iNameItIn(string $language, ?string $name = null): void
     {
         /** @var CreatePageInterface|UpdatePageInterface $currentPage */
         $currentPage = $this->currentPageResolver->getCurrentPageWithForm([$this->createPage, $this->updatePage]);
@@ -128,7 +104,7 @@ final class ManagingPaymentMethodsContext implements Context
      */
     public function iShouldBeNotifiedThatItIsInUse()
     {
-        $this->notificationChecker->checkNotification('Cannot delete, the payment method is in use.', NotificationType::failure());
+        $this->notificationChecker->checkNotification('Cannot delete, the Payment method is in use.', NotificationType::failure());
     }
 
     /**
@@ -191,6 +167,14 @@ final class ManagingPaymentMethodsContext implements Context
     }
 
     /**
+     * @When I cancel my changes
+     */
+    public function iCancelMyChanges(): void
+    {
+        $this->createPage->cancelChanges();
+    }
+
+    /**
      * @When I check (also) the :paymentMethodName payment method
      */
     public function iCheckThePaymentMethod(string $paymentMethodName): void
@@ -236,6 +220,22 @@ final class ManagingPaymentMethodsContext implements Context
     }
 
     /**
+     * @When I choose enabled filter
+     */
+    public function iChooseEnabledFilter(): void
+    {
+        $this->indexPage->chooseEnabledFilter();
+    }
+
+    /**
+     * @When I filter
+     */
+    public function iFilter(): void
+    {
+        $this->indexPage->filter();
+    }
+
+    /**
      * @Then the first payment method on the list should have :field :value
      */
     public function theFirstPaymentMethodOnTheListShouldHave($field, $value)
@@ -269,7 +269,7 @@ final class ManagingPaymentMethodsContext implements Context
      */
     public function iShouldSeePaymentMethodsInTheList(int $amount = 1): void
     {
-        Assert::same($this->indexPage->countItems(), (int) $amount);
+        Assert::same($this->indexPage->countItems(), $amount);
     }
 
     /**
@@ -287,7 +287,7 @@ final class ManagingPaymentMethodsContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessage('paypal_' . $element),
-            sprintf('Please enter paypal %s.', $element)
+            sprintf('Please enter paypal %s.', $element),
         );
     }
 
@@ -298,7 +298,7 @@ final class ManagingPaymentMethodsContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessage('gateway_name'),
-            'Gateway name should contain only letters and underscores.'
+            'Gateway name should contain only letters and underscores.',
         );
     }
 
@@ -375,7 +375,7 @@ final class ManagingPaymentMethodsContext implements Context
     public function thePaymentMethodShouldHaveInstructionsIn(
         PaymentMethodInterface $paymentMethod,
         $instructions,
-        $language
+        $language,
     ) {
         $this->iWantToModifyAPaymentMethod($paymentMethod);
 
@@ -387,7 +387,7 @@ final class ManagingPaymentMethodsContext implements Context
      */
     public function thePaymentMethodShouldBeAvailableInChannel(
         PaymentMethodInterface $paymentMethod,
-        $channelName
+        $channelName,
     ) {
         $this->iWantToModifyAPaymentMethod($paymentMethod);
 
@@ -463,5 +463,13 @@ final class ManagingPaymentMethodsContext implements Context
     {
         $this->createPage->setStripeSecretKey('TEST');
         $this->createPage->setStripePublishableKey('TEST');
+    }
+
+    /**
+     * @Then I should be redirected to the previous page of only enabled payment methods
+     */
+    public function iShouldBeRedirectedToThePreviousFilteredPageWithFilter(): void
+    {
+        Assert::true($this->indexPage->isEnabledFilterApplied());
     }
 }

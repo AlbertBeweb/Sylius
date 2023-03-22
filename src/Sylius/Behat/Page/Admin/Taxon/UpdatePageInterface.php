@@ -29,9 +29,6 @@ interface UpdatePageInterface extends BaseUpdatePageInterface
 
     public function specifySlug(string $slug, string $languageCode): void;
 
-    /**
-     * @param string $type
-     */
     public function attachImage(string $path, string $type = null): void;
 
     public function isImageWithTypeDisplayed(string $type): bool;
@@ -65,4 +62,10 @@ interface UpdatePageInterface extends BaseUpdatePageInterface
     public function getValidationMessageForImageAtPlace(int $place): string;
 
     public function activateLanguageTab(string $locale): void;
+
+    public function enable(): void;
+
+    public function disable(): void;
+
+    public function isEnabled(): bool;
 }

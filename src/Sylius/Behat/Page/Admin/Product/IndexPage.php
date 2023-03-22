@@ -21,25 +21,30 @@ use Symfony\Component\Routing\RouterInterface;
 
 class IndexPage extends CrudIndexPage implements IndexPageInterface
 {
-    /** @var ImageExistenceCheckerInterface */
-    private $imageExistenceChecker;
-
     public function __construct(
         Session $session,
         $minkParameters,
         RouterInterface $router,
         TableAccessorInterface $tableAccessor,
         string $routeName,
-        ImageExistenceCheckerInterface $imageExistenceChecker
+        private ImageExistenceCheckerInterface $imageExistenceChecker,
     ) {
         parent::__construct($session, $minkParameters, $router, $tableAccessor, $routeName);
+    }
 
-        $this->imageExistenceChecker = $imageExistenceChecker;
+    public function filter(): void
+    {
+        $this->getElement('filter')->press();
     }
 
     public function filterByTaxon(string $taxonName): void
     {
         $this->getElement('taxon_filter', ['%taxon%' => $taxonName])->click();
+    }
+
+    public function chooseChannelFilter(string $channelName): void
+    {
+        $this->getElement('channel_filter')->selectOption($channelName);
     }
 
     public function hasProductAccessibleImage(string $productCode): bool
@@ -59,9 +64,36 @@ class IndexPage extends CrudIndexPage implements IndexPageInterface
         $field->clickLink('Details');
     }
 
+    public function goToPage(int $page): void
+    {
+        $this->getElement('pagination_button', ['%page%' => $page])->click();
+    }
+
+    public function checkFirstProductHasDataAttribute(string $attributeName): bool
+    {
+        return $this->getElement('first_product')->find('css', sprintf('[%s]', $attributeName)) !== null;
+    }
+
+    public function checkLastProductHasDataAttribute(string $attributeName): bool
+    {
+        return $this->getElement('last_product')->find('css', sprintf('[%s]', $attributeName)) !== null;
+    }
+
+    public function getPageNumber(): int
+    {
+        return (int) $this->getElement('page_number')->getText();
+    }
+
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'channel_filter' => '#criteria_channel',
+            'enabled_filter' => '#criteria_enabled',
+            'first_product' => '.table > tbody > tr:first-child',
+            'last_product' => '.table > tbody > tr:last-child',
+            'page_number' => '.sylius-grid-nav__pagination .active',
+            'pagination_button' => '.sylius-grid-nav__pagination a.item:contains("%page%")',
+            'pagination_buttons' => '.sylius-grid-nav__pagination',
             'taxon_filter' => '.sylius-tree__item a:contains("%taxon%")',
         ]);
     }

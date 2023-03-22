@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Ui\Shop\Checkout;
 
 use Behat\Behat\Context\Context;
+use Behat\Mink\Exception\ElementNotFoundException;
+use FriendsOfBehat\PageObjectExtension\Page\UnexpectedPageException;
 use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Sylius\Behat\Page\Shop\Checkout\SelectPaymentPageInterface;
 use Sylius\Behat\Page\Shop\Checkout\SelectShippingPageInterface;
@@ -21,42 +23,31 @@ use Webmozart\Assert\Assert;
 
 final class CheckoutShippingContext implements Context
 {
-    /** @var SelectShippingPageInterface */
-    private $selectShippingPage;
-
-    /** @var SelectPaymentPageInterface */
-    private $selectPaymentPage;
-
-    /** @var CompletePageInterface */
-    private $completePage;
-
     public function __construct(
-        SelectShippingPageInterface $selectShippingPage,
-        SelectPaymentPageInterface $selectPaymentPage,
-        CompletePageInterface $completePage
+        private SelectShippingPageInterface $selectShippingPage,
+        private SelectPaymentPageInterface $selectPaymentPage,
+        private CompletePageInterface $completePage,
     ) {
-        $this->selectShippingPage = $selectShippingPage;
-        $this->selectPaymentPage = $selectPaymentPage;
-        $this->completePage = $completePage;
     }
 
     /**
+     * @Given I completed the shipping step with :shippingMethodName shipping method
      * @Given I have proceeded selecting :shippingMethodName shipping method
      * @When I proceed with :shippingMethodName shipping method
      */
-    public function iHaveProceededSelectingShippingMethod($shippingMethodName)
+    public function iHaveProceededSelectingShippingMethod(string $shippingMethodName): void
     {
         $this->iSelectShippingMethod($shippingMethodName);
         $this->selectShippingPage->nextStep();
     }
 
     /**
-     * @Given I have selected :shippingMethod shipping method
-     * @When I select :shippingMethod shipping method
+     * @Given I have selected :shippingMethodName shipping method
+     * @When I select :shippingMethodName shipping method
      */
-    public function iSelectShippingMethod($shippingMethod)
+    public function iSelectShippingMethod(string $shippingMethodName): void
     {
-        $this->selectShippingPage->selectShippingMethod($shippingMethod);
+        $this->selectShippingPage->selectShippingMethod($shippingMethodName);
     }
 
     /**
@@ -68,9 +59,10 @@ final class CheckoutShippingContext implements Context
     }
 
     /**
-     * @When /^I(?:| try to) complete the shipping step$/
+     * @When /^I(?:| try to) complete(?:|d) the shipping step$/
+     * @When I complete the shipping step with first shipping method
      */
-    public function iCompleteTheShippingStep()
+    public function iCompleteTheShippingStep(): void
     {
         $this->selectShippingPage->nextStep();
     }
@@ -201,6 +193,22 @@ final class CheckoutShippingContext implements Context
      */
     public function iShouldBeCheckingOutAs($email)
     {
-        Assert::same($this->selectShippingPage->getPurchaserEmail(), 'Checking out as ' . $email . '.');
+        Assert::same($this->selectShippingPage->getPurchaserIdentifier(), 'Checking out as ' . $email . '.');
+    }
+
+    /**
+     * @Then I should not be able to proceed checkout shipping step
+     */
+    public function iShouldNotBeAbleToProceedCheckoutShippingStep(): void
+    {
+        $this->selectShippingPage->tryToOpen();
+
+        try {
+            $this->selectShippingPage->nextStep();
+        } catch (ElementNotFoundException) {
+            return;
+        }
+
+        throw new UnexpectedPageException('It should not be possible to complete checkout shipping step.');
     }
 }

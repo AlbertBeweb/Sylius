@@ -30,7 +30,7 @@ class IndexPage extends BaseIndexPage implements IndexPageInterface
     {
         try {
             return (int) $this->getElement('on_hold_quantity', ['%id%' => $productVariant->getId()])->getText();
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return 0;
         }
     }
@@ -50,9 +50,7 @@ class IndexPage extends BaseIndexPage implements IndexPageInterface
     {
         $this->getElement('save_configuration_button')->press();
 
-        $this->getDocument()->waitFor(5, function () {
-            return null === $this->getElement('save_configuration_button')->find('css', '.loading');
-        });
+        $this->getDocument()->waitFor(5, fn () => null === $this->getElement('save_configuration_button')->find('css', '.loading'));
     }
 
     protected function getDefinedElements(): array

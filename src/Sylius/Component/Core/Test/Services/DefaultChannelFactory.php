@@ -28,48 +28,17 @@ final class DefaultChannelFactory implements DefaultChannelFactoryInterface
 
     public const DEFAULT_CHANNEL_CURRENCY = 'USD';
 
-    /** @var ChannelFactoryInterface */
-    private $channelFactory;
-
-    /** @var FactoryInterface */
-    private $currencyFactory;
-
-    /** @var FactoryInterface */
-    private $localeFactory;
-
-    /** @var RepositoryInterface */
-    private $channelRepository;
-
-    /** @var RepositoryInterface */
-    private $currencyRepository;
-
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var string */
-    private $defaultLocaleCode;
-
     public function __construct(
-        ChannelFactoryInterface $channelFactory,
-        FactoryInterface $currencyFactory,
-        FactoryInterface $localeFactory,
-        RepositoryInterface $channelRepository,
-        RepositoryInterface $currencyRepository,
-        RepositoryInterface $localeRepository,
-        string $defaultLocaleCode
+        private ChannelFactoryInterface $channelFactory,
+        private FactoryInterface $currencyFactory,
+        private FactoryInterface $localeFactory,
+        private RepositoryInterface $channelRepository,
+        private RepositoryInterface $currencyRepository,
+        private RepositoryInterface $localeRepository,
+        private string $defaultLocaleCode,
     ) {
-        $this->channelFactory = $channelFactory;
-        $this->currencyFactory = $currencyFactory;
-        $this->localeFactory = $localeFactory;
-        $this->channelRepository = $channelRepository;
-        $this->currencyRepository = $currencyRepository;
-        $this->localeRepository = $localeRepository;
-        $this->defaultLocaleCode = $defaultLocaleCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(?string $code = null, ?string $name = null, ?string $currencyCode = null): array
     {
         $currency = $this->provideCurrency($currencyCode);
@@ -99,7 +68,7 @@ final class DefaultChannelFactory implements DefaultChannelFactoryInterface
     {
         $currencyCode = $currencyCode ?? self::DEFAULT_CHANNEL_CURRENCY;
 
-        /** @var CurrencyInterface $currency */
+        /** @var CurrencyInterface|null $currency */
         $currency = $this->currencyRepository->findOneBy(['code' => $currencyCode]);
 
         if (null === $currency) {
@@ -115,7 +84,7 @@ final class DefaultChannelFactory implements DefaultChannelFactoryInterface
 
     private function provideLocale(): LocaleInterface
     {
-        /** @var LocaleInterface $locale */
+        /** @var LocaleInterface|null $locale */
         $locale = $this->localeRepository->findOneBy(['code' => $this->defaultLocaleCode]);
 
         if (null === $locale) {

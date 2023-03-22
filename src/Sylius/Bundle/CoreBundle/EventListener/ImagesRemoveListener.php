@@ -25,34 +25,31 @@ use Sylius\Component\Core\Uploader\ImageUploaderInterface;
  */
 final class ImagesRemoveListener
 {
-    /** @var ImageUploaderInterface */
-    private $imageUploader;
-
-    /** @var CacheManager */
-    private $cacheManager;
-
-    /** @var FilterManager */
-    private $filterManager;
-
     /** @var string[] */
-    private $imagesToDelete = [];
+    private array $imagesToDelete = [];
 
-    public function __construct(ImageUploaderInterface $imageUploader, CacheManager $cacheManager, FilterManager $filterManager)
-    {
-        $this->imageUploader = $imageUploader;
-        $this->cacheManager = $cacheManager;
-        $this->filterManager = $filterManager;
+    public function __construct(
+        private ImageUploaderInterface $imageUploader,
+        private CacheManager $cacheManager,
+        private FilterManager $filterManager,
+    ) {
     }
 
     public function onFlush(OnFlushEventArgs $event): void
     {
-        foreach ($event->getEntityManager()->getUnitOfWork()->getScheduledEntityDeletions() as $entityDeletion) {
+        foreach ($event->getObjectManager()->getUnitOfWork()->getScheduledEntityDeletions() as $entityDeletion) {
             if (!$entityDeletion instanceof ImageInterface) {
                 continue;
             }
 
-            if (!in_array($entityDeletion->getPath(), $this->imagesToDelete)) {
-                $this->imagesToDelete[] = $entityDeletion->getPath();
+            $path = $entityDeletion->getPath();
+
+            if (null === $path) {
+                continue;
+            }
+
+            if (!in_array($path, $this->imagesToDelete, true)) {
+                $this->imagesToDelete[] = $path;
             }
         }
     }

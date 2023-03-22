@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\AddressingBundle\Form\EventListener;
 
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use Sylius\Bundle\AddressingBundle\Form\Type\ProvinceCodeChoiceType;
 use Sylius\Component\Addressing\Model\AddressInterface;
 use Sylius\Component\Addressing\Model\CountryInterface;
@@ -29,21 +29,10 @@ use Symfony\Component\Form\FormInterface;
  */
 final class BuildAddressFormSubscriber implements EventSubscriberInterface
 {
-    /** @var ObjectRepository */
-    private $countryRepository;
-
-    /** @var FormFactoryInterface */
-    private $formFactory;
-
-    public function __construct(ObjectRepository $countryRepository, FormFactoryInterface $factory)
+    public function __construct(private ObjectRepository $countryRepository, private FormFactoryInterface $formFactory)
     {
-        $this->countryRepository = $countryRepository;
-        $this->formFactory = $factory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -54,7 +43,7 @@ final class BuildAddressFormSubscriber implements EventSubscriberInterface
 
     public function preSetData(FormEvent $event): void
     {
-        /** @var AddressInterface $address */
+        /** @var AddressInterface|null $address */
         $address = $event->getData();
         if (null === $address) {
             return;
@@ -65,7 +54,7 @@ final class BuildAddressFormSubscriber implements EventSubscriberInterface
             return;
         }
 
-        /** @var CountryInterface $country */
+        /** @var CountryInterface|null $country */
         $country = $this->countryRepository->findOneBy(['code' => $countryCode]);
         if (null === $country) {
             return;
@@ -93,7 +82,7 @@ final class BuildAddressFormSubscriber implements EventSubscriberInterface
             return;
         }
 
-        /** @var CountryInterface $country */
+        /** @var CountryInterface|null $country */
         $country = $this->countryRepository->findOneBy(['code' => $data['countryCode']]);
         if (null === $country) {
             return;

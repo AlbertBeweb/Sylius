@@ -19,9 +19,9 @@ use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\OrderItemUnitInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Inventory\Model\InventoryUnitInterface;
 use Sylius\Component\Order\Model\OrderItemUnit as BaseOrderItemUnit;
-use Sylius\Component\Shipping\Model\ShipmentInterface;
 use Sylius\Component\Shipping\Model\ShipmentUnitInterface;
 
 final class OrderItemUnitSpec extends ObjectBehavior
@@ -93,7 +93,7 @@ final class OrderItemUnitSpec extends ObjectBehavior
     function it_returns_a_sum_of_neutral_and_non_neutral_tax_adjustments_as_tax_total(
         OrderItemInterface $orderItem,
         AdjustmentInterface $nonNeutralTaxAdjustment,
-        AdjustmentInterface $neutralTaxAdjustment
+        AdjustmentInterface $neutralTaxAdjustment,
     ): void {
         $neutralTaxAdjustment->isNeutral()->willReturn(true);
         $neutralTaxAdjustment->getType()->willReturn(AdjustmentInterface::TAX_ADJUSTMENT);
@@ -115,7 +115,7 @@ final class OrderItemUnitSpec extends ObjectBehavior
         OrderItemInterface $orderItem,
         AdjustmentInterface $nonNeutralTaxAdjustment,
         AdjustmentInterface $neutralTaxAdjustment,
-        AdjustmentInterface $notTaxAdjustment
+        AdjustmentInterface $notTaxAdjustment,
     ): void {
         $neutralTaxAdjustment->isNeutral()->willReturn(true);
         $neutralTaxAdjustment->getType()->willReturn(AdjustmentInterface::TAX_ADJUSTMENT);

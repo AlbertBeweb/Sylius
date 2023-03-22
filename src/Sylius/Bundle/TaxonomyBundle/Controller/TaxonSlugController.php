@@ -23,29 +23,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class TaxonSlugController
 {
-    /** @var TaxonSlugGeneratorInterface */
-    private $taxonSlugGenerator;
-
-    /** @var RepositoryInterface */
-    private $taxonRepository;
-
-    /** @var FactoryInterface */
-    private $taxonFactory;
-
     public function __construct(
-        TaxonSlugGeneratorInterface $taxonSlugGenerator,
-        RepositoryInterface $taxonRepository,
-        FactoryInterface $taxonFactory
+        private TaxonSlugGeneratorInterface $taxonSlugGenerator,
+        private RepositoryInterface $taxonRepository,
+        private FactoryInterface $taxonFactory,
     ) {
-        $this->taxonSlugGenerator = $taxonSlugGenerator;
-        $this->taxonRepository = $taxonRepository;
-        $this->taxonFactory = $taxonFactory;
     }
 
     public function generateAction(Request $request): Response
     {
-        $name = $request->query->get('name');
-        $locale = $request->query->get('locale');
+        $name = (string) $request->query->get('name');
+        $locale = (string) $request->query->get('locale');
         $parentId = $request->query->get('parentId');
 
         /** @var TaxonInterface $taxon */

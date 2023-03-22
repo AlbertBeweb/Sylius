@@ -19,7 +19,7 @@ use Sylius\Component\Resource\Model\TimestampableTrait;
 use Sylius\Component\Resource\Model\TranslatableTrait;
 use Sylius\Component\Resource\Model\TranslationInterface;
 
-class ProductOption implements ProductOptionInterface
+class ProductOption implements ProductOptionInterface, \Stringable
 {
     use TimestampableTrait;
     use TranslatableTrait {
@@ -30,20 +30,26 @@ class ProductOption implements ProductOptionInterface
     /** @var mixed */
     protected $id;
 
-    /** @var string */
+    /** @var string|null */
     protected $code;
 
-    /** @var int */
+    /** @var int|null */
     protected $position;
 
-    /** @var Collection|ProductOptionValueInterface[] */
+    /**
+     * @var Collection|ProductOptionValueInterface[]
+     *
+     * @psalm-var Collection<array-key, ProductOptionValueInterface>
+     */
     protected $values;
 
     public function __construct()
     {
         $this->initializeTranslationsCollection();
 
+        /** @var ArrayCollection<array-key, ProductOptionValueInterface> $this->values */
         $this->values = new ArrayCollection();
+
         $this->createdAt = new \DateTime();
     }
 
@@ -52,98 +58,65 @@ class ProductOption implements ProductOptionInterface
         return (string) $this->getName();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCode(): ?string
     {
         return $this->code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setCode(?string $code): void
     {
         $this->code = $code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): ?string
     {
         return $this->getTranslation()->getName();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setName(?string $name): void
     {
         $this->getTranslation()->setName($name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPosition(): ?int
     {
         return $this->position;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setPosition(?int $position): void
     {
         $this->position = $position;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getValues(): Collection
     {
         return $this->values;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addValue(ProductOptionValueInterface $value): void
+    public function addValue(ProductOptionValueInterface $optionValue): void
     {
-        if (!$this->hasValue($value)) {
-            $value->setOption($this);
-            $this->values->add($value);
+        if (!$this->hasValue($optionValue)) {
+            $optionValue->setOption($this);
+            $this->values->add($optionValue);
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function removeValue(ProductOptionValueInterface $value): void
+    public function removeValue(ProductOptionValueInterface $optionValue): void
     {
-        if ($this->hasValue($value)) {
-            $this->values->removeElement($value);
-            $value->setOption(null);
+        if ($this->hasValue($optionValue)) {
+            $this->values->removeElement($optionValue);
+            $optionValue->setOption(null);
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function hasValue(ProductOptionValueInterface $value): bool
+    public function hasValue(ProductOptionValueInterface $optionValue): bool
     {
-        return $this->values->contains($value);
+        return $this->values->contains($optionValue);
     }
 
     /**
@@ -157,9 +130,6 @@ class ProductOption implements ProductOptionInterface
         return $translation;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function createTranslation(): ProductOptionTranslationInterface
     {
         return new ProductOptionTranslation();

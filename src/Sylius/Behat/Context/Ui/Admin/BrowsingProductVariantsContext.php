@@ -22,18 +22,10 @@ use Webmozart\Assert\Assert;
 
 final class BrowsingProductVariantsContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var ProductVariantResolverInterface */
-    private $defaultProductVariantResolver;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        ProductVariantResolverInterface $defaultProductVariantResolver
+        private IndexPageInterface $indexPage,
+        private ProductVariantResolverInterface $defaultProductVariantResolver,
     ) {
-        $this->indexPage = $indexPage;
-        $this->defaultProductVariantResolver = $defaultProductVariantResolver;
     }
 
     /**
@@ -145,7 +137,7 @@ final class BrowsingProductVariantsContext implements Context
     {
         Assert::true($this->indexPage->isSingleResourceWithSpecificElementOnPage(
             ['name' => $productVariantName],
-            sprintf('td > div.ui.label:contains("%s")', $quantity)
+            sprintf('td > div.ui.label:contains("%s")', $quantity),
         ));
     }
 
@@ -158,7 +150,7 @@ final class BrowsingProductVariantsContext implements Context
 
         Assert::true($this->indexPage->isSingleResourceWithSpecificElementOnPage(
             ['name' => $productVariantName],
-            sprintf('td > div.ui.label:contains("%s")', $quantity)
+            sprintf('td > div.ui.label:contains("%s")', $quantity),
         ));
     }
 
@@ -272,6 +264,17 @@ final class BrowsingProductVariantsContext implements Context
     }
 
     /**
+     * @Then /^I should see that the ("([^"]*)" variant) is enabled$/
+     */
+    public function iShouldSeeThatTheVariantIsEnabled(ProductVariantInterface $productVariant): void
+    {
+        Assert::true($this->indexPage->isSingleResourceOnPage([
+            'name' => $productVariant->getName(),
+            'enabled' => 'Enabled',
+        ]));
+    }
+
+    /**
      * @param int $expectedAmount
      * @param ProductVariantInterface $variant
      *
@@ -288,8 +291,8 @@ final class BrowsingProductVariantsContext implements Context
                 'Unexpected on hold quantity for "%s" variant. It should be "%s" but is "%s"',
                 $variant->getName(),
                 $expectedAmount,
-                $actualAmount
-            )
+                $actualAmount,
+            ),
         );
     }
 

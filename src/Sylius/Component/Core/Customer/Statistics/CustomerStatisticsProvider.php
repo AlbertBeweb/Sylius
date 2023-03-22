@@ -21,21 +21,10 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class CustomerStatisticsProvider implements CustomerStatisticsProviderInterface
 {
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var RepositoryInterface */
-    private $channelRepository;
-
-    public function __construct(OrderRepositoryInterface $orderRepository, RepositoryInterface $channelRepository)
+    public function __construct(private OrderRepositoryInterface $orderRepository, private RepositoryInterface $channelRepository)
     {
-        $this->orderRepository = $orderRepository;
-        $this->channelRepository = $channelRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCustomerStatistics(CustomerInterface $customer): CustomerStatistics
     {
         $orders = $this->orderRepository->findForCustomerStatistics($customer);
@@ -55,7 +44,7 @@ final class CustomerStatisticsProvider implements CustomerStatisticsProviderInte
             $perChannelCustomerStatisticsArray[] = new PerChannelCustomerStatistics(
                 count($channelOrders),
                 $this->getOrdersSummedTotal($channelOrders),
-                $channel
+                $channel,
             );
         }
 
@@ -70,7 +59,7 @@ final class CustomerStatisticsProvider implements CustomerStatisticsProviderInte
         return array_sum(
             array_map(function (OrderInterface $order) {
                 return $order->getTotal();
-            }, $orders)
+            }, $orders),
         );
     }
 

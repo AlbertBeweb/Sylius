@@ -29,7 +29,7 @@ final class CustomerAndChannelBasedCartContextSpec extends ObjectBehavior
     function let(
         CustomerContextInterface $customerContext,
         ChannelContextInterface $channelContext,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
     ): void {
         $this->beConstructedWith($customerContext, $channelContext, $orderRepository);
     }
@@ -45,12 +45,12 @@ final class CustomerAndChannelBasedCartContextSpec extends ObjectBehavior
         CustomerContextInterface $customerContext,
         CustomerInterface $customer,
         OrderInterface $order,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
     ): void {
         $channelContext->getChannel()->willReturn($channel);
         $customerContext->getCustomer()->willReturn($customer);
 
-        $orderRepository->findLatestCartByChannelAndCustomer($channel, $customer)->willReturn($order);
+        $orderRepository->findLatestNotEmptyCartByChannelAndCustomer($channel, $customer)->willReturn($order);
 
         $this->getCart()->shouldReturn($order);
     }
@@ -60,12 +60,12 @@ final class CustomerAndChannelBasedCartContextSpec extends ObjectBehavior
         ChannelContextInterface $channelContext,
         CustomerContextInterface $customerContext,
         CustomerInterface $customer,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
     ): void {
         $channelContext->getChannel()->willReturn($channel);
         $customerContext->getCustomer()->willReturn($customer);
 
-        $orderRepository->findLatestCartByChannelAndCustomer($channel, $customer)->willReturn(null);
+        $orderRepository->findLatestNotEmptyCartByChannelAndCustomer($channel, $customer)->willReturn(null);
 
         $this
             ->shouldThrow(new CartNotFoundException('Sylius was not able to find the cart for currently logged in user.'))
@@ -76,7 +76,7 @@ final class CustomerAndChannelBasedCartContextSpec extends ObjectBehavior
     function it_throws_exception_if_there_is_no_logged_in_customer(
         CustomerContextInterface $customerContext,
         ChannelContextInterface $channelContext,
-        ChannelInterface $channel
+        ChannelInterface $channel,
     ): void {
         $customerContext->getCustomer()->willReturn(null);
         $channelContext->getChannel()->willReturn($channel);

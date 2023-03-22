@@ -13,18 +13,14 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\ReviewBundle\EventListener;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Sylius\Bundle\ReviewBundle\Updater\ReviewableRatingUpdaterInterface;
 use Sylius\Component\Review\Model\ReviewInterface;
 
 final class ReviewChangeListener
 {
-    /** @var ReviewableRatingUpdaterInterface */
-    private $averageRatingUpdater;
-
-    public function __construct(ReviewableRatingUpdaterInterface $averageRatingUpdater)
+    public function __construct(private ReviewableRatingUpdaterInterface $averageRatingUpdater)
     {
-        $this->averageRatingUpdater = $averageRatingUpdater;
     }
 
     public function postPersist(LifecycleEventArgs $args)

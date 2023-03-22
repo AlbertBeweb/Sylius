@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Domain;
 
 use Behat\Behat\Context\Context;
-use Doctrine\DBAL\DBALException;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -23,28 +22,12 @@ use Webmozart\Assert\Assert;
 
 final class ManagingProductsContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var RepositoryInterface */
-    private $productRepository;
-
-    /** @var RepositoryInterface */
-    private $productVariantRepository;
-
-    /** @var RepositoryInterface */
-    private $productReviewRepository;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        RepositoryInterface $productRepository,
-        RepositoryInterface $productVariantRepository,
-        RepositoryInterface $productReviewRepository
+        private SharedStorageInterface $sharedStorage,
+        private RepositoryInterface $productRepository,
+        private RepositoryInterface $productVariantRepository,
+        private RepositoryInterface $productReviewRepository,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->productRepository = $productRepository;
-        $this->productVariantRepository = $productVariantRepository;
-        $this->productReviewRepository = $productReviewRepository;
     }
 
     /**
@@ -62,7 +45,8 @@ final class ManagingProductsContext implements Context
     {
         try {
             $this->productVariantRepository->remove($productVariant);
-        } catch (DBALException $exception) {
+            /** @phpstan-ignore-next-line  */
+        } catch (\Doctrine\DBAL\DBALException|\Doctrine\DBAL\Exception $exception) {
             $this->sharedStorage->set('last_exception', $exception);
         }
     }
@@ -82,7 +66,7 @@ final class ManagingProductsContext implements Context
     {
         try {
             $this->productRepository->remove($product);
-        } catch (DBALException $exception) {
+        } catch (\Exception $exception) {
             $this->sharedStorage->set('last_exception', $exception);
         }
     }
@@ -92,7 +76,13 @@ final class ManagingProductsContext implements Context
      */
     public function iShouldBeNotifiedThatThisProductVariantIsInUseAndCannotBeDeleted()
     {
-        Assert::isInstanceOf($this->sharedStorage->get('last_exception'), DBALException::class);
+        if (class_exists('\Doctrine\DBAL\DBALException')) {
+            Assert::isInstanceOf($this->sharedStorage->get('last_exception'), \Doctrine\DBAL\DBALException::class);
+        }
+
+        if (class_exists('\Doctrine\DBAL\Exception')) {
+            Assert::isInstanceOf($this->sharedStorage->get('last_exception'), \Doctrine\DBAL\Exception::class);
+        }
     }
 
     /**

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture\Factory;
 
+use Faker\Factory;
+use Faker\Generator;
 use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
 use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
@@ -30,57 +32,28 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ShippingMethodExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $shippingMethodFactory;
+    private Generator $faker;
 
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
-    /** @var RepositoryInterface */
-    private $shippingCategoryRepository;
-
-    /** @var RepositoryInterface */
-    private $taxCategoryRepository;
-
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var ChannelRepositoryInterface */
-    private $channelRepository;
-
-    /** @var \Faker\Generator */
-    private $faker;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
 
     public function __construct(
-        FactoryInterface $shippingMethodFactory,
-        RepositoryInterface $zoneRepository,
-        RepositoryInterface $shippingCategoryRepository,
-        RepositoryInterface $localeRepository,
-        ChannelRepositoryInterface $channelRepository,
-        ?RepositoryInterface $taxCategoryRepository = null
+        private FactoryInterface $shippingMethodFactory,
+        private RepositoryInterface $zoneRepository,
+        private RepositoryInterface $shippingCategoryRepository,
+        private RepositoryInterface $localeRepository,
+        private ChannelRepositoryInterface $channelRepository,
+        private ?RepositoryInterface $taxCategoryRepository = null,
     ) {
-        $this->shippingMethodFactory = $shippingMethodFactory;
-        $this->zoneRepository = $zoneRepository;
-        $this->shippingCategoryRepository = $shippingCategoryRepository;
-        $this->taxCategoryRepository = $taxCategoryRepository;
         if ($this->taxCategoryRepository === null) {
             @trigger_error(sprintf('Not passing a $taxCategoryRepository to %s constructor is deprecated since Sylius 1.4 and will be removed in Sylius 2.0.', self::class), \E_USER_DEPRECATED);
         }
-        $this->localeRepository = $localeRepository;
-        $this->channelRepository = $channelRepository;
 
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver = new OptionsResolver();
 
         $this->configureOptions($this->optionsResolver);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(array $options = []): ShippingMethodInterface
     {
         $options = $this->optionsResolver->resolve($options);
@@ -117,28 +90,22 @@ class ShippingMethodExampleFactory extends AbstractExampleFactory implements Exa
         return $shippingMethod;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault('code', function (Options $options): string {
-                return StringInflector::nameToCode($options['name']);
-            })
+            ->setDefault('code', fn (Options $options): string => StringInflector::nameToCode($options['name']))
             ->setDefault('name', function (Options $options): string {
-                return $this->faker->words(3, true);
+                /** @var string $words */
+                $words = $this->faker->words(3, true);
+
+                return $words;
             })
-            ->setDefault('description', function (Options $options): string {
-                return $this->faker->sentence();
-            })
-            ->setDefault('enabled', function (Options $options): bool {
-                return $this->faker->boolean(90);
-            })
+            ->setDefault('description', fn (Options $options): string => $this->faker->sentence())
+            ->setDefault('enabled', fn (Options $options): bool => $this->faker->boolean(90))
             ->setAllowedTypes('enabled', 'bool')
             ->setDefault('zone', LazyOption::randomOne($this->zoneRepository))
             ->setAllowedTypes('zone', ['null', 'string', ZoneInterface::class])
-            ->setNormalizer('zone', LazyOption::findOneBy($this->zoneRepository, 'code'))
+            ->setNormalizer('zone', LazyOption::getOneBy($this->zoneRepository, 'code'))
             ->setDefined('tax_category')
             ->setAllowedTypes('tax_category', ['null', 'string', TaxCategoryInterface::class])
             ->setDefined('category')
@@ -162,6 +129,7 @@ class ShippingMethodExampleFactory extends AbstractExampleFactory implements Exa
             ->setDefault('archived_at', null)
             ->setAllowedTypes('archived_at', ['null', \DateTimeInterface::class])
         ;
+
         if ($this->taxCategoryRepository !== null) {
             $resolver->setNormalizer('tax_category', LazyOption::findOneBy($this->taxCategoryRepository, 'code'));
         }

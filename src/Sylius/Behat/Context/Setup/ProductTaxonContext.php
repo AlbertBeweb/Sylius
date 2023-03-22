@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductTaxonInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
@@ -22,18 +22,10 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class ProductTaxonContext implements Context
 {
-    /** @var FactoryInterface */
-    private $productTaxonFactory;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
     public function __construct(
-        FactoryInterface $productTaxonFactory,
-        ObjectManager $objectManager
+        private FactoryInterface $productTaxonFactory,
+        private ObjectManager $objectManager,
     ) {
-        $this->productTaxonFactory = $productTaxonFactory;
-        $this->objectManager = $objectManager;
     }
 
     /**
@@ -53,6 +45,7 @@ final class ProductTaxonContext implements Context
 
     /**
      * @Given the product :product has a main taxon :taxon
+     * @Given /^(this product) has a main (taxon "[^"]+")$/
      */
     public function productHasMainTaxon(ProductInterface $product, TaxonInterface $taxon): void
     {

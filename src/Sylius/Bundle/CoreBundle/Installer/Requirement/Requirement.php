@@ -15,24 +15,8 @@ namespace Sylius\Bundle\CoreBundle\Installer\Requirement;
 
 final class Requirement
 {
-    /** @var string */
-    private $label;
-
-    /** @var bool */
-    private $fulfilled;
-
-    /** @var bool */
-    private $required;
-
-    /** @var string|null */
-    private $help;
-
-    public function __construct(string $label, bool $fulfilled, bool $required = true, ?string $help = null)
+    public function __construct(private string $label, private bool $fulfilled, private bool $required = true, private ?string $help = null)
     {
-        $this->label = $label;
-        $this->fulfilled = $fulfilled;
-        $this->required = $required;
-        $this->help = $help;
     }
 
     public function getLabel(): string

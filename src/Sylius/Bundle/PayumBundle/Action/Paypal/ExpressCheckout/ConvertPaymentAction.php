@@ -23,17 +23,11 @@ use Sylius\Component\Core\Payment\InvoiceNumberGeneratorInterface;
 
 final class ConvertPaymentAction implements ActionInterface
 {
-    /** @var InvoiceNumberGeneratorInterface */
-    private $invoiceNumberGenerator;
-
-    public function __construct(InvoiceNumberGeneratorInterface $invoiceNumberGenerator)
+    public function __construct(private InvoiceNumberGeneratorInterface $invoiceNumberGenerator)
     {
-        $this->invoiceNumberGenerator = $invoiceNumberGenerator;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @param Convert $request
      */
     public function execute($request): void
@@ -51,10 +45,12 @@ final class ConvertPaymentAction implements ActionInterface
         $details['PAYMENTREQUEST_0_AMT'] = $this->formatPrice($order->getTotal());
         $details['PAYMENTREQUEST_0_ITEMAMT'] = $this->formatPrice($order->getTotal());
 
+        $details = $this->prepareAddressData($order, $details);
+
         $m = 0;
         foreach ($order->getItems() as $item) {
             $details['L_PAYMENTREQUEST_0_NAME' . $m] = $item->getVariant()->getProduct()->getName();
-            $details['L_PAYMENTREQUEST_0_AMT' . $m] = $this->formatPrice($item->getDiscountedUnitPrice());
+            $details['L_PAYMENTREQUEST_0_AMT' . $m] = $this->formatPrice($item->getUnitPrice());
             $details['L_PAYMENTREQUEST_0_QTY' . $m] = $item->getQuantity();
 
             ++$m;
@@ -76,7 +72,7 @@ final class ConvertPaymentAction implements ActionInterface
             ++$m;
         }
 
-        if (0 !== $shippingTotal = $order->getShippingTotal()) {
+        if (0 !== $shippingTotal = $this->getShippingTotalWithoutTaxes($order)) {
             $details['L_PAYMENTREQUEST_0_NAME' . $m] = 'Shipping Total';
             $details['L_PAYMENTREQUEST_0_AMT' . $m] = $this->formatPrice($shippingTotal);
             $details['L_PAYMENTREQUEST_0_QTY' . $m] = 1;
@@ -85,9 +81,6 @@ final class ConvertPaymentAction implements ActionInterface
         $request->setResult($details);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports($request): bool
     {
         return
@@ -97,8 +90,36 @@ final class ConvertPaymentAction implements ActionInterface
         ;
     }
 
+    private function getShippingTotalWithoutTaxes(OrderInterface $order): int
+    {
+        return $order->getAdjustmentsTotal(AdjustmentInterface::SHIPPING_ADJUSTMENT) + $order->getAdjustmentsTotal(AdjustmentInterface::ORDER_SHIPPING_PROMOTION_ADJUSTMENT);
+    }
+
     private function formatPrice(int $price): float
     {
         return round($price / 100, 2);
+    }
+
+    private function prepareAddressData(OrderInterface $order, array $details): array
+    {
+        $details['EMAIL'] = $order->getCustomer()->getEmail();
+        $billingAddress = $order->getBillingAddress();
+        $details['LOCALECODE'] = $billingAddress->getCountryCode();
+        $details['PAYMENTREQUEST_0_SHIPTONAME'] = $billingAddress->getFullName();
+        $details['PAYMENTREQUEST_0_SHIPTOSTREET'] = $billingAddress->getStreet();
+        $details['PAYMENTREQUEST_0_SHIPTOCITY'] = $billingAddress->getCity();
+        $details['PAYMENTREQUEST_0_SHIPTOZIP'] = $billingAddress->getPostcode();
+        $details['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] = $billingAddress->getCountryCode();
+
+        if ($billingAddress->getPhoneNumber() !== null) {
+            $details['PAYMENTREQUEST_0_SHIPTOPHONENUM'] = $billingAddress->getPhoneNumber();
+        }
+
+        $province = $billingAddress->getProvinceCode() ?? $billingAddress->getProvinceName();
+        if ($province !== null) {
+            $details['PAYMENTREQUEST_0_SHIPTOSTATE'] = $province;
+        }
+
+        return $details;
     }
 }

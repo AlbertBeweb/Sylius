@@ -24,43 +24,38 @@ use Webmozart\Assert\Assert;
 
 final class ShippingChargesProcessor implements OrderProcessorInterface
 {
-    /** @var FactoryInterface */
-    private $adjustmentFactory;
-
-    /** @var DelegatingCalculatorInterface */
-    private $shippingChargesCalculator;
-
-    public function __construct(
-        FactoryInterface $adjustmentFactory,
-        DelegatingCalculatorInterface $shippingChargesCalculator
-    ) {
-        $this->adjustmentFactory = $adjustmentFactory;
-        $this->shippingChargesCalculator = $shippingChargesCalculator;
+    public function __construct(private FactoryInterface $adjustmentFactory, private DelegatingCalculatorInterface $shippingChargesCalculator)
+    {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function process(BaseOrderInterface $order): void
     {
         /** @var OrderInterface $order */
         Assert::isInstanceOf($order, OrderInterface::class);
 
-        // Remove all shipping adjustments, we recalculate everything from scratch.
-        $order->removeAdjustments(AdjustmentInterface::SHIPPING_ADJUSTMENT);
+        if (OrderInterface::STATE_CART !== $order->getState()) {
+            return;
+        }
 
         foreach ($order->getShipments() as $shipment) {
+            $shipment->removeAdjustments(AdjustmentInterface::SHIPPING_ADJUSTMENT);
+
             try {
                 $shippingCharge = $this->shippingChargesCalculator->calculate($shipment);
+                $shippingMethod = $shipment->getMethod();
 
                 /** @var AdjustmentInterface $adjustment */
                 $adjustment = $this->adjustmentFactory->createNew();
                 $adjustment->setType(AdjustmentInterface::SHIPPING_ADJUSTMENT);
                 $adjustment->setAmount($shippingCharge);
-                $adjustment->setLabel($shipment->getMethod()->getName());
+                $adjustment->setLabel($shippingMethod->getName());
+                $adjustment->setDetails([
+                    'shippingMethodCode' => $shippingMethod->getCode(),
+                    'shippingMethodName' => $shippingMethod->getName(),
+                ]);
 
-                $order->addAdjustment($adjustment);
-            } catch (UndefinedShippingMethodException $exception) {
+                $shipment->addAdjustment($adjustment);
+            } catch (UndefinedShippingMethodException) {
             }
         }
     }

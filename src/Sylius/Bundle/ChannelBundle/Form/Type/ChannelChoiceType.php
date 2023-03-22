@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ChannelChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $channelRepository;
-
-    public function __construct(RepositoryInterface $channelRepository)
+    public function __construct(private RepositoryInterface $channelRepository)
     {
-        $this->channelRepository = $channelRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -41,32 +34,21 @@ final class ChannelChoiceType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'choices' => function (Options $options): array {
-                return $this->channelRepository->findAll();
-            },
+            'choices' => fn (Options $options): array => $this->channelRepository->findAll(),
             'choice_value' => 'code',
             'choice_label' => 'name',
             'choice_translation_domain' => false,
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_channel_choice';

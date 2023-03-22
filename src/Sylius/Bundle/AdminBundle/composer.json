@@ -2,56 +2,74 @@
     "name": "sylius/admin-bundle",
     "type": "symfony-bundle",
     "description": "Sylius eCommerce administration panel component.",
-    "keywords": ["shop", "ecommerce", "store", "webshop", "sylius", "ui", "admin interface", "admin", "backend"],
-    "homepage": "http://sylius.com",
+    "keywords": [
+        "shop",
+        "ecommerce",
+        "store",
+        "webshop",
+        "sylius",
+        "ui",
+        "admin interface",
+        "admin",
+        "backend"
+    ],
+    "homepage": "https://sylius.com",
     "license": "MIT",
     "authors": [
         {
             "name": "Paweł Jędrzejewski",
-            "homepage": "http://pjedrzejewski.com"
+            "homepage": "https://pjedrzejewski.com"
         },
         {
             "name": "Sylius project",
-            "homepage": "http://sylius.com"
+            "homepage": "https://sylius.com"
         },
         {
             "name": "Community contributions",
-            "homepage": "http://github.com/Sylius/Sylius/contributors"
+            "homepage": "https://github.com/Sylius/Sylius/contributors"
         }
     ],
     "require": {
-        "php": "^7.2",
-
-        "sonata-project/intl-bundle": "^2.2",
-        "sylius/core-bundle": "^1.2",
-        "sylius/ui-bundle": "^1.2",
-        "symfony/framework-bundle": "^3.4|^4.3"
+        "php": "^8.0",
+        "knplabs/knp-menu": "^3.1",
+        "knplabs/knp-menu-bundle": "^3.0",
+        "sylius/core-bundle": "^1.12",
+        "sylius/ui-bundle": "^1.12",
+        "symfony/framework-bundle": "^5.4 || ^6.0",
+        "symfony/webpack-encore-bundle": "^1.15",
+        "twig/intl-extra": "^2.12 || ^3.4",
+        "twig/twig": "^2.12 || ^3.3"
     },
     "require-dev": {
-        "phpspec/phpspec": "^5.0",
-        "phpunit/phpunit": "^7.0",
-        "symfony/dependency-injection": "^3.4|^4.3"
-    },
-    "conflict": {
-        "twig/twig": "^1.0"
+        "phpspec/phpspec": "^7.2",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpunit/phpunit": "^9.5",
+        "symfony/dependency-injection": "^5.4 || ^6.0",
+        "symfony/dotenv": "^5.4 || ^6.0"
     },
     "config": {
-        "bin-dir": "bin"
+        "allow-plugins": {
+            "symfony/flex": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.12-dev"
+        }
     },
     "autoload": {
-        "psr-4": { "Sylius\\Bundle\\AdminBundle\\": "" }
+        "psr-4": {
+            "Sylius\\Bundle\\AdminBundle\\": "",
+            "Sylius\\Bundle\\AdminBundle\\Tests\\": "Tests/",
+            "Sylius\\Bundle\\AdminBundle\\Application\\": "test/src/"
+        }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "repositories": [
         {
             "type": "path",
             "url": "../../*/*"
         }
     ],
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.6-dev"
-        }
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

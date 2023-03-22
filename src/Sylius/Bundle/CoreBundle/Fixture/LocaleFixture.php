@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Bundle\FixturesBundle\Fixture\AbstractFixture;
 use Sylius\Component\Locale\Model\LocaleInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
@@ -21,28 +21,13 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 class LocaleFixture extends AbstractFixture
 {
-    /** @var FactoryInterface */
-    private $localeFactory;
-
-    /** @var ObjectManager */
-    private $localeManager;
-
-    /** @var string */
-    private $baseLocaleCode;
-
     /**
      * @param string $baseLocaleCode
      */
-    public function __construct(FactoryInterface $localeFactory, ObjectManager $localeManager, $baseLocaleCode)
+    public function __construct(private FactoryInterface $localeFactory, private ObjectManager $localeManager, private $baseLocaleCode)
     {
-        $this->localeFactory = $localeFactory;
-        $this->localeManager = $localeManager;
-        $this->baseLocaleCode = $baseLocaleCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function load(array $options): void
     {
         $localesCodes = $options['locales'];
@@ -65,17 +50,11 @@ class LocaleFixture extends AbstractFixture
         $this->localeManager->flush();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'locale';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptionsNode(ArrayNodeDefinition $optionsNode): void
     {
         $optionsNode

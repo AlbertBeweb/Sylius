@@ -20,22 +20,14 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 class CartItemType extends AbstractResourceType
 {
-    /** @var DataMapperInterface */
-    private $dataMapper;
-
     public function __construct(
         string $dataClass,
-        array $validationGroups = [],
-        DataMapperInterface $dataMapper
+        array $validationGroups,
+        private DataMapperInterface $dataMapper,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->dataMapper = $dataMapper;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -47,9 +39,6 @@ class CartItemType extends AbstractResourceType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_cart_item';

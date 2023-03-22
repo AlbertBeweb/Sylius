@@ -16,43 +16,27 @@ namespace Sylius\Bundle\ShopBundle\Controller;
 use Sylius\Bundle\ShopBundle\Locale\LocaleSwitcherInterface;
 use Sylius\Component\Locale\Context\LocaleContextInterface;
 use Sylius\Component\Locale\Provider\LocaleProviderInterface;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Twig\Environment;
 
 final class LocaleSwitchController
 {
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var LocaleContextInterface */
-    private $localeContext;
-
-    /** @var LocaleProviderInterface */
-    private $localeProvider;
-
-    /** @var LocaleSwitcherInterface */
-    private $localeSwitcher;
-
     public function __construct(
-        EngineInterface $templatingEngine,
-        LocaleContextInterface $localeContext,
-        LocaleProviderInterface $localeProvider,
-        LocaleSwitcherInterface $localeSwitcher
+        private Environment $templatingEngine,
+        private LocaleContextInterface $localeContext,
+        private LocaleProviderInterface $localeProvider,
+        private LocaleSwitcherInterface $localeSwitcher,
     ) {
-        $this->templatingEngine = $templatingEngine;
-        $this->localeContext = $localeContext;
-        $this->localeProvider = $localeProvider;
-        $this->localeSwitcher = $localeSwitcher;
     }
 
     public function renderAction(): Response
     {
-        return $this->templatingEngine->renderResponse('@SyliusShop/Menu/_localeSwitch.html.twig', [
+        return new Response($this->templatingEngine->render('@SyliusShop/Menu/_localeSwitch.html.twig', [
             'active' => $this->localeContext->getLocaleCode(),
             'locales' => $this->localeProvider->getAvailableLocalesCodes(),
-        ]);
+        ]));
     }
 
     public function switchAction(Request $request, ?string $code = null): Response
@@ -64,7 +48,7 @@ final class LocaleSwitchController
         if (!in_array($code, $this->localeProvider->getAvailableLocalesCodes(), true)) {
             throw new HttpException(
                 Response::HTTP_NOT_ACCEPTABLE,
-                sprintf('The locale code "%s" is invalid.', $code)
+                sprintf('The locale code "%s" is invalid.', $code),
             );
         }
 

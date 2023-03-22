@@ -15,12 +15,11 @@ namespace Sylius\Bundle\UserBundle;
 
 use Sylius\Bundle\ResourceBundle\AbstractResourceBundle;
 use Sylius\Bundle\ResourceBundle\SyliusResourceBundle;
+use Sylius\Bundle\UserBundle\DependencyInjection\Compiler\RemoveUserPasswordEncoderPass;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class SyliusUserBundle extends AbstractResourceBundle
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getSupportedDrivers(): array
     {
         return [
@@ -28,8 +27,15 @@ final class SyliusUserBundle extends AbstractResourceBundle
         ];
     }
 
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+
+        $container->addCompilerPass(new RemoveUserPasswordEncoderPass());
+    }
+
     /**
-     * {@inheritdoc}
+     * @psalm-suppress MismatchingDocblockReturnType https://github.com/vimeo/psalm/issues/2345
      */
     protected function getModelNamespace(): string
     {

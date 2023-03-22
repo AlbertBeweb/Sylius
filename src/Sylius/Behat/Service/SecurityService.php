@@ -15,59 +15,50 @@ namespace Sylius\Behat\Service;
 
 use Sylius\Behat\Service\Setter\CookieSetterInterface;
 use Sylius\Component\User\Model\UserInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionFactoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\TokenNotFoundException;
 
 final class SecurityService implements SecurityServiceInterface
 {
-    /** @var SessionInterface */
-    private $session;
+    private string $sessionTokenVariable;
 
-    /** @var CookieSetterInterface */
-    private $cookieSetter;
-
-    /** @var string */
-    private $sessionTokenVariable;
-
-    /** @var string */
-    private $firewallContextName;
-
-    /**
-     * @param string $firewallContextName
-     */
-    public function __construct(SessionInterface $session, CookieSetterInterface $cookieSetter, $firewallContextName)
-    {
-        $this->session = $session;
-        $this->cookieSetter = $cookieSetter;
+    public function __construct(
+        private RequestStack $requestStack,
+        private CookieSetterInterface $cookieSetter,
+        private string $firewallContextName,
+        private ?SessionFactoryInterface $sessionFactory = null,
+    ) {
         $this->sessionTokenVariable = sprintf('_security_%s', $firewallContextName);
-        $this->firewallContextName = $firewallContextName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function logIn(UserInterface $user)
+    public function logIn(UserInterface $user): void
     {
-        $token = new UsernamePasswordToken($user, $user->getPassword(), $this->firewallContextName, $user->getRoles());
+        /** @deprecated parameter credential was deprecated in Symfony 5.4, so in Sylius 1.11 too, in Sylius 2.0 providing 4 arguments will be prohibited. */
+        if (3 === (new \ReflectionClass(UsernamePasswordToken::class))->getConstructor()->getNumberOfParameters()) {
+            $token = new UsernamePasswordToken($user, $this->firewallContextName, $user->getRoles());
+        } else {
+            $token = new UsernamePasswordToken($user, $user->getPassword(), $this->firewallContextName, $user->getRoles());
+        }
+
         $this->setToken($token);
     }
 
-    public function logOut()
+    public function logOut(): void
     {
-        $this->session->set($this->sessionTokenVariable, null);
-        $this->session->save();
-
-        $this->cookieSetter->setCookie($this->session->getName(), $this->session->getId());
+        try {
+            $this->setTokenCookie();
+        } catch (SessionNotFoundException) {
+        }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getCurrentToken()
+    public function getCurrentToken(): TokenInterface
     {
-        $serializedToken = $this->session->get($this->sessionTokenVariable);
+        $serializedToken = $this->requestStack->getSession()->get($this->sessionTokenVariable);
 
         if (null === $serializedToken) {
             throw new TokenNotFoundException();
@@ -76,19 +67,28 @@ final class SecurityService implements SecurityServiceInterface
         return unserialize($serializedToken);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function restoreToken(TokenInterface $token)
+    public function restoreToken(TokenInterface $token): void
     {
         $this->setToken($token);
     }
 
-    private function setToken(TokenInterface $token)
+    private function setToken(TokenInterface $token): void
     {
-        $serializedToken = serialize($token);
-        $this->session->set($this->sessionTokenVariable, $serializedToken);
-        $this->session->save();
-        $this->cookieSetter->setCookie($this->session->getName(), $this->session->getId());
+        if (null !== $this->sessionFactory) {
+            $session = $this->sessionFactory->createSession();
+            $request = new Request();
+            $request->setSession($session);
+            $this->requestStack->push($request);
+        }
+
+        $this->setTokenCookie(serialize($token));
+    }
+
+    private function setTokenCookie($serializedToken = null): void
+    {
+        $session = $this->requestStack->getSession();
+        $session->set($this->sessionTokenVariable, $serializedToken);
+        $session->save();
+        $this->cookieSetter->setCookie($session->getName(), $session->getId());
     }
 }

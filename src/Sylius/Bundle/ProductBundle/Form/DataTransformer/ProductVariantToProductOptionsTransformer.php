@@ -22,17 +22,11 @@ use Symfony\Component\Form\Exception\UnexpectedTypeException;
 
 final class ProductVariantToProductOptionsTransformer implements DataTransformerInterface
 {
-    /** @var ProductInterface */
-    private $product;
-
-    public function __construct(ProductInterface $product)
+    public function __construct(private ProductInterface $product)
     {
-        $this->product = $product;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws UnexpectedTypeException
      */
     public function transform($value): array
@@ -46,16 +40,14 @@ final class ProductVariantToProductOptionsTransformer implements DataTransformer
         }
 
         return array_combine(
-            array_map(function (ProductOptionValueInterface $productOptionValue) {
-                return $productOptionValue->getOptionCode();
-            }, $value->getOptionValues()->toArray()),
-            $value->getOptionValues()->toArray()
+            array_map(
+                fn (ProductOptionValueInterface $productOptionValue): string => (string) $productOptionValue->getOptionCode(),
+                $value->getOptionValues()->toArray(),
+            ),
+            $value->getOptionValues()->toArray(),
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reverseTransform($value): ?ProductVariantInterface
     {
         if (null === $value || '' === $value) {
@@ -66,15 +58,15 @@ final class ProductVariantToProductOptionsTransformer implements DataTransformer
             throw new UnexpectedTypeException($value, '\Traversable or \ArrayAccess');
         }
 
-        return $this->matches($value);
+        return $this->matches(is_array($value) ? $value : iterator_to_array($value));
     }
 
     /**
-     * @param ProductOptionValueInterface[] $optionValues
+     * @param (ProductOptionValueInterface|null)[] $optionValues
      *
      * @throws TransformationFailedException
      */
-    private function matches(array $optionValues): ?ProductVariantInterface
+    private function matches(array $optionValues): ProductVariantInterface
     {
         foreach ($this->product->getVariants() as $variant) {
             foreach ($optionValues as $optionValue) {
@@ -89,7 +81,7 @@ final class ProductVariantToProductOptionsTransformer implements DataTransformer
         throw new TransformationFailedException(sprintf(
             'Variant "%s" not found for product %s',
             !empty($optionValues[0]) ? $optionValues[0]->getCode() : '',
-            $this->product->getCode()
+            $this->product->getCode(),
         ));
     }
 }

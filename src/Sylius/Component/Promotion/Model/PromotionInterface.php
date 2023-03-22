@@ -17,8 +17,9 @@ use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Resource\Model\CodeAwareInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Sylius\Component\Resource\Model\TimestampableInterface;
+use Sylius\Component\Resource\Model\TranslatableInterface;
 
-interface PromotionInterface extends CodeAwareInterface, TimestampableInterface, ResourceInterface
+interface PromotionInterface extends CodeAwareInterface, TimestampableInterface, TranslatableInterface, ResourceInterface
 {
     public function getName(): ?string;
 
@@ -62,6 +63,8 @@ interface PromotionInterface extends CodeAwareInterface, TimestampableInterface,
 
     /**
      * @return Collection|PromotionCouponInterface[]
+     *
+     * @psalm-return Collection<array-key, PromotionCouponInterface>
      */
     public function getCoupons(): Collection;
 
@@ -75,6 +78,8 @@ interface PromotionInterface extends CodeAwareInterface, TimestampableInterface,
 
     /**
      * @return Collection|PromotionRuleInterface[]
+     *
+     * @psalm-return Collection<array-key, PromotionRuleInterface>
      */
     public function getRules(): Collection;
 
@@ -88,6 +93,8 @@ interface PromotionInterface extends CodeAwareInterface, TimestampableInterface,
 
     /**
      * @return Collection|PromotionActionInterface[]
+     *
+     * @psalm-return Collection<array-key, PromotionActionInterface>
      */
     public function getActions(): Collection;
 
@@ -98,4 +105,8 @@ interface PromotionInterface extends CodeAwareInterface, TimestampableInterface,
     public function addAction(PromotionActionInterface $action): void;
 
     public function removeAction(PromotionActionInterface $action): void;
+
+    public function getAppliesToDiscounted(): bool;
+
+    public function setAppliesToDiscounted(bool $applyOnDiscounted): void;
 }

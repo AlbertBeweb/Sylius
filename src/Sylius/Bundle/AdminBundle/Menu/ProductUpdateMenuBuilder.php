@@ -23,16 +23,8 @@ final class ProductUpdateMenuBuilder
 {
     public const EVENT_NAME = 'sylius.menu.admin.product.update';
 
-    /** @var FactoryInterface */
-    private $factory;
-
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-
-    public function __construct(FactoryInterface $factory, EventDispatcherInterface $eventDispatcher)
+    public function __construct(private FactoryInterface $factory, private EventDispatcherInterface $eventDispatcher)
     {
-        $this->factory = $factory;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function createMenu(array $options): ItemInterface
@@ -89,8 +81,8 @@ final class ProductUpdateMenuBuilder
         $menu->addChild($manageVariantsItem);
 
         $this->eventDispatcher->dispatch(
+            new ProductMenuBuilderEvent($this->factory, $menu, $product),
             self::EVENT_NAME,
-            new ProductMenuBuilderEvent($this->factory, $menu, $product)
         );
 
         return $menu;

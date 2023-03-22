@@ -15,20 +15,8 @@ namespace Sylius\Bundle\CoreBundle\Command\Model;
 
 final class PluginInfo
 {
-    /** @var string */
-    private $name;
-
-    /** @var string */
-    private $description;
-
-    /** @var string */
-    private $url;
-
-    public function __construct(string $name, string $description, string $url)
+    public function __construct(private string $name, private string $description, private string $url)
     {
-        $this->name = $name;
-        $this->description = $description;
-        $this->url = $url;
     }
 
     public function name(): string

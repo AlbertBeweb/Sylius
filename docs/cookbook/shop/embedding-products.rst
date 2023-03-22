@@ -35,7 +35,7 @@ Your extending repository class should look like that:
             {
                 return $this->createQueryBuilder('o')
                     ->innerJoin('o.channels', 'channel')
-                    ->andWhere('o.enabled = true')
+                    ->andWhere('o.enabled = :enabled')
                     ->andWhere('channel = :channel')
                     ->innerJoin('o.productTaxons', 'productTaxons')
                     ->addOrderBy('productTaxons.position', 'asc')
@@ -43,6 +43,7 @@ Your extending repository class should look like that:
                     ->andWhere('taxon.code = :code')
                     ->setParameter('code', $code)
                     ->setParameter('channel', $channel)
+                    ->setParameter('enabled', true)
                     ->setMaxResults($count)
                     ->getQuery()
                     ->getResult();
@@ -71,7 +72,7 @@ To be able to render a partial with the retrieved products configure routing for
         path: /latest/{code}/{count} # configure a new path that has all the needed variables
         methods: [GET]
         defaults:
-            _controller: sylius.controller.product:indexAction # you make a call on the Product Controller's index action
+            _controller: sylius.controller.product::indexAction # you make a call on the Product Controller's index action
             _sylius:
                 template: $template
                 repository:

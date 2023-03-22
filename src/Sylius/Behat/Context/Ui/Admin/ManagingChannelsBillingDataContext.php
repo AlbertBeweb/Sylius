@@ -20,12 +20,8 @@ use Webmozart\Assert\Assert;
 
 final class ManagingChannelsBillingDataContext implements Context
 {
-    /** @var ShopBillingDataElementInterface */
-    private $shopBillingDataElement;
-
-    public function __construct(ShopBillingDataElementInterface $shopBillingDataElement)
+    public function __construct(private ShopBillingDataElementInterface $shopBillingDataElement)
     {
-        $this->shopBillingDataElement = $shopBillingDataElement;
     }
 
     /**
@@ -51,7 +47,7 @@ final class ManagingChannelsBillingDataContext implements Context
         string $street,
         string $postcode,
         string $city,
-        CountryInterface $country
+        CountryInterface $country,
     ): void {
         $this->shopBillingDataElement->specifyBillingAddress($street, $postcode, $city, $country->getCode());
     }
@@ -79,7 +75,7 @@ final class ManagingChannelsBillingDataContext implements Context
         string $street,
         string $postcode,
         string $city,
-        CountryInterface $country
+        CountryInterface $country,
     ): void {
         Assert::true($this->shopBillingDataElement->hasBillingAddress($street, $postcode, $city, $country->getCode()));
     }

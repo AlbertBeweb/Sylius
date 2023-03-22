@@ -12,21 +12,21 @@ Feature: Editing shipping method
 
     @todo
     Scenario: Trying to change shipping method code
-        Given I want to modify a shipping method "UPS Carrier"
-        When I change its code to "UPS"
+        When I want to modify a shipping method "UPS Carrier"
+        And I change its code to "UPS"
         And I save my changes
         Then I should be notified that code cannot be changed
         And shipping method "UPS Carrier" should still have code "UPS_CARRIER"
 
-    @ui
+    @ui @api
     Scenario: Seeing disabled code field when editing shipping method
         When I want to modify a shipping method "UPS Carrier"
-        Then the code field should be disabled
+        Then I should not be able to edit its code
 
-    @ui @javascript
+    @ui @api
     Scenario: Renaming the shipping method
-        Given I want to modify a shipping method "UPS Carrier"
-        When I rename it to "UPS Transport" in "English (United States)"
+        When I want to modify a shipping method "UPS Carrier"
+        And I rename it to "UPS Transport" in "English (United States)"
         And I save my changes
         Then I should be notified that it has been successfully edited
         And this shipping method name should be "UPS Transport"

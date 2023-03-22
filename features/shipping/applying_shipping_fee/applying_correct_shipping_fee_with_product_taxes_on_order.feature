@@ -18,10 +18,10 @@ Feature: Apply correct shipping fee with product taxes on order
         And the store has "FedEx" shipping method with "$20.00" fee for the rest of the world
         And shipping method "DHL" belongs to "Shipping Services" tax category
         And shipping method "FedEx" belongs to "Shipping Services" tax category
-        And the store allows paying offline
+        And the store allows paying Offline
         And I am a logged in customer
 
-    @ui
+    @ui @api
     Scenario: Proper shipping fee, tax and product tax
         Given I have product "PHP T-Shirt" in the cart
         When I proceed selecting "DHL" shipping method
@@ -30,10 +30,10 @@ Feature: Apply correct shipping fee with product taxes on order
         And my cart taxes should be "$25.30"
         And my cart shipping total should be "$12.30"
 
-    @ui
+    @ui @api
     Scenario: Proper shipping fee, tax and products' taxes after addressing
         Given I have 3 products "PHP T-Shirt" in the cart
-        When I proceed selecting "Germany" as shipping country with "FedEx" method
+        When I proceed selecting "Germany" as billing country with "FedEx" method
         And I choose "Offline" payment method
         Then my cart total should be "$352.00"
         And my cart taxes should be "$32.00"

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Tests\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
@@ -65,15 +65,12 @@ final class ProductAttributeFixtureTest extends TestCase
         $this->assertPartialConfigurationIsInvalid([['custom' => [['type' => 'not_defined']]]], 'custom.*.type');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): ProductAttributeFixture
     {
         return new ProductAttributeFixture(
             $this->getMockBuilder(ObjectManager::class)->getMock(),
             $this->getMockBuilder(ExampleFactoryInterface::class)->getMock(),
-            ['text' => 'Text attribute', 'bool' => 'Boolean attribute']
+            ['text' => 'Text attribute', 'bool' => 'Boolean attribute'],
         );
     }
 }

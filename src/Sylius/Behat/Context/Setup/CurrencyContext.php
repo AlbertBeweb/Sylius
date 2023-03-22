@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -23,28 +23,12 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class CurrencyContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var RepositoryInterface */
-    private $currencyRepository;
-
-    /** @var FactoryInterface */
-    private $currencyFactory;
-
-    /** @var ObjectManager */
-    private $channelManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        RepositoryInterface $currencyRepository,
-        FactoryInterface $currencyFactory,
-        ObjectManager $channelManager
+        private SharedStorageInterface $sharedStorage,
+        private RepositoryInterface $currencyRepository,
+        private FactoryInterface $currencyFactory,
+        private ObjectManager $channelManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->currencyRepository = $currencyRepository;
-        $this->currencyFactory = $currencyFactory;
-        $this->channelManager = $channelManager;
     }
 
     /**
@@ -83,8 +67,8 @@ final class CurrencyContext implements Context
     }
 
     /**
-     * @Given /^(that channel)(?: also|) allows to shop using the "([^"]+)" currency$/
-     * @Given /^(that channel)(?: also|) allows to shop using "([^"]+)" and "([^"]+)" currencies$/
+     * @Given /^(that channel|"[^"]+" channel)(?: also|) allows to shop using the "([^"]+)" currency$/
+     * @Given /^(that channel|"[^"]+" channel)(?: also|) allows to shop using "([^"]+)" and "([^"]+)" currencies$/
      * @Given /^(that channel)(?: also|) allows to shop using "([^"]+)", "([^"]+)" and "([^"]+)" currencies$/
      */
     public function thatChannelAllowsToShopUsingAndCurrencies(ChannelInterface $channel, ...$currenciesCodes)

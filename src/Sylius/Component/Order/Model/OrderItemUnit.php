@@ -18,37 +18,30 @@ use Doctrine\Common\Collections\Collection;
 
 class OrderItemUnit implements OrderItemUnitInterface
 {
-    /** @var int */
+    /** @var mixed */
     protected $id;
 
-    /** @var OrderItemInterface */
-    protected $orderItem;
-
-    /** @var Collection|AdjustmentInterface[] */
+    /**
+     * @var Collection|AdjustmentInterface[]
+     *
+     * @psalm-var Collection<array-key, AdjustmentInterface>
+     */
     protected $adjustments;
 
     /** @var int */
     protected $adjustmentsTotal = 0;
 
-    public function __construct(OrderItemInterface $orderItem)
+    public function __construct(protected OrderItemInterface $orderItem)
     {
-        $this->orderItem = $orderItem;
-        $this->orderItem->addUnit($this);
-
         $this->adjustments = new ArrayCollection();
+        $this->orderItem->addUnit($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTotal(): int
     {
         $total = $this->orderItem->getUnitPrice() + $this->adjustmentsTotal;
@@ -60,17 +53,11 @@ class OrderItemUnit implements OrderItemUnitInterface
         return $total;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOrderItem(): OrderItemInterface
     {
         return $this->orderItem;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAdjustments(?string $type = null): Collection
     {
         if (null === $type) {
@@ -82,9 +69,6 @@ class OrderItemUnit implements OrderItemUnitInterface
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addAdjustment(AdjustmentInterface $adjustment): void
     {
         if ($this->hasAdjustment($adjustment)) {
@@ -97,9 +81,6 @@ class OrderItemUnit implements OrderItemUnitInterface
         $adjustment->setAdjustable($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeAdjustment(AdjustmentInterface $adjustment): void
     {
         if ($adjustment->isLocked() || !$this->hasAdjustment($adjustment)) {
@@ -112,17 +93,11 @@ class OrderItemUnit implements OrderItemUnitInterface
         $adjustment->setAdjustable(null);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasAdjustment(AdjustmentInterface $adjustment): bool
     {
         return $this->adjustments->contains($adjustment);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAdjustmentsTotal(?string $type = null): int
     {
         if (null === $type) {
@@ -139,19 +114,15 @@ class OrderItemUnit implements OrderItemUnitInterface
         return $total;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeAdjustments(?string $type = null): void
     {
         foreach ($this->getAdjustments($type) as $adjustment) {
             $this->removeAdjustment($adjustment);
         }
+
+        $this->recalculateAdjustmentsTotal();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function recalculateAdjustmentsTotal(): void
     {
         $this->adjustmentsTotal = 0;

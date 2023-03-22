@@ -20,24 +20,16 @@ use Webmozart\Assert\Assert;
 
 final class CurrentPageResolver implements CurrentPageResolverInterface
 {
-    /** @var Session */
-    private $session;
-
-    /** @var UrlMatcherInterface */
-    private $urlMatcher;
-
-    public function __construct(Session $session, UrlMatcherInterface $urlMatcher)
-    {
-        $this->session = $session;
-        $this->urlMatcher = $urlMatcher;
+    public function __construct(
+        private Session $session,
+        private UrlMatcherInterface $urlMatcher,
+    ) {
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \LogicException
      */
-    public function getCurrentPageWithForm(array $pages)
+    public function getCurrentPageWithForm(array $pages): SymfonyPageInterface
     {
         $routeParameters = $this->urlMatcher->match(parse_url($this->session->getCurrentUrl(), \PHP_URL_PATH));
 

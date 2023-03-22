@@ -21,33 +21,20 @@ use Symfony\Component\Form\ReversedTransformer;
 
 final class CountryCodeChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $countryRepository;
-
-    public function __construct(RepositoryInterface $countryRepository)
+    public function __construct(private RepositoryInterface $countryRepository)
     {
-        $this->countryRepository = $countryRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new ReversedTransformer(new ResourceToIdentifierTransformer($this->countryRepository, 'code')));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return CountryChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_country_code_choice';

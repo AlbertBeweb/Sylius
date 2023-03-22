@@ -25,46 +25,22 @@ use Webmozart\Assert\Assert;
 
 final class ManagingCustomersContext implements Context
 {
-    /** @var CustomerIndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var ShowPageInterface */
-    private $showPage;
-
-    /** @var IndexPageInterface */
-    private $ordersIndexPage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
     /**
      * @param CustomerIndexPageInterface $indexPage
      */
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        UpdatePageInterface $updatePage,
-        ShowPageInterface $showPage,
-        IndexPageInterface $ordersIndexPage,
-        CurrentPageResolverInterface $currentPageResolver
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private UpdatePageInterface $updatePage,
+        private ShowPageInterface $showPage,
+        private IndexPageInterface $ordersIndexPage,
+        private CurrentPageResolverInterface $currentPageResolver,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
-        $this->showPage = $showPage;
-        $this->ordersIndexPage = $ordersIndexPage;
-        $this->currentPageResolver = $currentPageResolver;
     }
 
     /**
-     * @Given I want to create a new customer
-     * @Given I want to create a new customer account
+     * @When I want to create a new customer
+     * @When I want to create a new customer account
      */
     public function iWantToCreateANewCustomer()
     {
@@ -115,6 +91,19 @@ final class ManagingCustomersContext implements Context
     }
 
     /**
+     * @When I filter by group :groupName
+     * @When I filter by groups :firstGroup and :secondGroup
+     */
+    public function iFilterByGroup(string ...$groupsNames): void
+    {
+        foreach ($groupsNames as $groupName) {
+            $this->indexPage->specifyFilterGroup($groupName);
+        }
+
+        $this->indexPage->filter();
+    }
+
+    /**
      * @Then the customer :customer should appear in the store
      * @Then the customer :customer should still have this email
      */
@@ -158,6 +147,24 @@ final class ManagingCustomersContext implements Context
     }
 
     /**
+     * @When I verify it
+     */
+    public function iTryToVerifyIt(): void
+    {
+        $this->updatePage->verifyUser();
+    }
+
+    /**
+     * @Then /^(this customer) should be verified$/
+     */
+    public function thisCustomerShouldBeVerified(CustomerInterface $customer): void
+    {
+        $this->indexPage->open();
+
+        Assert::true($this->indexPage->isCustomerVerified($customer));
+    }
+
+    /**
      * @When I save my changes
      * @When I try to save my changes
      */
@@ -186,8 +193,9 @@ final class ManagingCustomersContext implements Context
 
     /**
      * @Then /^I should see (\d+) customers in the list$/
+     * @Then /^I should see a single customer on the list$/
      */
-    public function iShouldSeeCustomersInTheList($amountOfCustomers)
+    public function iShouldSeeCustomersInTheList($amountOfCustomers = 1)
     {
         Assert::same($this->indexPage->countItems(), (int) $amountOfCustomers);
     }
@@ -207,7 +215,7 @@ final class ManagingCustomersContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessage($elementName),
-            sprintf('Please enter your %s.', $elementName)
+            sprintf('Please enter your %s.', $elementName),
         );
     }
 
@@ -218,7 +226,7 @@ final class ManagingCustomersContext implements Context
     {
         Assert::same(
             $this->updatePage->getValidationMessage($elementName),
-            sprintf('%s must be %s.', ucfirst($elementName), $validationMessage)
+            sprintf('%s must be %s.', ucfirst($elementName), $validationMessage),
         );
     }
 
@@ -297,10 +305,11 @@ final class ManagingCustomersContext implements Context
     }
 
     /**
-     * @Given I want to enable :customer
-     * @Given I want to disable :customer
+     * @When I want to enable :customer
+     * @When I want to disable :customer
+     * @When I want to verify :customer
      */
-    public function iWantToChangeStatusOf(CustomerInterface $customer)
+    public function iWantToChangeStatusOf(CustomerInterface $customer): void
     {
         $this->updatePage->open(['id' => $customer->getId()]);
     }
@@ -381,7 +390,7 @@ final class ManagingCustomersContext implements Context
     {
         Assert::notNull(
             $customer->getUser()->getPassword(),
-            'Customer should have an account, but they do not.'
+            'Customer should have an account, but they do not.',
         );
     }
 
@@ -606,7 +615,7 @@ final class ManagingCustomersContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessage('password'),
-            sprintf('Password must be at least %d characters long.', $amountOfCharacters)
+            sprintf('Password must be at least %d characters long.', $amountOfCharacters),
         );
     }
 

@@ -6,6 +6,7 @@ default:
         ui_viewing_products:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.product
                 - sylius.behat.context.transform.product_variant
@@ -20,4 +21,4 @@ default:
                 - sylius.behat.context.ui.admin.product_showpage
 
             filters:
-                tags: "@accessing_edit_page_from_product_show_page && @ui"
+                tags: "@accessing_edit_page_from_product_show_page&&@ui"

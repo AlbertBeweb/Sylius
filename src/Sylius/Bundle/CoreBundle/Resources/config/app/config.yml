@@ -17,14 +17,18 @@ imports:
     - { resource: "@SyliusTaxationBundle/Resources/config/app/config.yml" }
     - { resource: "@SyliusTaxonomyBundle/Resources/config/app/config.yml" }
     - { resource: "@SyliusUserBundle/Resources/config/app/config.yml" }
+    - { resource: "@SyliusUiBundle/Resources/config/app/config.yml" }
 
     - { resource: "@SyliusCoreBundle/Resources/config/app/parameters.yml" }
     - { resource: "@SyliusCoreBundle/Resources/config/app/sylius.yml" }
     - { resource: "@SyliusCoreBundle/Resources/config/app/state_machine.yml" }
     - { resource: "@SyliusCoreBundle/Resources/config/app/fixtures.yml" }
+    - { resource: "@SyliusCoreBundle/Resources/config/app/messenger.yaml" }
+    - { resource: "@SyliusCoreBundle/Resources/config/app/doctrine_migrations.yaml" }
 
 parameters:
     sylius_core.public_dir: "%kernel.project_dir%/web"
+    sylius_core.images_dir: "%sylius_core.public_dir%/media/image"
 
 doctrine:
     orm:
@@ -32,12 +36,27 @@ doctrine:
         entity_managers:
             default:
                 auto_mapping: true
+                dql:
+                    string_functions:
+                        DATE_FORMAT: Sylius\Bundle\CoreBundle\Doctrine\DQL\DateFormat
+                        DAY: Sylius\Bundle\CoreBundle\Doctrine\DQL\Day
+                        HOUR: Sylius\Bundle\CoreBundle\Doctrine\DQL\Hour
+                        MONTH: Sylius\Bundle\CoreBundle\Doctrine\DQL\Month
+                        WEEK: Sylius\Bundle\CoreBundle\Doctrine\DQL\Week
+                        YEAR: Sylius\Bundle\CoreBundle\Doctrine\DQL\Year
+
+flysystem:
+    storages:
+        sylius.storage:
+            adapter: 'local'
+            options:
+                directory: '%sylius_core.images_dir%'
 
 knp_gaufrette:
     adapters:
         sylius_image:
             local:
-                directory: "%sylius_core.public_dir%/media/image"
+                directory: "%sylius_core.images_dir%"
                 create: true
     filesystems:
         sylius_image:
@@ -47,7 +66,7 @@ liip_imagine:
     loaders:
         default:
             filesystem:
-                data_root: "%sylius_core.public_dir%/media/image"
+                data_root: "%sylius_core.images_dir%"
     resolvers:
         default:
             web_path:
@@ -98,7 +117,7 @@ twig:
         sylius: "@sylius.context.shopper"
         sylius_base_locale: "%locale%"
         sylius_meta:
-            version: !php/const Sylius\Bundle\CoreBundle\Application\Kernel::VERSION
+            version: !php/const Sylius\Bundle\CoreBundle\SyliusCoreBundle::VERSION
 
 sonata_block:
     blocks:
@@ -121,8 +140,3 @@ sonata_block:
                 resources: ~
                 statistics: ~
                 taxon: ~
-
-sonata_core:
-    form:
-        mapping:
-            enabled: false # https://github.com/sonata-project/SonataCoreBundle/pull/462

@@ -19,15 +19,14 @@ use Sylius\Component\Order\Processor\OrderProcessorInterface;
 
 final class OrderAdjustmentsClearer implements OrderProcessorInterface
 {
-    /** @var array */
-    private $adjustmentsToRemove;
+    private array $adjustmentsToRemove;
 
     public function __construct(array $adjustmentsToRemove = [])
     {
         if (0 === func_num_args()) {
             @trigger_error(
                 'Not passing adjustments types explicitly is deprecated since 1.2 and will be prohibited in 2.0',
-                \E_USER_DEPRECATED
+                \E_USER_DEPRECATED,
             );
 
             $adjustmentsToRemove = [
@@ -42,11 +41,12 @@ final class OrderAdjustmentsClearer implements OrderProcessorInterface
         $this->adjustmentsToRemove = $adjustmentsToRemove;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function process(OrderInterface $order): void
     {
+        if (OrderInterface::STATE_CART !== $order->getState()) {
+            return;
+        }
+
         foreach ($this->adjustmentsToRemove as $type) {
             $order->removeAdjustmentsRecursively($type);
         }

@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture\Factory;
 
+use Faker\Factory;
+use Faker\Generator;
 use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
 use Sylius\Component\Customer\Model\CustomerGroupInterface;
-use Sylius\Component\Customer\Model\CustomerInterface as CustotmerComponent;
+use Sylius\Component\Customer\Model\CustomerInterface as CustomerComponent;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\OptionsResolver\Options;
@@ -25,39 +27,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ShopUserExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $userFactory;
+    private Generator $faker;
 
-    /** @var FactoryInterface */
-    private $customerFactory;
-
-    /** @var RepositoryInterface */
-    private $customerGroupRepository;
-
-    /** @var \Faker\Generator */
-    private $faker;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
 
     public function __construct(
-        FactoryInterface $userFactory,
-        FactoryInterface $customerFactory,
-        RepositoryInterface $customerGroupRepository
+        private FactoryInterface $shopUserFactory,
+        private FactoryInterface $customerFactory,
+        private RepositoryInterface $customerGroupRepository,
     ) {
-        $this->userFactory = $userFactory;
-        $this->customerFactory = $customerFactory;
-        $this->customerGroupRepository = $customerGroupRepository;
-
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver = new OptionsResolver();
 
         $this->configureOptions($this->optionsResolver);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(array $options = []): ShopUserInterface
     {
         $options = $this->optionsResolver->resolve($options);
@@ -73,7 +57,7 @@ class ShopUserExampleFactory extends AbstractExampleFactory implements ExampleFa
         $customer->setBirthday($options['birthday']);
 
         /** @var ShopUserInterface $user */
-        $user = $this->userFactory->createNew();
+        $user = $this->shopUserFactory->createNew();
         $user->setPlainPassword($options['password']);
         $user->setEnabled($options['enabled']);
         $user->addRole('ROLE_USER');
@@ -82,46 +66,36 @@ class ShopUserExampleFactory extends AbstractExampleFactory implements ExampleFa
         return $user;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault('email', function (Options $options): string {
-                return $this->faker->email;
-            })
-            ->setDefault('first_name', function (Options $options): string {
-                return $this->faker->firstName;
-            })
-            ->setDefault('last_name', function (Options $options): string {
-                return $this->faker->lastName;
-            })
+            ->setDefault('email', fn (Options $options): string => $this->faker->email)
+            ->setDefault('first_name', fn (Options $options): string => $this->faker->firstName)
+            ->setDefault('last_name', fn (Options $options): string => $this->faker->lastName)
             ->setDefault('enabled', true)
             ->setAllowedTypes('enabled', 'bool')
             ->setDefault('password', 'password123')
             ->setDefault('customer_group', LazyOption::randomOneOrNull($this->customerGroupRepository, 100))
             ->setAllowedTypes('customer_group', ['null', 'string', CustomerGroupInterface::class])
             ->setNormalizer('customer_group', LazyOption::findOneBy($this->customerGroupRepository, 'code'))
-            ->setDefault('gender', CustotmerComponent::UNKNOWN_GENDER)
+            ->setDefault('gender', CustomerComponent::UNKNOWN_GENDER)
             ->setAllowedValues(
                 'gender',
-                [CustotmerComponent::UNKNOWN_GENDER, CustotmerComponent::MALE_GENDER, CustotmerComponent::FEMALE_GENDER]
+                [CustomerComponent::UNKNOWN_GENDER, CustomerComponent::MALE_GENDER, CustomerComponent::FEMALE_GENDER],
             )
-            ->setDefault('phone_number', function (Options $options): string {
-                return $this->faker->phoneNumber;
-            })
-            ->setDefault('birthday', function (Options $options): \DateTime {
-                return $this->faker->dateTimeThisCentury();
-            })
+            ->setDefault('phone_number', fn (Options $options): string => $this->faker->phoneNumber)
+            ->setDefault('birthday', fn (Options $options): \DateTime => $this->faker->dateTimeThisCentury())
             ->setAllowedTypes('birthday', ['null', 'string', \DateTimeInterface::class])
-            ->setNormalizer('birthday', function (Options $options, $value) {
-                if (is_string($value)) {
-                    return \DateTime::createFromFormat('Y-m-d H:i:s', $value);
-                }
+            ->setNormalizer(
+                'birthday',
+                function (Options $options, string|\DateTimeInterface|null $value) {
+                    if (is_string($value)) {
+                        return \DateTime::createFromFormat('Y-m-d H:i:s', $value);
+                    }
 
-                return $value;
-            })
+                    return $value;
+                },
+            )
         ;
     }
 }

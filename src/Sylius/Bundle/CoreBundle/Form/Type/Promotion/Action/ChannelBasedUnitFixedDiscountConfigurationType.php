@@ -21,25 +21,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ChannelBasedUnitFixedDiscountConfigurationType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'entry_type' => UnitFixedDiscountConfigurationType::class,
-            'entry_options' => function (ChannelInterface $channel) {
-                return [
-                    'label' => $channel->getName(),
-                    'currency' => $channel->getBaseCurrency()->getCode(),
-                ];
-            },
+            'entry_options' => fn (ChannelInterface $channel) => [
+                'label' => $channel->getName(),
+                'currency' => $channel->getBaseCurrency()->getCode(),
+            ],
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChannelCollectionType::class;

@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Core\Formatter\StringInflector;
@@ -27,42 +27,19 @@ use Webmozart\Assert\Assert;
 
 final class TaxationContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var FactoryInterface */
-    private $taxRateFactory;
-
-    /** @var FactoryInterface */
-    private $taxCategoryFactory;
-
-    /** @var RepositoryInterface */
-    private $taxRateRepository;
-
-    /** @var TaxCategoryRepositoryInterface */
-    private $taxCategoryRepository;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        FactoryInterface $taxRateFactory,
-        FactoryInterface $taxCategoryFactory,
-        RepositoryInterface $taxRateRepository,
-        TaxCategoryRepositoryInterface $taxCategoryRepository,
-        ObjectManager $objectManager
+        private SharedStorageInterface $sharedStorage,
+        private FactoryInterface $taxRateFactory,
+        private FactoryInterface $taxCategoryFactory,
+        private RepositoryInterface $taxRateRepository,
+        private TaxCategoryRepositoryInterface $taxCategoryRepository,
+        private ObjectManager $objectManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->taxRateFactory = $taxRateFactory;
-        $this->taxCategoryFactory = $taxCategoryFactory;
-        $this->taxRateRepository = $taxRateRepository;
-        $this->taxCategoryRepository = $taxCategoryRepository;
-        $this->objectManager = $objectManager;
     }
 
     /**
      * @Given the store has :taxRateName tax rate of :taxRateAmount% for :taxCategoryName within the :zone zone
+     * @Given the store has :taxRateName tax rate of :taxRateAmount% for :taxCategoryName within the :zone zone with dates between :startDate and :endDate
      * @Given the store has :taxRateName tax rate of :taxRateAmount% for :taxCategoryName within the :zone zone identified by the :taxRateCode code
      * @Given /^the store has(?:| also) "([^"]+)" tax rate of ([^"]+)% for "([^"]+)" for the (rest of the world)$/
      */
@@ -72,27 +49,46 @@ final class TaxationContext implements Context
         $taxCategoryName,
         ZoneInterface $zone,
         $taxRateCode = null,
-        $includedInPrice = false
+        $includedInPrice = false,
+        ?string $startDate = null,
+        ?string $endDate = null,
     ) {
-        $taxCategory = $this->getOrCreateTaxCategory($taxCategoryName);
+        $this->configureTaxRate(
+            $taxCategoryName,
+            $taxRateCode,
+            $taxRateName,
+            $zone,
+            $taxRateAmount,
+            $includedInPrice,
+            $startDate !== null ? new \DateTime($startDate) : null,
+            $endDate !== null ? new \DateTime($endDate) : null,
+        );
+    }
 
-        if (null === $taxRateCode) {
-            $taxRateCode = $this->getCodeFromNameAndZoneCode($taxRateName, $zone->getCode());
-        }
+    /**
+     * @Given the store has :taxRateName tax rate of :taxRateAmount% for :taxCategoryName within the :zone zone ending at :endDate
+     */
+    public function storeHasTaxRateWithinZoneEndingAt(
+        string $taxRateName,
+        string $taxRateAmount,
+        string $taxCategoryName,
+        ZoneInterface $zone,
+        string $endDate,
+    ) {
+        $this->configureTaxRate($taxCategoryName, null, $taxRateName, $zone, $taxRateAmount, false, null, new \DateTime($endDate));
+    }
 
-        /** @var TaxRateInterface $taxRate */
-        $taxRate = $this->taxRateFactory->createNew();
-        $taxRate->setName($taxRateName);
-        $taxRate->setCode($taxRateCode);
-        $taxRate->setZone($zone);
-        $taxRate->setAmount((float) $this->getAmountFromString($taxRateAmount));
-        $taxRate->setCategory($taxCategory);
-        $taxRate->setCalculator('default');
-        $taxRate->setIncludedInPrice($includedInPrice);
-
-        $this->taxRateRepository->add($taxRate);
-
-        $this->sharedStorage->set('tax_rate', $taxRate);
+    /**
+     * @Given the store has :taxRateName tax rate of :taxRateAmount% for :taxCategoryName within the :zone zone starting at :startDate
+     */
+    public function storeHasTaxRateWithinZoneStartingAt(
+        string $taxRateName,
+        string $taxRateAmount,
+        string $taxCategoryName,
+        ZoneInterface $zone,
+        string $startDate,
+    ) {
+        $this->configureTaxRate($taxCategoryName, StringInflector::nameToCode($taxRateName), $taxRateName, $zone, $taxRateAmount, false, new \DateTime($startDate));
     }
 
     /**
@@ -148,6 +144,19 @@ final class TaxationContext implements Context
     }
 
     /**
+     * @Given /^(this tax rate) operates between "([^"]+)" and "([^"]+)"$/
+     */
+    public function theTaxRateOperatesBetweenDates(
+        TaxRateInterface $taxRate,
+        string $startDate,
+        string $endDate,
+    ): void {
+        $taxRate->setStartDate(new \DateTime($startDate));
+        $taxRate->setEndDate(new \DateTime($endDate));
+        $this->objectManager->flush();
+    }
+
+    /**
      * @param string $taxCategoryName
      *
      * @return TaxCategoryInterface
@@ -162,7 +171,7 @@ final class TaxationContext implements Context
         Assert::eq(
             count($taxCategories),
             1,
-            sprintf('%d tax categories has been found with name "%s".', count($taxCategories), $taxCategoryName)
+            sprintf('%d tax categories has been found with name "%s".', count($taxCategories), $taxCategoryName),
         );
 
         return $taxCategories[0];
@@ -219,5 +228,38 @@ final class TaxationContext implements Context
     private function getCodeFromNameAndZoneCode($taxRateName, $zoneCode)
     {
         return $this->getCodeFromName($taxRateName) . '_' . strtolower($zoneCode);
+    }
+
+    private function configureTaxRate(
+        string $taxCategoryName,
+        ?string $taxRateCode,
+        string $taxRateName,
+        ZoneInterface $zone,
+        string $taxRateAmount,
+        bool $includedInPrice,
+        ?\DateTimeInterface $startDate = null,
+        ?\DateTimeInterface $endDate = null,
+    ): void {
+        $taxCategory = $this->getOrCreateTaxCategory($taxCategoryName);
+
+        if (null === $taxRateCode) {
+            $taxRateCode = $this->getCodeFromNameAndZoneCode($taxRateName, $zone->getCode());
+        }
+
+        /** @var TaxRateInterface $taxRate */
+        $taxRate = $this->taxRateFactory->createNew();
+        $taxRate->setName($taxRateName);
+        $taxRate->setCode($taxRateCode);
+        $taxRate->setZone($zone);
+        $taxRate->setAmount((float) $this->getAmountFromString($taxRateAmount));
+        $taxRate->setCategory($taxCategory);
+        $taxRate->setCalculator('default');
+        $taxRate->setIncludedInPrice($includedInPrice);
+        $taxRate->setStartDate($startDate);
+        $taxRate->setEndDate($endDate);
+
+        $this->taxRateRepository->add($taxRate);
+
+        $this->sharedStorage->set('tax_rate', $taxRate);
     }
 }

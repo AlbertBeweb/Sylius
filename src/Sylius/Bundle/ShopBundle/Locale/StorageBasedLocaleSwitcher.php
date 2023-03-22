@@ -20,21 +20,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class StorageBasedLocaleSwitcher implements LocaleSwitcherInterface
 {
-    /** @var LocaleStorageInterface */
-    private $localeStorage;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    public function __construct(LocaleStorageInterface $localeStorage, ChannelContextInterface $channelContext)
+    public function __construct(private LocaleStorageInterface $localeStorage, private ChannelContextInterface $channelContext)
     {
-        $this->localeStorage = $localeStorage;
-        $this->channelContext = $channelContext;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function handle(Request $request, string $localeCode): RedirectResponse
     {
         $this->localeStorage->set($this->channelContext->getChannel(), $localeCode);

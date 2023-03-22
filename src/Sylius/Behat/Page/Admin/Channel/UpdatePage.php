@@ -17,6 +17,8 @@ use Behat\Mink\Element\NodeElement;
 use Sylius\Behat\Behaviour\ChecksCodeImmutability;
 use Sylius\Behat\Behaviour\Toggles;
 use Sylius\Behat\Page\Admin\Crud\UpdatePage as BaseUpdatePage;
+use Sylius\Behat\Service\AutocompleteHelper;
+use Sylius\Behat\Service\DriverHelper;
 
 class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
 {
@@ -87,6 +89,31 @@ class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
         return $this->getElement('base_currency')->hasAttribute('disabled');
     }
 
+    public function changeMenuTaxon(string $menuTaxon): void
+    {
+        $menuTaxonElement = $this->getElement('menu_taxon')->getParent();
+
+        AutocompleteHelper::chooseValue($this->getSession(), $menuTaxonElement, $menuTaxon);
+    }
+
+    public function getMenuTaxon(): string
+    {
+        $element = $this->getElement('menu_taxon');
+
+        if (DriverHelper::isJavascript($this->getDriver())) {
+            $this->getDocument()->waitFor(1, function () use ($element) {
+                return $element->getText() !== '';
+            });
+        }
+
+        return $element->getText();
+    }
+
+    public function getUsedTheme(): string
+    {
+        return $this->getElement('theme')->getValue();
+    }
+
     protected function getCodeElement(): NodeElement
     {
         return $this->getElement('code');
@@ -107,6 +134,7 @@ class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
             'default_tax_zone' => '#sylius_channel_defaultTaxZone',
             'enabled' => '#sylius_channel_enabled',
             'locales' => '#sylius_channel_locales',
+            'menu_taxon' => '#sylius_channel_menuTaxon ~ .text',
             'name' => '#sylius_channel_name',
             'tax_calculation_strategy' => '#sylius_channel_taxCalculationStrategy',
         ]);

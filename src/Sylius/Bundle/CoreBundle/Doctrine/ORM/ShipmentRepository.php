@@ -15,6 +15,8 @@ namespace Sylius\Bundle\CoreBundle\Doctrine\ORM;
 
 use Doctrine\ORM\QueryBuilder;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
+use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Core\Repository\ShipmentRepositoryInterface;
 
@@ -28,9 +30,6 @@ class ShipmentRepository extends EntityRepository implements ShipmentRepositoryI
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findOneByOrderId($shipmentId, $orderId): ?ShipmentInterface
     {
         return $this->createQueryBuilder('o')
@@ -43,9 +42,35 @@ class ShipmentRepository extends EntityRepository implements ShipmentRepositoryI
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findOneByOrderTokenAndChannel($shipmentId, string $tokenValue, ChannelInterface $channel): ?ShipmentInterface
+    {
+        return $this->createQueryBuilder('o')
+            ->innerJoin('o.order', 'orders')
+            ->andWhere('o.id = :shipmentId')
+            ->andWhere('orders.tokenValue = :tokenValue')
+            ->andWhere('orders.channel = :channel')
+            ->setParameter('shipmentId', $shipmentId)
+            ->setParameter('tokenValue', $tokenValue)
+            ->setParameter('channel', $channel)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
+    public function findOneByCustomer($id, CustomerInterface $customer): ?ShipmentInterface
+    {
+        return $this->createQueryBuilder('o')
+            ->innerJoin('o.order', 'ord')
+            ->innerJoin('ord.customer', 'customer')
+            ->andWhere('o.id = :id')
+            ->andWhere('customer = :customer')
+            ->setParameter('id', $id)
+            ->setParameter('customer', $customer)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
     public function findByName(string $name, string $locale): array
     {
         return $this->createQueryBuilder('o')

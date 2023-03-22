@@ -20,19 +20,11 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 final class AdminUserType extends UserType
 {
-    /** @var string|null */
-    private $fallbackLocale;
-
-    public function __construct(string $dataClass, array $validationGroups = [], ?string $fallbackLocale = null)
+    public function __construct(string $dataClass, array $validationGroups = [], private ?string $fallbackLocale = null)
     {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->fallbackLocale = $fallbackLocale;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -54,9 +46,6 @@ final class AdminUserType extends UserType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_admin_user';

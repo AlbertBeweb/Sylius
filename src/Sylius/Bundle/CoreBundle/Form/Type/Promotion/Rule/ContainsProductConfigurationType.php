@@ -24,17 +24,10 @@ use Symfony\Component\Validator\Constraints\Type;
 
 final class ContainsProductConfigurationType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $productRepository;
-
-    public function __construct(RepositoryInterface $productRepository)
+    public function __construct(private RepositoryInterface $productRepository)
     {
-        $this->productRepository = $productRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -48,13 +41,10 @@ final class ContainsProductConfigurationType extends AbstractType
         ;
 
         $builder->get('product_code')->addModelTransformer(
-            new ReversedTransformer(new ResourceToIdentifierTransformer($this->productRepository, 'code'))
+            new ReversedTransformer(new ResourceToIdentifierTransformer($this->productRepository, 'code')),
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_promotion_rule_contains_product_configuration';

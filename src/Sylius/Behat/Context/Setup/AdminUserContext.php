@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
@@ -25,38 +25,14 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class AdminUserContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var ExampleFactoryInterface */
-    private $userFactory;
-
-    /** @var UserRepositoryInterface */
-    private $userRepository;
-
-    /** @var ImageUploaderInterface */
-    private $imageUploader;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
-    /** @var \ArrayAccess */
-    private $minkParameters;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        ExampleFactoryInterface $userFactory,
-        UserRepositoryInterface $userRepository,
-        ImageUploaderInterface $imageUploader,
-        ObjectManager $objectManager,
-        \ArrayAccess $minkParameters
+        private SharedStorageInterface $sharedStorage,
+        private ExampleFactoryInterface $userFactory,
+        private UserRepositoryInterface $userRepository,
+        private ImageUploaderInterface $imageUploader,
+        private ObjectManager $objectManager,
+        private \ArrayAccess $minkParameters,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->userFactory = $userFactory;
-        $this->userRepository = $userRepository;
-        $this->imageUploader = $imageUploader;
-        $this->objectManager = $objectManager;
-        $this->minkParameters = $minkParameters;
     }
 
     /**
@@ -66,7 +42,7 @@ final class AdminUserContext implements Context
     public function thereIsAnAdministratorIdentifiedBy($email, $password = 'sylius')
     {
         /** @var AdminUserInterface $adminUser */
-        $adminUser = $this->userFactory->create(['email' => $email, 'password' => $password, 'enabled' => true]);
+        $adminUser = $this->userFactory->create(['email' => $email, 'password' => $password, 'enabled' => true, 'api' => true]);
 
         $this->userRepository->add($adminUser);
         $this->sharedStorage->set('administrator', $adminUser);
@@ -91,6 +67,17 @@ final class AdminUserContext implements Context
     public function thisAdministratorHasTheImageAsAvatar(AdminUserInterface $administrator, string $avatarPath): void
     {
         $this->iHaveTheImageAsMyAvatar($avatarPath, $administrator);
+    }
+
+    /**
+     * @Given /^(this administrator) account is disabled$/
+     * @When /^(this administrator) account becomes disabled$/
+     */
+    public function thisAccountIsDisabled(AdminUserInterface $administrator): void
+    {
+        $administrator->setEnabled(false);
+
+        $this->objectManager->flush();
     }
 
     /**
@@ -121,5 +108,26 @@ final class AdminUserContext implements Context
         $this->objectManager->flush();
 
         $this->sharedStorage->set($avatarPath, $avatar->getPath());
+    }
+
+    /**
+     * @Given /^(I) have already received an administrator's password resetting email$/
+     */
+    public function iHaveAlreadyReceivedAnAdministratorsPasswordResettingEmail(AdminUserInterface $administrator): void
+    {
+        $administrator->setPasswordResetToken('token');
+        $administrator->setPasswordRequestedAt(new \DateTime());
+
+        $this->objectManager->flush();
+    }
+
+    /**
+     * @Given /^(my) password reset token has already expired$/
+     */
+    public function myPasswordResetTokenHasAlreadyExpired(AdminUserInterface $administrator): void
+    {
+        $administrator->setPasswordRequestedAt(new \DateTime('-1 year'));
+
+        $this->objectManager->flush();
     }
 }

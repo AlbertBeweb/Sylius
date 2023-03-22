@@ -13,108 +13,156 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Core\Model;
 
-class ChannelPricing implements ChannelPricingInterface
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+
+class ChannelPricing implements ChannelPricingInterface, \Stringable
 {
-    /** @var int */
+    /** @var mixed */
     protected $id;
 
-    /** @var string */
+    /** @var string|null */
     protected $channelCode;
 
-    /** @var ProductVariantInterface */
+    /** @var ProductVariantInterface|null */
     protected $productVariant;
 
-    /** @var int */
+    /** @var int|null */
     protected $price;
 
-    /** @var int */
+    /** @var int|null */
     protected $originalPrice;
 
+    /** @var int */
+    protected $minimumPrice = 0;
+
+    /** @var int|null */
+    protected $lowestPriceBeforeDiscount;
+
     /**
-     * {@inheritdoc}
+     * @var ArrayCollection
+     *
+     * @psalm-var ArrayCollection<array-key, CatalogPromotionInterface>
      */
+    protected $appliedPromotions;
+
+    public function __construct()
+    {
+        $this->appliedPromotions = new ArrayCollection();
+    }
+
     public function __toString(): string
     {
         return (string) $this->getPrice();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannelCode(): ?string
     {
         return $this->channelCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setChannelCode(?string $channelCode): void
     {
         $this->channelCode = $channelCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getProductVariant(): ?ProductVariantInterface
     {
         return $this->productVariant;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setProductVariant(?ProductVariantInterface $productVariant): void
     {
         $this->productVariant = $productVariant;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPrice(): ?int
     {
         return $this->price;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setPrice(?int $price): void
     {
         $this->price = $price;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOriginalPrice(): ?int
     {
         return $this->originalPrice;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setOriginalPrice(?int $originalPrice): void
     {
         $this->originalPrice = $originalPrice;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function getLowestPriceBeforeDiscount(): ?int
+    {
+        return $this->lowestPriceBeforeDiscount;
+    }
+
+    public function setLowestPriceBeforeDiscount(?int $lowestPriceBeforeDiscount): void
+    {
+        $this->lowestPriceBeforeDiscount = $lowestPriceBeforeDiscount;
+    }
+
     public function isPriceReduced(): bool
     {
         return $this->originalPrice > $this->price;
+    }
+
+    public function getMinimumPrice(): int
+    {
+        return $this->minimumPrice;
+    }
+
+    public function setMinimumPrice(?int $minimumPrice): void
+    {
+        $this->minimumPrice = $minimumPrice ?: 0;
+    }
+
+    public function getAppliedPromotions(): Collection
+    {
+        return $this->appliedPromotions;
+    }
+
+    public function addAppliedPromotion(CatalogPromotionInterface $catalogPromotion): void
+    {
+        if ($this->appliedPromotions->contains($catalogPromotion)) {
+            return;
+        }
+
+        $this->appliedPromotions->add($catalogPromotion);
+    }
+
+    public function removeAppliedPromotion(CatalogPromotionInterface $catalogPromotion): void
+    {
+        $this->appliedPromotions->removeElement($catalogPromotion);
+    }
+
+    public function hasPromotionApplied(CatalogPromotionInterface $catalogPromotion): bool
+    {
+        return $this->appliedPromotions->contains($catalogPromotion);
+    }
+
+    public function clearAppliedPromotions(): void
+    {
+        $this->appliedPromotions->clear();
+    }
+
+    public function hasExclusiveCatalogPromotionApplied(): bool
+    {
+        foreach ($this->appliedPromotions as $appliedPromotion) {
+            if ($appliedPromotion->isExclusive()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

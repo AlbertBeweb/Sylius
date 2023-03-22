@@ -15,14 +15,14 @@ If you have `Composer installed globally <http://getcomposer.org/doc/00-intro.md
 
 .. code-block:: bash
 
-    $ composer require sylius/taxonomy-bundle
+    composer require sylius/taxonomy-bundle
 
 Otherwise you have to download .phar file.
 
 .. code-block:: bash
 
-    $ curl -sS https://getcomposer.org/installer | php
-    $ php composer.phar require sylius/taxonomy-bundle
+    curl -sS https://getcomposer.org/installer | php
+    php composer.phar require sylius/taxonomy-bundle
 
 .. note::
 
@@ -46,9 +46,9 @@ Don't worry, everything was automatically installed via Composer.
         $bundles = array(
             new winzou\Bundle\StateMachineBundle\winzouStateMachineBundle(),
             new FOS\RestBundle\FOSRestBundle(),
-            new JMS\SerializerBundle\JMSSerializerBundle($this),
+            new JMS\SerializerBundle\JMSSerializerBundle(),
             new Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle(),
-            new WhiteOctober\PagerfantaBundle\WhiteOctoberPagerfantaBundle(),
+            new BabDev\PagerfantaBundle\BabDevPagerfantaBundle(),
             new Sylius\Bundle\TaxonomyBundle\SyliusTaxonomyBundle(),
             new Sylius\Bundle\ResourceBundle\SyliusResourceBundle(),
 
@@ -79,7 +79,7 @@ Run the following command.
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:schema:update --force
+    php bin/console doctrine:schema:update --force
 
 .. warning::
 

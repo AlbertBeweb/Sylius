@@ -15,14 +15,14 @@ If you have `Composer installed globally <http://getcomposer.org/doc/00-intro.md
 
 .. code-block:: bash
 
-    $ composer require sylius/promotion-bundle
+    composer require sylius/promotion-bundle
 
 Otherwise you have to download .phar file.
 
 .. code-block:: bash
 
-    $ curl -sS https://getcomposer.org/installer | php
-    $ php composer.phar require sylius/promotion-bundle
+    curl -sS https://getcomposer.org/installer | php
+    php composer.phar require sylius/promotion-bundle
 
 Adding required bundles to the kernel
 -------------------------------------
@@ -42,9 +42,9 @@ Don't worry, everything was automatically installed via Composer.
     {
         $bundles = array(
             new FOS\RestBundle\FOSRestBundle(),
-            new JMS\SerializerBundle\JMSSerializerBundle($this),
+            new JMS\SerializerBundle\JMSSerializerBundle(),
             new Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle(),
-            new WhiteOctober\PagerfantaBundle\WhiteOctoberPagerfantaBundle(),
+            new BabDev\PagerfantaBundle\BabDevPagerfantaBundle(),
             new winzou\Bundle\StateMachineBundle\winzouStateMachineBundle(),
             new Sylius\Bundle\ResourceBundle\SyliusResourceBundle(),
             new Sylius\Bundle\PromotionBundle\SyliusPromotionBundle(),
@@ -60,7 +60,7 @@ Promotion Subject configuration
 
 .. note::
 
-    You need to have a class that is :doc:`registered as a sylius_resource </components_and_bundles/bundles/SyliusResourceBundle/configuration>`.
+    You need to have a class that is `registered as a Sylius resource <https://github.com/Sylius/SyliusResourceBundle/blob/master/docs/index.md>`_.
     It can be for example a ``CarRentalOrderClass``.
 
 * Make your ``CarRentalOrder`` class implement the ``PromotionSubjectInterface``.

@@ -13,22 +13,15 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\UserBundle\Reloader;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\User\Model\UserInterface;
 
 final class UserReloader implements UserReloaderInterface
 {
-    /** @var ObjectManager */
-    private $objectManager;
-
-    public function __construct(ObjectManager $objectManager)
+    public function __construct(private ObjectManager $objectManager)
     {
-        $this->objectManager = $objectManager;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reloadUser(UserInterface $user): void
     {
         $this->objectManager->refresh($user);

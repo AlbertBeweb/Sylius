@@ -17,27 +17,23 @@ use Sylius\Component\Shipping\Exception\UnresolvedDefaultShippingMethodException
 use Sylius\Component\Shipping\Model\ShipmentInterface;
 use Sylius\Component\Shipping\Model\ShippingMethodInterface;
 use Sylius\Component\Shipping\Repository\ShippingMethodRepositoryInterface;
+use Webmozart\Assert\Assert;
 
 final class DefaultShippingMethodResolver implements DefaultShippingMethodResolverInterface
 {
-    /** @var ShippingMethodRepositoryInterface */
-    private $shippingMethodRepository;
-
-    public function __construct(ShippingMethodRepositoryInterface $shippingMethodRepository)
+    public function __construct(private ShippingMethodRepositoryInterface $shippingMethodRepository)
     {
-        $this->shippingMethodRepository = $shippingMethodRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultShippingMethod(ShipmentInterface $shipment): ShippingMethodInterface
     {
         $shippingMethods = $this->shippingMethodRepository->findBy(['enabled' => true]);
         if (empty($shippingMethods)) {
             throw new UnresolvedDefaultShippingMethodException();
         }
+        $shippingMethod = $shippingMethods[0];
+        Assert::isInstanceOf($shippingMethod, ShippingMethodInterface::class);
 
-        return $shippingMethods[0];
+        return $shippingMethod;
     }
 }

@@ -22,27 +22,15 @@ use Webmozart\Assert\Assert;
 
 class ManagingShippingCategoriesContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
     ) {
-        $this->indexPage = $indexPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
     }
 
     /**
-     * @Given I want to create a new shipping category
+     * @When I want to create a new shipping category
      */
     public function iWantToCreateANewShippingCategory()
     {
@@ -90,7 +78,7 @@ class ManagingShippingCategoriesContext implements Context
     {
         Assert::same(
             $this->updatePage->getValidationMessage($element),
-            sprintf('Please enter shipping category %s.', $element)
+            sprintf('Please enter shipping category %s.', $element),
         );
     }
 
@@ -158,7 +146,7 @@ class ManagingShippingCategoriesContext implements Context
 
     /**
      * @When /^I modify a (shipping category "([^"]+)")$/
-     * @Given /^I want to modify a (shipping category "([^"]+)")$/
+     * @When /^I want to modify a (shipping category "([^"]+)")$/
      */
     public function iWantToModifyAShippingCategory(ShippingCategoryInterface $shippingCategory)
     {
@@ -198,9 +186,9 @@ class ManagingShippingCategoriesContext implements Context
     }
 
     /**
-     * @Then the code field should be disabled
+     * @Then I should not be able to edit its code
      */
-    public function theCodeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsCode(): void
     {
         Assert::true($this->updatePage->isCodeDisabled());
     }
@@ -220,7 +208,7 @@ class ManagingShippingCategoriesContext implements Context
     {
         Assert::same(
             $this->createPage->getValidationMessage('code'),
-            'The shipping category with given code already exists.'
+            'The shipping category with given code already exists.',
         );
     }
 

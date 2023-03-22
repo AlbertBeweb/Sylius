@@ -31,7 +31,7 @@ class GeneratePage extends SymfonyPage implements GeneratePageInterface
 
     public function checkGenerationValidation(string $message): bool
     {
-        return false !== strpos($this->getElement('form')->find('css', '.ui.red.label')->getText(), $message);
+        return str_contains($this->getElement('form')->find('css', '.ui.red.label')->getText(), $message);
     }
 
     public function generate(): void
@@ -39,12 +39,12 @@ class GeneratePage extends SymfonyPage implements GeneratePageInterface
         $this->getDocument()->pressButton('Generate');
     }
 
-    public function specifyAmount(string $amount): void
+    public function specifyAmount(?int $amount): void
     {
         $this->getDocument()->fillField('Amount', $amount);
     }
 
-    public function specifyCodeLength(string $codeLength): void
+    public function specifyCodeLength(?int $codeLength): void
     {
         $this->getDocument()->fillField('Code length', $codeLength);
     }

@@ -3,6 +3,16 @@ The Cookbook
 
 The Sylius Cookbook is a collection of solution articles helping you with some specific, narrow problems.
 
+CLI
+---
+
+.. toctree::
+    :hidden:
+
+    cli/handle-multiple-channels-in-cli
+
+.. include:: /cookbook/cli/map.rst.inc
+
 Entities
 --------
 
@@ -10,19 +20,20 @@ Entities
     :hidden:
 
     entities/custom-model
+    entities/custom-model-accessible-for-channel-admin
     entities/custom-translatable-model
 
 .. include:: /cookbook/entities/map.rst.inc
 
-Api
----
+Administration
+--------------
 
 .. toctree::
     :hidden:
 
-    api/api
+    administration/editing-orders
 
-.. include:: /cookbook/api/map.rst.inc
+.. include:: /cookbook/administration/map.rst.inc
 
 Shop
 ----
@@ -38,6 +49,7 @@ Shop
     shop/embedding-products
     shop/facebook-login
     shop/cms
+    shop/vue-storefront
 
 .. include:: /cookbook/shop/map.rst.inc
 
@@ -52,6 +64,12 @@ Payments
     payments/encrypting-gateway-config
     payments/authorize
     payments/custom-payment-gateway
+    payments/customizing-credit-memo
+    payments/refund-process
+    payments/custom-field-on-refund-payment
+    payments/custom-type-of-refund
+    payments/custom-invoice
+    payments/generating-invoice-after-payment
 
 .. include:: /cookbook/payments/map.rst.inc
 
@@ -62,6 +80,7 @@ Emails
     :hidden:
 
     emails/custom-email
+    emails/custom-email-template-per-channel
     emails/disabling-order-confirmation-email
     emails/mailer
 
@@ -73,10 +92,34 @@ Promotions
 .. toctree::
     :hidden:
 
-    promotions/custom-promotion-rule
-    promotions/custom-promotion-action
+    promotions/custom-cart-promotion-rule
+    promotions/custom-cart-promotion-action
+    promotions/custom-catalog-promotion-scope
+    promotions/custom-catalog-promotion-action
+    promotions/catalog-promotion-labels
+    promotions/catalog-promotion-performance
 
 .. include:: /cookbook/promotions/map.rst.inc
+
+Inventory
+---------
+
+.. toctree::
+    :hidden:
+
+    inventory/custom-inventory-sources-filter
+
+.. include:: /cookbook/inventory/map.rst.inc
+
+Shipping methods
+----------------
+
+.. toctree::
+    :hidden:
+
+    shipping-methods/custom-shipping-method-rule
+
+.. include:: /cookbook/shipping-methods/map.rst.inc
 
 Images
 ------
@@ -86,6 +129,7 @@ Images
 
     images/images
     images/images-on-entity
+    images/images-on-aws-s3
 
 .. include:: /cookbook/images/map.rst.inc
 
@@ -95,10 +139,12 @@ Deployment
 .. toctree::
     :hidden:
 
+    deployment/symfonycloud
     deployment/platform-sh
-    deployment/platform-sh-advanced
     deployment/cloudways
     deployment/cron-jobs
+    deployment/artifakt
+    deployment/docker
 
 .. include:: /cookbook/deployment/map.rst.inc
 
@@ -111,6 +157,7 @@ Configuration
     configuration/disabling-shop-admin-api
     configuration/installation-commands
     configuration/disabling-admin-notifications
+    configuration/admin-prefix
 
 .. include:: /cookbook/configuration/map.rst.inc
 
@@ -120,6 +167,31 @@ Frontend
 .. toctree::
     :hidden:
 
-    frontend/admin-js-and-css
+    frontend/google-analytics.rst
+    frontend/migrating-to-webpack-1-11-or-earlier
+    frontend/migrating-to-webpack-1-12-or-later
+    frontend/staying-with-gulp
 
 .. include:: /cookbook/frontend/map.rst.inc
+
+Taxation
+--------
+
+.. toctree::
+    :hidden:
+
+    taxation/customize-tax-by-address
+
+.. include:: /cookbook/taxation/map.rst.inc
+
+API
+---
+
+.. toctree::
+    :hidden:
+
+    api/add_to_cart_product_chosen_by_product_options
+    api/how_force_login_already_registered_user_during_checkout
+
+.. include:: /cookbook/api/map.rst.inc
+

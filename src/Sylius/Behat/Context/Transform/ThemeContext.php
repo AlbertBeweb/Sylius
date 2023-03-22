@@ -18,12 +18,8 @@ use Sylius\Bundle\ThemeBundle\Repository\ThemeRepositoryInterface;
 
 final class ThemeContext implements Context
 {
-    /** @var ThemeRepositoryInterface */
-    private $themeRepository;
-
-    public function __construct(ThemeRepositoryInterface $themeRepository)
+    public function __construct(private ThemeRepositoryInterface $themeRepository)
     {
-        $this->themeRepository = $themeRepository;
     }
 
     /**

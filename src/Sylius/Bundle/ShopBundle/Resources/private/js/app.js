@@ -10,6 +10,7 @@
 import 'semantic-ui-css/components/popup';
 import 'semantic-ui-css/components/rating';
 import $ from 'jquery';
+import 'slick-carousel';
 
 import 'sylius/ui/app';
 import 'sylius/ui/sylius-api-login';
@@ -24,11 +25,14 @@ import './sylius-variants-prices';
 $(document).ready(() => {
   $('.popup-js').popup();
 
-  $('.cart.button')
-    .popup({
-      popup: $('.cart.popup'),
-      on: 'click',
-    });
+  $('.cart.button').popup({
+    popup: $('.cart.popup'),
+    on: 'click',
+    onUnplaceable() {
+      window.location.href = $('#sylius-go-to-cart').attr('href');
+    },
+    silent: true,
+  });
 
   $('.star.rating').rating({
     fireOnInit: true,
@@ -77,4 +81,13 @@ $(document).ready(() => {
   $(document).variantImages();
 
   $('body').find('input[autocomplete="off"]').prop('autocomplete', 'disable');
+
+  $('.carousel').slick({
+    infinite: true,
+    slidesToShow: 2,
+    slidesToScroll: 1,
+    prevArrow: $('.carousel-left'),
+    nextArrow: $('.carousel-right'),
+    appendArrows: false,
+  });
 });

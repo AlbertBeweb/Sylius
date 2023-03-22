@@ -21,29 +21,15 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class CartItemFactory implements CartItemFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $decoratedFactory;
-
-    /** @var ProductVariantResolverInterface */
-    private $variantResolver;
-
-    public function __construct(FactoryInterface $decoratedFactory, ProductVariantResolverInterface $variantResolver)
+    public function __construct(private FactoryInterface $decoratedFactory, private ProductVariantResolverInterface $variantResolver)
     {
-        $this->decoratedFactory = $decoratedFactory;
-        $this->variantResolver = $variantResolver;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNew(): OrderItemInterface
     {
         return $this->decoratedFactory->createNew();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createForProduct(ProductInterface $product): OrderItemInterface
     {
         /** @var OrderItemInterface $cartItem */
@@ -53,9 +39,6 @@ final class CartItemFactory implements CartItemFactoryInterface
         return $cartItem;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createForCart(OrderInterface $order): OrderItemInterface
     {
         /** @var OrderItemInterface $cartItem */

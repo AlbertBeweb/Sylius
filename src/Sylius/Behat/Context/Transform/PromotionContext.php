@@ -20,18 +20,10 @@ use Webmozart\Assert\Assert;
 
 final class PromotionContext implements Context
 {
-    /** @var PromotionRepositoryInterface */
-    private $promotionRepository;
-
-    /** @var PromotionCouponRepositoryInterface */
-    private $promotionCouponRepository;
-
     public function __construct(
-        PromotionRepositoryInterface $promotionRepository,
-        PromotionCouponRepositoryInterface $promotionCouponRepository
+        private PromotionRepositoryInterface $promotionRepository,
+        private PromotionCouponRepositoryInterface $promotionCouponRepository,
     ) {
-        $this->promotionRepository = $promotionRepository;
-        $this->promotionCouponRepository = $promotionCouponRepository;
     }
 
     /**
@@ -45,7 +37,7 @@ final class PromotionContext implements Context
 
         Assert::notNull(
             $promotion,
-            sprintf('Promotion with name "%s" does not exist', $promotionName)
+            sprintf('Promotion with name "%s" does not exist', $promotionName),
         );
 
         return $promotion;
@@ -62,7 +54,7 @@ final class PromotionContext implements Context
 
         Assert::notNull(
             $promotionCoupon,
-            sprintf('Promotion coupon with code "%s" does not exist', $promotionCouponCode)
+            sprintf('Promotion coupon with code "%s" does not exist', $promotionCouponCode),
         );
 
         return $promotionCoupon;

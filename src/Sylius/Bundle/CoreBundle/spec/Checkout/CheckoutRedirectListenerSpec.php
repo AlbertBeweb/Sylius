@@ -29,7 +29,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
     function let(
         RequestStack $requestStack,
         CheckoutStateUrlGeneratorInterface $checkoutStateUrlGenerator,
-        RequestMatcherInterface $requestMatcher
+        RequestMatcherInterface $requestMatcher,
     ): void {
         $this->beConstructedWith($requestStack, $checkoutStateUrlGenerator, $requestMatcher);
     }
@@ -40,7 +40,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
         Request $request,
         RequestMatcherInterface $requestMatcher,
         RequestStack $requestStack,
-        ResourceControllerEvent $resourceControllerEvent
+        ResourceControllerEvent $resourceControllerEvent,
     ): void {
         $requestStack->getCurrentRequest()->willReturn($request);
         $requestMatcher->matches($request)->willReturn(true);
@@ -48,7 +48,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
 
         $resourceControllerEvent->getSubject()->willReturn($order);
 
-        $checkoutStateUrlGenerator->generateForOrderCheckoutState($order)->willReturn('http://redirect-path');
+        $checkoutStateUrlGenerator->generateForOrderCheckoutState($order)->willReturn('https://redirect-path');
         $resourceControllerEvent->setResponse(Argument::type(RedirectResponse::class))->shouldBeCalled();
 
         $this->handleCheckoutRedirect($resourceControllerEvent);
@@ -58,7 +58,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
         Request $request,
         RequestMatcherInterface $requestMatcher,
         RequestStack $requestStack,
-        ResourceControllerEvent $resourceControllerEvent
+        ResourceControllerEvent $resourceControllerEvent,
     ): void {
         $requestStack->getCurrentRequest()->willReturn($request);
         $requestMatcher->matches($request)->willReturn(false);
@@ -72,7 +72,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
         Request $request,
         RequestMatcherInterface $requestMatcher,
         RequestStack $requestStack,
-        ResourceControllerEvent $resourceControllerEvent
+        ResourceControllerEvent $resourceControllerEvent,
     ): void {
         $requestStack->getCurrentRequest()->willReturn($request);
         $requestMatcher->matches($request)->willReturn(true);
@@ -87,7 +87,7 @@ final class CheckoutRedirectListenerSpec extends ObjectBehavior
         Request $request,
         RequestMatcherInterface $requestMatcher,
         RequestStack $requestStack,
-        ResourceControllerEvent $resourceControllerEvent
+        ResourceControllerEvent $resourceControllerEvent,
     ): void {
         $requestStack->getCurrentRequest()->willReturn($request);
         $requestMatcher->matches($request)->willReturn(true);

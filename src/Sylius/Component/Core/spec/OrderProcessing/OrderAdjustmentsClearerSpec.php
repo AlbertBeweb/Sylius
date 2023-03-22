@@ -27,6 +27,8 @@ final class OrderAdjustmentsClearerSpec extends ObjectBehavior
 
     function it_removes_adjustments_with_default_types_from_order_recursively(OrderInterface $order): void
     {
+        $order->getState()->willReturn(OrderInterface::STATE_CART);
+
         $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_ITEM_PROMOTION_ADJUSTMENT)->shouldBeCalled();
         $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT)->shouldBeCalled();
         $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_SHIPPING_PROMOTION_ADJUSTMENT)->shouldBeCalled();
@@ -43,8 +45,23 @@ final class OrderAdjustmentsClearerSpec extends ObjectBehavior
             AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT,
         ]);
 
+        $order->getState()->willReturn(OrderInterface::STATE_CART);
+
         $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_ITEM_PROMOTION_ADJUSTMENT)->shouldBeCalled();
         $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT)->shouldBeCalled();
+
+        $this->process($order);
+    }
+
+    function it_does_nothing_if_the_order_is_in_a_state_different_than_cart(OrderInterface $order): void
+    {
+        $order->getState()->willReturn(OrderInterface::STATE_NEW);
+
+        $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_ITEM_PROMOTION_ADJUSTMENT)->shouldNotBeCalled();
+        $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT)->shouldNotBeCalled();
+        $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_SHIPPING_PROMOTION_ADJUSTMENT)->shouldNotBeCalled();
+        $order->removeAdjustmentsRecursively(AdjustmentInterface::ORDER_UNIT_PROMOTION_ADJUSTMENT)->shouldNotBeCalled();
+        $order->removeAdjustmentsRecursively(AdjustmentInterface::TAX_ADJUSTMENT)->shouldNotBeCalled();
 
         $this->process($order);
     }

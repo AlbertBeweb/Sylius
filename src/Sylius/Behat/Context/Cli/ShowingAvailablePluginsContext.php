@@ -16,27 +16,21 @@ namespace Sylius\Behat\Context\Cli;
 use Behat\Behat\Context\Context;
 use Sylius\Bundle\CoreBundle\Command\SetupCommand;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Webmozart\Assert\Assert;
 
 final class ShowingAvailablePluginsContext implements Context
 {
-    /** @var KernelInterface */
-    private $kernel;
+    private ?Application $application = null;
 
-    /** @var Application */
-    private $application;
+    private ?CommandTester $tester = null;
 
-    /** @var CommandTester */
-    private $tester;
+    private ?Command $command = null;
 
-    /** @var SetupCommand */
-    private $command;
-
-    public function __construct(KernelInterface $kernel)
+    public function __construct(private KernelInterface $kernel)
     {
-        $this->kernel = $kernel;
     }
 
     /**
@@ -64,5 +58,6 @@ final class ShowingAvailablePluginsContext implements Context
         Assert::contains($this->tester->getDisplay(), 'Customer Reorder');
         Assert::contains($this->tester->getDisplay(), 'Invoicing');
         Assert::contains($this->tester->getDisplay(), 'Refund');
+        Assert::contains($this->tester->getDisplay(), 'CMS');
     }
 }

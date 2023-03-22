@@ -14,68 +14,64 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Api\Admin;
 
 use Behat\Behat\Context\Context;
+use Sylius\Behat\Client\ResponseCheckerInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
-use Symfony\Component\BrowserKit\Client;
+use Symfony\Component\BrowserKit\AbstractBrowser;
 use Symfony\Component\BrowserKit\Cookie;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Webmozart\Assert\Assert;
 
 final class ManagingTaxonsContext implements Context
 {
-    /** @var Client */
-    private $client;
-
-    /** @var SessionInterface */
-    private $session;
-
-    public function __construct(Client $client, SessionInterface $session)
-    {
-        $this->client = $client;
-        $this->session = $session;
+    public function __construct(
+        private AbstractBrowser $client,
+        private RequestStack $requestStack,
+        private ResponseCheckerInterface $responseChecker,
+    ) {
     }
 
     /**
      * @When I look for a taxon with :phrase in name
      */
-    public function iTypeIn($phrase)
+    public function iTypeIn($phrase): void
     {
-        $this->client->getCookieJar()->set(new Cookie($this->session->getName(), $this->session->getId()));
+        $this->client->getCookieJar()->set(new Cookie($this->requestStack->getSession()->getName(), $this->requestStack->getSession()->getId()));
         $this->client->request('GET', '/admin/ajax/taxons/search', ['phrase' => $phrase], [], ['ACCEPT' => 'application/json']);
     }
 
     /**
      * @When I want to get taxon with :code code
      */
-    public function iWantToGetTaxonWithCode($code)
+    public function iWantToGetTaxonWithCode($code): void
     {
-        $this->client->getCookieJar()->set(new Cookie($this->session->getName(), $this->session->getId()));
+        $this->client->getCookieJar()->set(new Cookie($this->requestStack->getSession()->getName(), $this->requestStack->getSession()->getId()));
         $this->client->request('GET', '/admin/ajax/taxons/leaf', ['code' => $code], [], ['ACCEPT' => 'application/json']);
     }
 
     /**
      * @When /^I want to get children from (taxon "[^"]+")/
      */
-    public function iWantToGetChildrenFromTaxon(TaxonInterface $taxon)
+    public function iWantToGetChildrenFromTaxon(TaxonInterface $taxon): void
     {
-        $this->client->getCookieJar()->set(new Cookie($this->session->getName(), $this->session->getId()));
+        $this->client->getCookieJar()->set(new Cookie($this->requestStack->getSession()->getName(), $this->requestStack->getSession()->getId()));
         $this->client->request('GET', '/admin/ajax/taxons/leafs', ['parentCode' => $taxon->getCode()], [], ['ACCEPT' => 'application/json']);
     }
 
     /**
      * @When I want to get taxon root
      */
-    public function iWantToGetTaxonRoot()
+    public function iWantToGetTaxonRoot(): void
     {
-        $this->client->getCookieJar()->set(new Cookie($this->session->getName(), $this->session->getId()));
+        $this->client->getCookieJar()->set(new Cookie($this->requestStack->getSession()->getName(), $this->requestStack->getSession()->getId()));
         $this->client->request('GET', '/admin/ajax/taxons/root-nodes', [], [], ['ACCEPT' => 'application/json']);
     }
 
     /**
      * @Then /^I should see (\d+) taxons on the list$/
      */
-    public function iShouldSeeTaxonsInTheList($number)
+    public function iShouldSeeTaxonsInTheList($number): void
     {
-        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $response = $this->responseChecker->getResponseContent($this->client->getResponse());
 
         Assert::eq(count($response), $number);
     }
@@ -86,11 +82,11 @@ final class ManagingTaxonsContext implements Context
      * @Then I should see the taxon named :firstName, :secondName and :thirdName in the list
      * @Then I should see the taxon named :firstName, :secondName, :thirdName and :fourthName in the list
      */
-    public function iShouldSeeTheTaxonNamedAnd(...$expectedTaxonNames)
+    public function iShouldSeeTheTaxonNamedAnd(...$expectedTaxonNames): void
     {
-        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $response = $this->responseChecker->getResponseContent($this->client->getResponse());
         $taxonNames = array_column($response, 'name');
 
-        Assert::allOneOf($taxonNames, $expectedTaxonNames);
+        Assert::allOneOf($expectedTaxonNames, $taxonNames);
     }
 }

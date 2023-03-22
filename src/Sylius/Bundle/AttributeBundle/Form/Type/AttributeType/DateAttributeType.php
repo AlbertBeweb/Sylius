@@ -19,31 +19,23 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class DateAttributeType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return DateType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
             ->setDefaults([
                 'label' => false,
+                'widget' => 'single_text',
             ])
             ->setRequired('configuration')
             ->setDefined('locale_code')
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_attribute_type_date';

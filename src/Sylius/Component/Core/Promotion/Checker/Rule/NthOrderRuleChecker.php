@@ -23,17 +23,11 @@ final class NthOrderRuleChecker implements RuleCheckerInterface
 {
     public const TYPE = 'nth_order';
 
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    public function __construct(OrderRepositoryInterface $orderRepository)
+    public function __construct(private OrderRepositoryInterface $orderRepository)
     {
-        $this->orderRepository = $orderRepository;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws UnsupportedTypeException
      */
     public function isEligible(PromotionSubjectInterface $subject, array $configuration): bool

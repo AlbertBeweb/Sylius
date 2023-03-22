@@ -23,32 +23,16 @@ use Webmozart\Assert\Assert;
 
 final class ManagingProductOptionsContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
     ) {
-        $this->indexPage = $indexPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
     }
 
     /**
-     * @Given I want to create a new product option
+     * @When I want to create a new product option
      */
     public function iWantToCreateANewProductOption()
     {
@@ -56,7 +40,7 @@ final class ManagingProductOptionsContext implements Context
     }
 
     /**
-     * @Given I want to modify the :productOption product option
+     * @When I want to modify the :productOption product option
      */
     public function iWantToModifyAProductOption(ProductOptionInterface $productOption)
     {
@@ -101,7 +85,7 @@ final class ManagingProductOptionsContext implements Context
      * @When I rename it to :name in :language
      * @When I remove its name from :language translation
      */
-    public function iRenameItToInLanguage($name = null, $language)
+    public function iRenameItToInLanguage(string $language, ?string $name = null): void
     {
         $this->updatePage->nameItIn($name ?? '', $language);
     }
@@ -213,9 +197,9 @@ final class ManagingProductOptionsContext implements Context
     }
 
     /**
-     * @Then the code field should be disabled
+     * @Then I should not be able to edit its code
      */
-    public function theCodeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsCode(): void
     {
         Assert::true($this->updatePage->isCodeDisabled());
     }
@@ -247,6 +231,7 @@ final class ManagingProductOptionsContext implements Context
 
     /**
      * @Then /^(this product option) should have the "([^"]*)" option value$/
+     * @Then /^(product option "[^"]+") should have the "([^"]*)" option value$/
      */
     public function thisProductOptionShouldHaveTheOptionValue(ProductOptionInterface $productOption, $optionValue)
     {

@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ProductAssociationTypeChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $productAssociationTypeRepository;
-
-    public function __construct(RepositoryInterface $productAssociationTypeRepository)
+    public function __construct(private RepositoryInterface $productAssociationTypeRepository)
     {
-        $this->productAssociationTypeRepository = $productAssociationTypeRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['multiple']) {
@@ -41,32 +34,21 @@ final class ProductAssociationTypeChoiceType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'choices' => function (Options $options) {
-                return $this->productAssociationTypeRepository->findAll();
-            },
+            'choices' => fn (Options $options) => $this->productAssociationTypeRepository->findAll(),
             'choice_value' => 'code',
             'choice_label' => 'name',
             'choice_translation_domain' => false,
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product_association_type_choice';

@@ -6,6 +6,7 @@ sylius:
             choices: Choices
             code: Code
             name: Name
+            translatable: Translatable
             translations: Translations
             type: Type
         attribute_type:
@@ -13,6 +14,7 @@ sylius:
             configuration: Configuration
             date: Date
             datetime: Datetime
+            float: Float
             integer: Integer
             percent: Percent
             select: Select

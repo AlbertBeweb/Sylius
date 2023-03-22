@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Formatter\StringInflector;
 use Sylius\Component\Product\Model\ProductOptionInterface;
@@ -24,42 +24,24 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class ProductOptionContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var ProductOptionRepositoryInterface */
-    private $productOptionRepository;
-
-    /** @var FactoryInterface */
-    private $productOptionFactory;
-
-    /** @var FactoryInterface */
-    private $productOptionValueFactory;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        ProductOptionRepositoryInterface $productOptionRepository,
-        FactoryInterface $productOptionFactory,
-        FactoryInterface $productOptionValueFactory,
-        ObjectManager $objectManager
+        private SharedStorageInterface $sharedStorage,
+        private ProductOptionRepositoryInterface $productOptionRepository,
+        private FactoryInterface $productOptionFactory,
+        private FactoryInterface $productOptionValueFactory,
+        private ObjectManager $objectManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->productOptionRepository = $productOptionRepository;
-        $this->productOptionFactory = $productOptionFactory;
-        $this->productOptionValueFactory = $productOptionValueFactory;
-        $this->objectManager = $objectManager;
     }
 
     /**
      * @Given the store has (also) a product option :name
      * @Given the store has a product option :name with a code :code
      */
-    public function theStoreHasAProductOptionWithACode($name, $code = null)
+    public function theStoreHasAProductOptionWithACode(string $name, ?string $code = null): void
     {
-        $this->createProductOption($name, $code);
+        $productOption = $this->createProductOption($name, $code);
+
+        $this->sharedStorage->set('product_option', $productOption);
     }
 
     /**
@@ -76,7 +58,7 @@ final class ProductOptionContext implements Context
     public function thisProductOptionHasTheOptionValueWithCode(
         ProductOptionInterface $productOption,
         $productOptionValueName,
-        $productOptionValueCode
+        $productOptionValueCode,
     ) {
         $productOptionValue = $this->createProductOptionValue($productOptionValueName, $productOptionValueCode);
         $productOption->addValue($productOptionValue);

@@ -21,18 +21,10 @@ use Webmozart\Assert\Assert;
 
 final class ContactContext implements Context
 {
-    /** @var ContactPageInterface */
-    private $contactPage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        ContactPageInterface $contactPage,
-        NotificationCheckerInterface $notificationChecker
+        private ContactPageInterface $contactPage,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->contactPage = $contactPage;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -77,7 +69,7 @@ final class ContactContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Your contact request has been submitted successfully.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -104,7 +96,7 @@ final class ContactContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'A problem occurred while sending the contact request. Please try again later.',
-            NotificationType::failure()
+            NotificationType::failure(),
         );
     }
 }

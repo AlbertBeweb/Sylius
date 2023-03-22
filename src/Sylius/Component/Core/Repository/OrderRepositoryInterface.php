@@ -18,11 +18,14 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PromotionCouponInterface;
+use Sylius\Component\Order\Model\OrderInterface as BaseOrderInterface;
 use Sylius\Component\Order\Repository\OrderRepositoryInterface as BaseOrderRepositoryInterface;
 
 interface OrderRepositoryInterface extends BaseOrderRepositoryInterface
 {
     public function createListQueryBuilder(): QueryBuilder;
+
+    public function createSearchListQueryBuilder(): QueryBuilder;
 
     public function createByCustomerIdQueryBuilder($customerId): QueryBuilder;
 
@@ -31,6 +34,8 @@ interface OrderRepositoryInterface extends BaseOrderRepositoryInterface
     public function countByCustomerAndCoupon(CustomerInterface $customer, PromotionCouponInterface $coupon): int;
 
     public function countByCustomer(CustomerInterface $customer): int;
+
+    public function findOrderById($id): ?OrderInterface;
 
     /**
      * @return array|OrderInterface[]
@@ -50,9 +55,19 @@ interface OrderRepositoryInterface extends BaseOrderRepositoryInterface
 
     public function findLatestCartByChannelAndCustomer(ChannelInterface $channel, CustomerInterface $customer): ?OrderInterface;
 
+    public function findLatestNotEmptyCartByChannelAndCustomer(ChannelInterface $channel, CustomerInterface $customer): ?OrderInterface;
+
     public function getTotalSalesForChannel(ChannelInterface $channel): int;
 
+    public function getTotalPaidSalesForChannel(ChannelInterface $channel): int;
+
+    public function getTotalPaidSalesForChannelInPeriod(ChannelInterface $channel, \DateTimeInterface $startDate, \DateTimeInterface $endDate): int;
+
     public function countFulfilledByChannel(ChannelInterface $channel): int;
+
+    public function countPaidByChannel(ChannelInterface $channel): int;
+
+    public function countPaidForChannelInPeriod(ChannelInterface $channel, \DateTimeInterface $startDate, \DateTimeInterface $endDate): int;
 
     /**
      * @return array|OrderInterface[]
@@ -62,7 +77,7 @@ interface OrderRepositoryInterface extends BaseOrderRepositoryInterface
     /**
      * @return array|OrderInterface[]
      */
-    public function findOrdersUnpaidSince(\DateTimeInterface $terminalDate): array;
+    public function findOrdersUnpaidSince(\DateTimeInterface $terminalDate, ?int $limit = null): array;
 
     public function findCartForSummary($id): ?OrderInterface;
 
@@ -71,4 +86,8 @@ interface OrderRepositoryInterface extends BaseOrderRepositoryInterface
     public function findCartForSelectingShipping($id): ?OrderInterface;
 
     public function findCartForSelectingPayment($id): ?OrderInterface;
+
+    public function findCartByTokenValue(string $tokenValue): ?BaseOrderInterface;
+
+    public function findCartByTokenValueAndChannel(string $tokenValue, ChannelInterface $channel): ?BaseOrderInterface;
 }

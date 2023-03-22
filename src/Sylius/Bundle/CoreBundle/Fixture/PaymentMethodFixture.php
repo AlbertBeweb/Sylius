@@ -17,17 +17,11 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 class PaymentMethodFixture extends AbstractResourceFixture
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'payment_method';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureResourceNode(ArrayNodeDefinition $resourceNode): void
     {
         $resourceNode
@@ -39,7 +33,11 @@ class PaymentMethodFixture extends AbstractResourceFixture
                 ->scalarNode('gatewayName')->cannotBeEmpty()->end()
                 ->scalarNode('gatewayFactory')->cannotBeEmpty()->end()
                 ->arrayNode('gatewayConfig')->variablePrototype()->end()->end()
-                ->arrayNode('channels')->scalarPrototype()->end()->end()
+                ->variableNode('channels')
+                    ->beforeNormalization()
+                        ->ifNull()->thenUnset()
+                    ->end()
+                ->end()
                 ->booleanNode('enabled')->end()
         ;
     }

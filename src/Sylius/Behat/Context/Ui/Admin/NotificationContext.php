@@ -15,47 +15,75 @@ namespace Sylius\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
 use Sylius\Behat\NotificationType;
+use Sylius\Behat\Service\Helper\JavaScriptTestHelperInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 
 final class NotificationContext implements Context
 {
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    public function __construct(NotificationCheckerInterface $notificationChecker)
-    {
-        $this->notificationChecker = $notificationChecker;
+    public function __construct(
+        private NotificationCheckerInterface $notificationChecker,
+        private JavaScriptTestHelperInterface $testHelper,
+    ) {
     }
 
     /**
      * @Then I should be notified that it has been successfully created
      */
-    public function iShouldBeNotifiedItHasBeenSuccessfullyCreated()
+    public function iShouldBeNotifiedItHasBeenSuccessfullyCreated(): void
     {
-        $this->notificationChecker->checkNotification('has been successfully created.', NotificationType::success());
+        $this->testHelper->waitUntilNotificationPopups(
+            $this->notificationChecker,
+            NotificationType::success(),
+            'has been successfully created.',
+        );
     }
 
     /**
      * @Then I should be notified that it has been successfully edited
      */
-    public function iShouldBeNotifiedThatItHasBeenSuccessfullyEdited()
+    public function iShouldBeNotifiedThatItHasBeenSuccessfullyEdited(): void
     {
-        $this->notificationChecker->checkNotification('has been successfully updated.', NotificationType::success());
+        $this->testHelper->waitUntilNotificationPopups(
+            $this->notificationChecker,
+            NotificationType::success(),
+            'has been successfully updated.',
+        );
     }
 
     /**
-     * @Then I should be notified that it has been successfully deleted
+     * @Then I should be notified that it :has been successfully deleted
+     * @Then I should be notified that they :have been successfully deleted
      */
-    public function iShouldBeNotifiedThatItHasBeenSuccessfullyDeleted()
+    public function iShouldBeNotifiedThatItHasBeenSuccessfullyDeleted(string $hasHave): void
     {
-        $this->notificationChecker->checkNotification('has been successfully deleted.', NotificationType::success());
+        $this->testHelper->waitUntilNotificationPopups(
+            $this->notificationChecker,
+            NotificationType::success(),
+            sprintf('%s been successfully deleted.', $hasHave),
+        );
     }
 
     /**
-     * @Then I should be notified that they have been successfully deleted
+     * @Then I should be notified that the removal operation has started successfully
      */
-    public function iShouldBeNotifiedThatTheyHaveBeenSuccessfullyDeleted()
+    public function iShouldBeNotifiedThatTheRemovalOperationHasStartedSuccessfully(): void
     {
-        $this->notificationChecker->checkNotification('have been successfully deleted.', NotificationType::success());
+        $this->testHelper->waitUntilNotificationPopups(
+            $this->notificationChecker,
+            NotificationType::success(),
+            'has been requested. This process can take a while depending on the number of affected products.',
+        );
+    }
+
+    /**
+     * @Then I should be notified that it has been failed deleted :name
+     */
+    public function iShouldBeNotifiedThatItHasBeenFailedDeleted(string $name): void
+    {
+        $this->testHelper->waitUntilNotificationPopups(
+            $this->notificationChecker,
+            NotificationType::failure(),
+            'Cannot delete, the ' . ucfirst($name) . ' is in use.',
+        );
     }
 }

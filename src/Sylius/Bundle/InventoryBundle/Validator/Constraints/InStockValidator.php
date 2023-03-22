@@ -22,21 +22,13 @@ use Webmozart\Assert\Assert;
 
 final class InStockValidator extends ConstraintValidator
 {
-    /** @var AvailabilityCheckerInterface */
-    private $availabilityChecker;
+    private PropertyAccessor $accessor;
 
-    /** @var PropertyAccessor */
-    private $accessor;
-
-    public function __construct(AvailabilityCheckerInterface $availabilityChecker)
+    public function __construct(private AvailabilityCheckerInterface $availabilityChecker)
     {
-        $this->availabilityChecker = $availabilityChecker;
         $this->accessor = PropertyAccess::createPropertyAccessor();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate($value, Constraint $constraint): void
     {
         /** @var InStock $constraint */
@@ -55,7 +47,7 @@ final class InStockValidator extends ConstraintValidator
         if (!$this->availabilityChecker->isStockSufficient($stockable, $quantity)) {
             $this->context->addViolation(
                 $constraint->message,
-                ['%itemName%' => $stockable->getInventoryName()]
+                ['%itemName%' => $stockable->getInventoryName()],
             );
         }
     }

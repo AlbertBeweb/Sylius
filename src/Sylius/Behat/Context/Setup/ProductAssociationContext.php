@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Product\Model\ProductAssociationInterface;
@@ -26,43 +26,15 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class ProductAssociationContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var FactoryInterface */
-    private $productAssociationTypeFactory;
-
-    /** @var FactoryInterface */
-    private $productAssociationTypeTranslationFactory;
-
-    /** @var FactoryInterface */
-    private $productAssociationFactory;
-
-    /** @var ProductAssociationTypeRepositoryInterface */
-    private $productAssociationTypeRepository;
-
-    /** @var RepositoryInterface */
-    private $productAssociationRepository;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        FactoryInterface $productAssociationTypeFactory,
-        FactoryInterface $productAssociationTypeTranslationFactory,
-        FactoryInterface $productAssociationFactory,
-        ProductAssociationTypeRepositoryInterface $productAssociationTypeRepository,
-        RepositoryInterface $productAssociationRepository,
-        ObjectManager $objectManager
+        private SharedStorageInterface $sharedStorage,
+        private FactoryInterface $productAssociationTypeFactory,
+        private FactoryInterface $productAssociationTypeTranslationFactory,
+        private FactoryInterface $productAssociationFactory,
+        private ProductAssociationTypeRepositoryInterface $productAssociationTypeRepository,
+        private RepositoryInterface $productAssociationRepository,
+        private ObjectManager $objectManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->productAssociationTypeFactory = $productAssociationTypeFactory;
-        $this->productAssociationTypeTranslationFactory = $productAssociationTypeTranslationFactory;
-        $this->productAssociationFactory = $productAssociationFactory;
-        $this->productAssociationTypeRepository = $productAssociationTypeRepository;
-        $this->productAssociationRepository = $productAssociationRepository;
-        $this->objectManager = $objectManager;
     }
 
     /**
@@ -105,7 +77,7 @@ final class ProductAssociationContext implements Context
     public function theProductHasAnAssociationWithProduct(
         ProductInterface $product,
         ProductAssociationTypeInterface $productAssociationType,
-        ProductInterface $associatedProduct
+        ProductInterface $associatedProduct,
     ) {
         $this->createProductAssociation($product, $productAssociationType, [$associatedProduct]);
     }
@@ -116,7 +88,7 @@ final class ProductAssociationContext implements Context
     public function theProductHasAnAssociationWithProducts(
         ProductInterface $product,
         ProductAssociationTypeInterface $productAssociationType,
-        array $associatedProducts
+        array $associatedProducts,
     ) {
         $this->createProductAssociation($product, $productAssociationType, $associatedProducts);
     }
@@ -147,7 +119,7 @@ final class ProductAssociationContext implements Context
     private function createProductAssociation(
         ProductInterface $product,
         ProductAssociationTypeInterface $productAssociationType,
-        array $associatedProducts
+        array $associatedProducts,
     ) {
         /** @var ProductAssociationInterface $productAssociation */
         $productAssociation = $this->productAssociationFactory->createNew();
@@ -165,7 +137,7 @@ final class ProductAssociationContext implements Context
     private function addProductAssociationTypeTranslation(
         ProductAssociationTypeInterface $productAssociationType,
         string $name,
-        string $locale
+        string $locale,
     ) {
         /** @var ProductAssociationTypeTranslationInterface $translation */
         $translation = $this->productAssociationTypeTranslationFactory->createNew();

@@ -20,25 +20,19 @@ use Webmozart\Assert\Assert;
 
 final class CountryContext implements Context
 {
-    /** @var CountryNameConverterInterface */
-    private $countryNameConverter;
-
-    /** @var RepositoryInterface */
-    private $countryRepository;
-
     public function __construct(
-        CountryNameConverterInterface $countryNameConverter,
-        RepositoryInterface $countryRepository
+        private CountryNameConverterInterface $countryNameConverter,
+        private RepositoryInterface $countryRepository,
     ) {
-        $this->countryNameConverter = $countryNameConverter;
-        $this->countryRepository = $countryRepository;
     }
 
     /**
      * @Transform /^country "([^"]+)"$/
      * @Transform /^"([^"]+)" country$/
      * @Transform /^"([^"]+)" as shipping country$/
+     * @Transform /^"([^"]+)" as billing country$/
      * @Transform :country
+     * @Transform :otherCountry
      */
     public function getCountryByName($countryName)
     {
@@ -47,9 +41,28 @@ final class CountryContext implements Context
 
         Assert::notNull(
             $country,
-            sprintf('Country with name "%s" does not exist', $countryName)
+            sprintf('Country with name "%s" does not exist', $countryName),
         );
 
         return $country;
+    }
+
+    /**
+     * @Transform /^"([^"]+)", "([^"]+)" and "([^"]+)" country$/
+     */
+    public function getCountriesByNames(string ...$countryNames): array
+    {
+        $countryCodes = $countryNames;
+        array_walk($countryCodes, fn (&$item) => $item = $this->countryNameConverter->convertToCode($item));
+
+        return $this->countryRepository->findBy(['code' => $countryCodes]);
+    }
+
+    /**
+     * @Transform :countryCode
+     */
+    public function getCountryCodeByName(string $countryName): string
+    {
+        return $this->countryNameConverter->convertToCode($countryName);
     }
 }

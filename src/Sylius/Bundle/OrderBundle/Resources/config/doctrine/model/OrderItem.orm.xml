@@ -23,6 +23,7 @@
 
         <field name="quantity" column="quantity" type="integer" />
         <field name="unitPrice" column="unit_price" type="integer" />
+        <field name="originalUnitPrice" column="original_unit_price" type="integer" nullable="true"/>
         <field name="unitsTotal" column="units_total" type="integer" />
         <field name="adjustmentsTotal" column="adjustments_total" type="integer" />
         <field name="total" column="total" type="integer" />
@@ -36,12 +37,18 @@
             <cascade>
                 <cascade-all/>
             </cascade>
+            <order-by>
+                <order-by-field name="id" />
+            </order-by>
         </one-to-many>
 
         <one-to-many field="units" target-entity="Sylius\Component\Order\Model\OrderItemUnitInterface" mapped-by="orderItem" orphan-removal="true">
             <cascade>
                 <cascade-all/>
             </cascade>
+            <order-by>
+                <order-by-field name="id" />
+            </order-by>
         </one-to-many>
     </mapped-superclass>
 

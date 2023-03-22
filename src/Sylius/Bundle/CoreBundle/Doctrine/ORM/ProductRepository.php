@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Bundle\CoreBundle\Doctrine\ORM;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use Sylius\Bundle\ProductBundle\Doctrine\ORM\ProductRepository as BaseProductRepository;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -25,27 +25,20 @@ use SyliusLabs\AssociationHydrator\AssociationHydrator;
 
 class ProductRepository extends BaseProductRepository implements ProductRepositoryInterface
 {
-    /** @var AssociationHydrator */
-    private $associationHydrator;
+    protected AssociationHydrator $associationHydrator;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(EntityManager $entityManager, Mapping\ClassMetadata $class)
+    public function __construct(EntityManager $entityManager, ClassMetadata $class)
     {
         parent::__construct($entityManager, $class);
 
         $this->associationHydrator = new AssociationHydrator($entityManager, $class);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createListQueryBuilder(string $locale, $taxonId = null): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('o')
             ->addSelect('translation')
-            ->innerJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
+            ->leftJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
             ->setParameter('locale', $locale)
         ;
 
@@ -60,22 +53,19 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
         return $queryBuilder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createShopListQueryBuilder(
         ChannelInterface $channel,
         TaxonInterface $taxon,
         string $locale,
         array $sorting = [],
-        bool $includeAllDescendants = false
+        bool $includeAllDescendants = false,
     ): QueryBuilder {
         $queryBuilder = $this->createQueryBuilder('o')
-            ->distinct()
             ->addSelect('translation')
             ->addSelect('productTaxon')
             ->innerJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
-            ->innerJoin('o.productTaxons', 'productTaxon');
+            ->innerJoin('o.productTaxons', 'productTaxon')
+        ;
 
         if ($includeAllDescendants) {
             $queryBuilder
@@ -94,11 +84,20 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
             ;
         }
 
+        if (empty($sorting)) {
+            $queryBuilder
+                ->leftJoin('o.productTaxons', 'productTaxons', 'WITH', 'productTaxons.taxon = :taxonId')
+                ->orderBy('productTaxons.position', 'ASC')
+                ->setParameter('taxonId', $taxon->getId())
+            ;
+        }
+
         $queryBuilder
             ->andWhere(':channel MEMBER OF o.channels')
-            ->andWhere('o.enabled = true')
+            ->andWhere('o.enabled = :enabled')
             ->setParameter('locale', $locale)
             ->setParameter('channel', $channel)
+            ->setParameter('enabled', true)
         ;
 
         // Grid hack, we do not need to join these if we don't sort by price
@@ -108,7 +107,8 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
                  ->select('min(v.position)')
                  ->innerJoin('m.variants', 'v')
                  ->andWhere('m.id = :product_id')
-             ;
+                 ->andWhere('v.enabled = :enabled')
+            ;
 
             $queryBuilder
                 ->addSelect('variant')
@@ -119,38 +119,34 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
                 ->andWhere(
                     $queryBuilder->expr()->in(
                         'variant.position',
-                        str_replace(':product_id', 'o.id', $subQuery->getDQL())
-                    )
+                        str_replace(':product_id', 'o.id', $subQuery->getDQL()),
+                    ),
                 )
                 ->setParameter('channelCode', $channel->getCode())
+                ->setParameter('enabled', true)
             ;
         }
 
         return $queryBuilder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findLatestByChannel(ChannelInterface $channel, string $locale, int $count): array
     {
         return $this->createQueryBuilder('o')
             ->addSelect('translation')
             ->innerJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
             ->andWhere(':channel MEMBER OF o.channels')
-            ->andWhere('o.enabled = true')
+            ->andWhere('o.enabled = :enabled')
             ->addOrderBy('o.createdAt', 'DESC')
             ->setParameter('channel', $channel)
             ->setParameter('locale', $locale)
+            ->setParameter('enabled', true)
             ->setMaxResults($count)
             ->getQuery()
             ->getResult()
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findOneByChannelAndSlug(ChannelInterface $channel, string $locale, string $slug): ?ProductInterface
     {
         $product = $this->createQueryBuilder('o')
@@ -158,10 +154,11 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
             ->innerJoin('o.translations', 'translation', 'WITH', 'translation.locale = :locale')
             ->andWhere('translation.slug = :slug')
             ->andWhere(':channel MEMBER OF o.channels')
-            ->andWhere('o.enabled = true')
+            ->andWhere('o.enabled = :enabled')
             ->setParameter('channel', $channel)
             ->setParameter('locale', $locale)
             ->setParameter('slug', $slug)
+            ->setParameter('enabled', true)
             ->getQuery()
             ->getOneOrNullResult()
         ;
@@ -179,9 +176,32 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
         return $product;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findOneByChannelAndCode(ChannelInterface $channel, string $code): ?ProductInterface
+    {
+        $product = $this->createQueryBuilder('o')
+            ->where('o.code = :code')
+            ->andWhere(':channel MEMBER OF o.channels')
+            ->andWhere('o.enabled = :enabled')
+            ->setParameter('channel', $channel)
+            ->setParameter('code', $code)
+            ->setParameter('enabled', true)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+
+        $this->associationHydrator->hydrateAssociations($product, [
+            'images',
+            'options',
+            'options.translations',
+            'variants',
+            'variants.channelPricings',
+            'variants.optionValues',
+            'variants.optionValues.translations',
+        ]);
+
+        return $product;
+    }
+
     public function findOneByCode(string $code): ?ProductInterface
     {
         return $this->createQueryBuilder('o')
@@ -189,6 +209,20 @@ class ProductRepository extends BaseProductRepository implements ProductReposito
             ->setParameter('code', $code)
             ->getQuery()
             ->getOneOrNullResult()
+        ;
+    }
+
+    public function findByTaxon(TaxonInterface $taxon): array
+    {
+        return $this
+            ->createQueryBuilder('product')
+            ->distinct()
+            ->addSelect('productTaxon')
+            ->innerJoin('product.productTaxons', 'productTaxon')
+            ->andWhere('productTaxon.taxon = :taxon')
+            ->setParameter('taxon', $taxon)
+            ->getQuery()
+            ->getResult()
         ;
     }
 }

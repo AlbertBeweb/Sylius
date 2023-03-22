@@ -2,13 +2,16 @@
     "name": "sylius/customer-bundle",
     "type": "symfony-bundle",
     "description": "Customers management for Symfony projects.",
-    "keywords": ["customer", "groups"],
-    "homepage": "http://sylius.com",
+    "keywords": [
+        "customer",
+        "groups"
+    ],
+    "homepage": "https://sylius.com",
     "license": "MIT",
     "authors": [
         {
             "name": "Paweł Jędrzejewski",
-            "homepage": "http://pjedrzejewski.com"
+            "homepage": "https://pjedrzejewski.com"
         },
         {
             "name": "Michał Marcinkowski",
@@ -24,54 +27,62 @@
         },
         {
             "name": "Sylius project",
-            "homepage": "http://sylius.com"
+            "homepage": "https://sylius.com"
         },
         {
             "name": "Community contributions",
-            "homepage": "http://github.com/Sylius/Sylius/contributors"
+            "homepage": "https://github.com/Sylius/Sylius/contributors"
         }
     ],
     "require": {
-        "php": "^7.2",
-
-        "doctrine/orm": "^2.5",
-		"egulias/email-validator": "~2.0",
-        "sylius/customer": "^1.2",
-        "sylius/resource-bundle": "^1.2",
-        "symfony/framework-bundle": "^3.4|^4.3",
-        "webmozart/assert": "^1.0"
+        "php": "^8.0",
+        "doctrine/orm": "^2.13",
+        "egulias/email-validator": "^3.1",
+        "sylius/customer": "^1.12",
+        "sylius/resource-bundle": "^1.9",
+        "symfony/framework-bundle": "^5.4 || ^6.0",
+        "webmozart/assert": "^1.9"
+    },
+    "conflict": {
+        "twig/twig": "^3.0"
     },
     "require-dev": {
-        "phpspec/phpspec": "^5.0",
-        "phpunit/phpunit": "^7.0",
-        "symfony/dependency-injection": "^3.4|^4.3",
-        "symfony/form": "^3.4|^4.3",
-        "symfony/browser-kit": "^3.4|^4.3",
-        "polishsymfonycommunity/symfony-mocker-container": "^1.0"
+        "phpspec/phpspec": "^7.2",
+        "phpunit/phpunit": "^9.5",
+        "polishsymfonycommunity/symfony-mocker-container": "^1.0",
+        "symfony/browser-kit": "^5.4 || ^6.0",
+        "symfony/dependency-injection": "^5.4 || ^6.0",
+        "symfony/form": "^5.4 || ^6.0"
     },
     "config": {
-        "bin-dir": "bin"
+        "allow-plugins": {
+            "symfony/flex": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.12-dev"
+        }
     },
     "autoload": {
-        "psr-4": { "Sylius\\Bundle\\CustomerBundle\\": "" }
+        "psr-4": {
+            "Sylius\\Bundle\\CustomerBundle\\": ""
+        }
     },
     "autoload-dev": {
         "psr-4": {
             "Sylius\\Bundle\\CustomerBundle\\spec\\": "spec/"
         },
-        "classmap": ["test/app/AppKernel.php"]
+        "classmap": [
+            "test/app/AppKernel.php"
+        ]
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "repositories": [
         {
             "type": "path",
             "url": "../../*/*"
         }
     ],
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.6-dev"
-        }
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

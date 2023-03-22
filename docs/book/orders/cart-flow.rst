@@ -51,5 +51,3 @@ Third scenario::
 
 Learn more
 ----------
-
-* :doc:`Carts API </api/carts>`

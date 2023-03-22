@@ -24,53 +24,37 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class PromotionCouponToCodeType extends AbstractType implements DataTransformerInterface
 {
-    /** @var RepositoryInterface */
-    private $promotionCouponRepository;
-
-    public function __construct(RepositoryInterface $promotionCouponRepository)
+    public function __construct(private RepositoryInterface $promotionCouponRepository)
     {
-        $this->promotionCouponRepository = $promotionCouponRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function transform($coupon): string
+    public function transform($value): string
     {
-        if (null === $coupon) {
+        if (null === $value) {
             return '';
         }
 
-        if (!$coupon instanceof PromotionCouponInterface) {
-            throw new UnexpectedTypeException($coupon, PromotionCouponInterface::class);
+        if (!$value instanceof PromotionCouponInterface) {
+            throw new UnexpectedTypeException($value, PromotionCouponInterface::class);
         }
 
-        return $coupon->getCode();
+        return $value->getCode();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function reverseTransform($code): ?PromotionCouponInterface
+    public function reverseTransform($value): ?PromotionCouponInterface
     {
-        if (null === $code || '' === $code) {
+        if (null === $value || '' === $value) {
             return null;
         }
 
-        return $this->promotionCouponRepository->findOneBy(['code' => $code]);
+        return $this->promotionCouponRepository->findOneBy(['code' => $value]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -81,17 +65,11 @@ final class PromotionCouponToCodeType extends AbstractType implements DataTransf
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return TextType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_promotion_coupon_to_code';

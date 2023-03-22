@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Tests\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
@@ -102,6 +102,16 @@ final class PromotionFixtureTest extends TestCase
     public function promotion_channels_are_optional(): void
     {
         $this->assertConfigurationIsValid([['custom' => [['channels' => ['channel_1', 'channel_2']]]]], 'custom.*.channels');
+        $this->assertProcessedConfigurationEquals(
+            [['custom' => [['channels' => []]]]],
+            ['custom' => [['channels' => []]]],
+            'custom.*.channels',
+        );
+        $this->assertProcessedConfigurationEquals(
+            [['custom' => [['channels' => null]]]],
+            ['custom' => [[]]],
+            'custom.*.channels',
+        );
     }
 
     /**
@@ -146,14 +156,11 @@ final class PromotionFixtureTest extends TestCase
         ]]]]]], 'custom.*.actions');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): PromotionFixture
     {
         return new PromotionFixture(
             $this->getMockBuilder(ObjectManager::class)->getMock(),
-            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock()
+            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock(),
         );
     }
 }

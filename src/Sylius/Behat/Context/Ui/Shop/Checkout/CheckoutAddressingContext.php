@@ -16,6 +16,7 @@ namespace Sylius\Behat\Context\Ui\Shop\Checkout;
 use Behat\Behat\Context\Context;
 use Sylius\Behat\Page\Shop\Checkout\AddressPageInterface;
 use Sylius\Behat\Page\Shop\Checkout\SelectShippingPageInterface;
+use Sylius\Behat\Service\Helper\JavaScriptTestHelperInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Addressing\Comparator\AddressComparatorInterface;
 use Sylius\Component\Addressing\Model\CountryInterface;
@@ -25,63 +26,55 @@ use Webmozart\Assert\Assert;
 
 final class CheckoutAddressingContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var AddressPageInterface */
-    private $addressPage;
-
-    /** @var FactoryInterface */
-    private $addressFactory;
-
-    /** @var AddressComparatorInterface */
-    private $addressComparator;
-
-    /** @var SelectShippingPageInterface */
-    private $selectShippingPage;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        AddressPageInterface $addressPage,
-        FactoryInterface $addressFactory,
-        AddressComparatorInterface $addressComparator,
-        SelectShippingPageInterface $selectShippingPage
+        private SharedStorageInterface $sharedStorage,
+        private AddressPageInterface $addressPage,
+        private FactoryInterface $addressFactory,
+        private AddressComparatorInterface $addressComparator,
+        private SelectShippingPageInterface $selectShippingPage,
+        private JavaScriptTestHelperInterface $testHelper,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->addressPage = $addressPage;
-        $this->addressFactory = $addressFactory;
-        $this->addressComparator = $addressComparator;
-        $this->selectShippingPage = $selectShippingPage;
+    }
+
+    /**
+     * @Given my billing address is fulfilled automatically through default address
+     */
+    public function myBillingAddressIsFulfilledAutomaticallyThroughDefaultAddress(): void
+    {
+        //intentionally blank line for api tests
     }
 
     /**
      * @Given I am at the checkout addressing step
+     * @When I go to the checkout addressing step
      * @When I go back to addressing step of the checkout
      */
-    public function iAmAtTheCheckoutAddressingStep()
+    public function iAmAtTheCheckoutAddressingStep(): void
     {
         $this->addressPage->open();
     }
 
     /**
-     * @Given /^I have completed addressing step with email "([^"]+)" and ("[^"]+" based shipping address)$/
-     * @When /^I complete addressing step with email "([^"]+)" and ("[^"]+" based shipping address)$/
+     * @Given /^I have completed addressing step with email "([^"]+)" and ("[^"]+" based billing address)$/
+     * @Given /^they have completed addressing step with email "([^"]+)" and ("[^"]+" based billing address)$/
+     * @When /^I complete addressing step with email "([^"]+)" and ("[^"]+" based billing address)$/
+     * @When /^they complete addressing step with email "([^"]+)" and ("[^"]+" based billing address)$/
      */
-    public function iCompleteAddressingStepWithEmail($email, AddressInterface $address)
+    public function iCompleteAddressingStepWithEmail(string $email, AddressInterface $address): void
     {
         $this->addressPage->open();
         $this->iSpecifyTheEmail($email);
-        $this->iSpecifyTheShippingAddressAs($address);
+        $this->iSpecifyTheBillingAddressAs($address);
         $this->iCompleteTheAddressingStep();
     }
 
     /**
-     * @When /^I complete addressing step with ("[^"]+" based shipping address)$/
+     * @When /^I complete addressing step with ("[^"]+" based billing address)$/
      */
-    public function iCompleteAddressingStepWithBasedShippingAddress(AddressInterface $address): void
+    public function iCompleteAddressingStepWithBasedBillingAddress(AddressInterface $address): void
     {
         $this->addressPage->open();
-        $this->iSpecifyTheShippingAddressAs($address);
+        $this->iSpecifyTheBillingAddressAs($address);
         $this->iCompleteTheAddressingStep();
     }
 
@@ -114,6 +107,7 @@ final class CheckoutAddressingContext implements Context
      */
     public function iChooseForShippingAddress(AddressInterface $address)
     {
+        $this->addressPage->chooseDifferentShippingAddress();
         $this->addressPage->selectShippingAddressFromAddressBook($address);
     }
 
@@ -122,7 +116,6 @@ final class CheckoutAddressingContext implements Context
      */
     public function iChooseForBillingAddress(AddressInterface $address)
     {
-        $this->addressPage->chooseDifferentBillingAddress();
         $this->addressPage->selectBillingAddressFromAddressBook($address);
     }
 
@@ -134,10 +127,12 @@ final class CheckoutAddressingContext implements Context
      */
     public function iSpecifyTheShippingAddressAs(AddressInterface $address)
     {
+        $this->addressPage->chooseDifferentShippingAddress();
+
         $key = sprintf(
             'shipping_address_%s_%s',
             strtolower((string) $address->getFirstName()),
-            strtolower((string) $address->getLastName())
+            strtolower((string) $address->getLastName()),
         );
         $this->sharedStorage->set($key, $address);
 
@@ -145,19 +140,35 @@ final class CheckoutAddressingContext implements Context
     }
 
     /**
-     * @When I specify shipping country province as :province
+     * @When /^I specify the required shipping (address as "[^"]+", "[^"]+", "[^"]+", "[^"]+" for "[^"]+")$/
      */
-    public function iSpecifyShippingCountryProvinceAs($province)
+    public function iSpecifyTheRequiredShippingAddressAs(AddressInterface $address): void
     {
-        $this->addressPage->selectShippingAddressProvince($province);
+        $key = sprintf(
+            'shipping_address_%s_%s',
+            strtolower((string) $address->getFirstName()),
+            strtolower((string) $address->getLastName()),
+        );
+        $this->sharedStorage->set($key, $address);
+        $this->sharedStorage->set(str_replace('shipping', 'billing', $key), $address);
+
+        $this->addressPage->specifyShippingAddress($address);
     }
 
     /**
-     * @When I specify billing country province as :province
+     * @When I specify shipping country province as :provinceName
      */
-    public function iSpecifyBillingCountryProvinceAs($province)
+    public function iSpecifyShippingCountryProvinceAs(string $provinceName): void
     {
-        $this->addressPage->selectBillingAddressProvince($province);
+        $this->addressPage->selectShippingAddressProvince($provinceName);
+    }
+
+    /**
+     * @When I specify billing country province as :provinceName
+     */
+    public function iSpecifyBillingCountryProvinceAs(string $provinceName): void
+    {
+        $this->addressPage->selectBillingAddressProvince($provinceName);
     }
 
     /**
@@ -167,12 +178,10 @@ final class CheckoutAddressingContext implements Context
      */
     public function iSpecifyTheBillingAddressAs(AddressInterface $address)
     {
-        $this->addressPage->chooseDifferentBillingAddress();
-
         $key = sprintf(
             'billing_address_%s_%s',
             strtolower((string) $address->getFirstName()),
-            strtolower((string) $address->getLastName())
+            strtolower((string) $address->getLastName()),
         );
         $this->sharedStorage->set($key, $address);
 
@@ -180,18 +189,31 @@ final class CheckoutAddressingContext implements Context
     }
 
     /**
-     * @When /^I specified the shipping (address as "[^"]+", "[^"]+", "[^"]+", "[^"]+" for "[^"]+")$/
+     * @When /^I specify different billing (address as "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)" for "([^"]+)")$/
      */
-    public function iSpecifiedTheShippingAddress(AddressInterface $address = null)
+    public function iSpecifyDifferentBillingAddressAs(AddressInterface $address): void
+    {
+        $this->addressPage->chooseDifferentShippingAddress();
+
+        $this->iSpecifyTheBillingAddressAs($address);
+    }
+
+    /**
+     * @Given /^I have specified the billing (address as "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)" for "([^"]+)")$/
+     * @When I specified the billing address
+     * @When /^I specified the billing (address as "[^"]+", "[^"]+", "[^"]+", "[^"]+" for "[^"]+")$/
+     * @When /^I define the billing (address as "[^"]+", "[^"]+", "[^"]+", "[^"]+" for "[^"]+")$/
+     */
+    public function iSpecifiedTheBillingAddress(AddressInterface $address = null)
     {
         if (null === $address) {
             $address = $this->createDefaultAddress();
         }
 
         $this->addressPage->open();
-        $this->iSpecifyTheShippingAddressAs($address);
+        $this->iSpecifyTheBillingAddressAs($address);
 
-        $key = sprintf('billing_address_%s_%s', strtolower((string) $address->getFirstName()), strtolower((string) $address->getLastName()));
+        $key = sprintf('shipping_address_%s_%s', strtolower((string) $address->getFirstName()), strtolower((string) $address->getLastName()));
         $this->sharedStorage->set($key, $address);
 
         $this->iCompleteTheAddressingStep();
@@ -207,11 +229,11 @@ final class CheckoutAddressingContext implements Context
     }
 
     /**
-     * @When I specify the first and last name as :fullName for shipping address
+     * @When I specify the first and last name as :fullName for billing address
      */
-    public function iSpecifyTheStreetAsForShippingAddress(string $fullName)
+    public function iSpecifyTheFirstAndLastNameAsForBillingAddress(string $fullName): void
     {
-        $this->addressPage->specifyShippingAddressFullName($fullName);
+        $this->addressPage->specifyBillingAddressFullName($fullName);
     }
 
     /**
@@ -232,25 +254,32 @@ final class CheckoutAddressingContext implements Context
     }
 
     /**
-     * @When /^I proceed selecting ("[^"]+" as shipping country)$/
+     * @When /^I proceed selecting ("[^"]+" as billing country)$/
      */
-    public function iProceedSelectingShippingCountry(CountryInterface $shippingCountry = null, $localeCode = 'en_US')
-    {
+    public function iProceedSelectingBillingCountry(
+        CountryInterface $shippingCountry = null,
+        string $localeCode = 'en_US',
+        ?string $email = null,
+    ) {
         $this->addressPage->open(['_locale' => $localeCode]);
         $shippingAddress = $this->createDefaultAddress();
         if (null !== $shippingCountry) {
             $shippingAddress->setCountryCode($shippingCountry->getCode());
         }
-
-        $this->addressPage->specifyShippingAddress($shippingAddress);
+        if (null !== $email) {
+            $this->addressPage->specifyEmail($email);
+        }
+        $this->addressPage->specifyBillingAddress($shippingAddress);
         $this->addressPage->nextStep();
     }
 
     /**
-     * @When /^I proceed as guest "([^"]*)" with ("[^"]+" as shipping country)$/
+     * @When /^I proceed as guest "([^"]*)" with ("[^"]+" as billing country)$/
      */
-    public function iProceedLoggingAsGuestWithAsShippingCountry($email, CountryInterface $shippingCountry = null)
-    {
+    public function iProceedLoggingAsGuestWithAsBillingCountry(
+        string $email,
+        CountryInterface $shippingCountry = null,
+    ): void {
         $this->addressPage->open();
         $this->addressPage->specifyEmail($email);
         $shippingAddress = $this->createDefaultAddress();
@@ -258,7 +287,7 @@ final class CheckoutAddressingContext implements Context
             $shippingAddress->setCountryCode($shippingCountry->getCode());
         }
 
-        $this->addressPage->specifyShippingAddress($shippingAddress);
+        $this->addressPage->specifyBillingAddress($shippingAddress);
         $this->addressPage->nextStep();
     }
 
@@ -268,6 +297,14 @@ final class CheckoutAddressingContext implements Context
     public function iSpecifyThePasswordAs($password)
     {
         $this->addressPage->specifyPassword($password);
+    }
+
+    /**
+     * @Then I should be making an order as :purchaserIdentifier
+     */
+    public function iShouldSeeInCheckoutHeader(string $purchaserIdentifier): void
+    {
+        Assert::contains($this->selectShippingPage->getPurchaserIdentifier(), $purchaserIdentifier);
     }
 
     /**
@@ -358,7 +395,9 @@ final class CheckoutAddressingContext implements Context
      */
     public function addressShouldBeFilledAsShippingAddress(AddressInterface $address)
     {
-        Assert::true($this->addressComparator->equal($address, $this->addressPage->getPreFilledShippingAddress()));
+        $this->testHelper->waitUntilAssertionPasses(function () use ($address): void {
+            Assert::true($this->addressComparator->equal($address, $this->addressPage->getPreFilledShippingAddress()));
+        });
     }
 
     /**
@@ -366,7 +405,41 @@ final class CheckoutAddressingContext implements Context
      */
     public function addressShouldBeFilledAsBillingAddress(AddressInterface $address)
     {
-        Assert::true($this->addressComparator->equal($address, $this->addressPage->getPreFilledBillingAddress()));
+        $this->testHelper->waitUntilAssertionPasses(function () use ($address): void {
+            Assert::true($this->addressComparator->equal($address, $this->addressPage->getPreFilledBillingAddress()));
+        });
+    }
+
+    /**
+     * @Then different shipping address should be checked
+     */
+    public function differentShippingAddressShouldBeChecked(): void
+    {
+        Assert::true($this->addressPage->isDifferentShippingAddressChecked());
+    }
+
+    /**
+     * @Then different shipping address should not be checked
+     */
+    public function differentShippingAddressShouldNotBeChecked(): void
+    {
+        Assert::false($this->addressPage->isDifferentShippingAddressChecked());
+    }
+
+    /**
+     * @Then shipping address should be visible
+     */
+    public function shippingAddressShouldBeVisible(): void
+    {
+        Assert::true($this->addressPage->isShippingAddressVisible());
+    }
+
+    /**
+     * @Then shipping address should not be visible
+     */
+    public function shippingAddressShouldNotBeVisible(): void
+    {
+        Assert::false($this->addressPage->isShippingAddressVisible());
     }
 
     /**
@@ -376,6 +449,23 @@ final class CheckoutAddressingContext implements Context
     {
         $this->assertElementValidationMessage($type, $firstElement, sprintf('Please enter %s.', $firstElement));
         $this->assertElementValidationMessage($type, $secondElement, sprintf('Please enter %s.', $secondElement));
+    }
+
+    /**
+     * @Then I should have only :firstCountry country available to choose from
+     * @Then I should have both :firstCountry and :secondCountry countries available to choose from
+     */
+    public function shouldHaveCountriesToChooseFrom(string ...$countries): void
+    {
+        $availableShippingCountries = $this->addressPage->getAvailableShippingCountries();
+        $availableBillingCountries = $this->addressPage->getAvailableBillingCountries();
+
+        sort($countries);
+        sort($availableShippingCountries);
+        sort($availableBillingCountries);
+
+        Assert::same($availableShippingCountries, $countries);
+        Assert::same($availableBillingCountries, $countries);
     }
 
     /**

@@ -17,17 +17,11 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 class ChannelFixture extends AbstractResourceFixture
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'channel';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureResourceNode(ArrayNodeDefinition $resourceNode): void
     {
         $resourceNode
@@ -43,11 +37,20 @@ class ChannelFixture extends AbstractResourceFixture
                 ->booleanNode('skipping_payment_step_allowed')->end()
                 ->booleanNode('account_verification_required')->end()
                 ->scalarNode('default_locale')->cannotBeEmpty()->end()
-                ->arrayNode('locales')->scalarPrototype()->end()->end()
+                ->variableNode('locales')
+                    ->beforeNormalization()
+                        ->ifNull()->thenUnset()
+                    ->end()
+                ->end()
                 ->scalarNode('base_currency')->cannotBeEmpty()->end()
-                ->arrayNode('currencies')->scalarPrototype()->end()->end()
+                ->variableNode('currencies')
+                    ->beforeNormalization()
+                        ->ifNull()->thenUnset()
+                    ->end()
+                ->end()
                 ->scalarNode('theme_name')->end()
                 ->scalarNode('contact_email')->end()
+                ->scalarNode('contact_phone_number')->end()
                 ->arrayNode('shop_billing_data')
                     ->children()
                         ->scalarNode('company')->end()
@@ -58,6 +61,7 @@ class ChannelFixture extends AbstractResourceFixture
                         ->scalarNode('postcode')->end()
                     ->end()
                 ->end()
+                ->scalarNode('menu_taxon')->end()
         ;
     }
 }

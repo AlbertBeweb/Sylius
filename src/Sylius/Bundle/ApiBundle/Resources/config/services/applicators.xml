@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+
+ This file is part of the Sylius package.
+
+ (c) Paweł Jędrzejewski
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+
+-->
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <defaults public="true" />
+
+        <service id="Sylius\Bundle\ApiBundle\Applicator\ArchivingShippingMethodApplicatorInterface" class="Sylius\Bundle\ApiBundle\Applicator\ArchivingShippingMethodApplicator">
+            <argument type="service" id="Sylius\Calendar\Provider\DateTimeProviderInterface" />
+        </service>
+
+        <service id="Sylius\Bundle\ApiBundle\Applicator\OrderStateMachineTransitionApplicatorInterface" class="Sylius\Bundle\ApiBundle\Applicator\OrderStateMachineTransitionApplicator">
+            <argument id="sm.factory" type="service" />
+        </service>
+
+        <service id="Sylius\Bundle\ApiBundle\Applicator\PaymentStateMachineTransitionApplicatorInterface" class="Sylius\Bundle\ApiBundle\Applicator\PaymentStateMachineTransitionApplicator">
+            <argument id="sm.factory" type="service" />
+        </service>
+
+        <service id="Sylius\Bundle\ApiBundle\Applicator\ProductReviewStateMachineTransitionApplicatorInterface" class="Sylius\Bundle\ApiBundle\Applicator\ProductReviewStateMachineTransitionApplicator">
+            <argument id="sm.factory" type="service" />
+        </service>
+    </services>
+</container>

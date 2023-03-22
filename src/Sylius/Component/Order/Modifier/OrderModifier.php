@@ -19,52 +19,38 @@ use Sylius\Component\Order\Processor\OrderProcessorInterface;
 
 final class OrderModifier implements OrderModifierInterface
 {
-    /** @var OrderProcessorInterface */
-    private $orderProcessor;
-
-    /** @var OrderItemQuantityModifierInterface */
-    private $orderItemQuantityModifier;
-
     public function __construct(
-        OrderProcessorInterface $orderProcessor,
-        OrderItemQuantityModifierInterface $orderItemQuantityModifier
+        private OrderProcessorInterface $orderProcessor,
+        private OrderItemQuantityModifierInterface $orderItemQuantityModifier,
     ) {
-        $this->orderProcessor = $orderProcessor;
-        $this->orderItemQuantityModifier = $orderItemQuantityModifier;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addToOrder(OrderInterface $order, OrderItemInterface $item): void
+    public function addToOrder(OrderInterface $cart, OrderItemInterface $cartItem): void
     {
-        $this->resolveOrderItem($order, $item);
+        $this->resolveOrderItem($cart, $cartItem);
 
-        $this->orderProcessor->process($order);
+        $this->orderProcessor->process($cart);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function removeFromOrder(OrderInterface $order, OrderItemInterface $item): void
+    public function removeFromOrder(OrderInterface $cart, OrderItemInterface $item): void
     {
-        $order->removeItem($item);
-        $this->orderProcessor->process($order);
+        $cart->removeItem($item);
+        $this->orderProcessor->process($cart);
     }
 
-    private function resolveOrderItem(OrderInterface $order, OrderItemInterface $item): void
+    private function resolveOrderItem(OrderInterface $cart, OrderItemInterface $item): void
     {
-        foreach ($order->getItems() as $existingItem) {
+        foreach ($cart->getItems() as $existingItem) {
             if ($item->equals($existingItem)) {
                 $this->orderItemQuantityModifier->modify(
                     $existingItem,
-                    $existingItem->getQuantity() + $item->getQuantity()
+                    $existingItem->getQuantity() + $item->getQuantity(),
                 );
 
                 return;
             }
         }
 
-        $order->addItem($item);
+        $cart->addItem($item);
     }
 }

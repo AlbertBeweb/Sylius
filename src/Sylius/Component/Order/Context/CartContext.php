@@ -18,17 +18,10 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 final class CartContext implements CartContextInterface
 {
-    /** @var FactoryInterface */
-    private $cartFactory;
-
-    public function __construct(FactoryInterface $cartFactory)
+    public function __construct(private FactoryInterface $cartFactory)
     {
-        $this->cartFactory = $cartFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCart(): OrderInterface
     {
         return $this->cartFactory->createNew();

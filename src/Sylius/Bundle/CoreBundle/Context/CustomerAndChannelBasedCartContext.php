@@ -23,33 +23,18 @@ use Sylius\Component\Order\Model\OrderInterface;
 
 final class CustomerAndChannelBasedCartContext implements CartContextInterface
 {
-    /** @var CustomerContextInterface */
-    private $customerContext;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
     public function __construct(
-        CustomerContextInterface $customerContext,
-        ChannelContextInterface $channelContext,
-        OrderRepositoryInterface $orderRepository
+        private CustomerContextInterface $customerContext,
+        private ChannelContextInterface $channelContext,
+        private OrderRepositoryInterface $orderRepository,
     ) {
-        $this->customerContext = $customerContext;
-        $this->channelContext = $channelContext;
-        $this->orderRepository = $orderRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCart(): OrderInterface
     {
         try {
             $channel = $this->channelContext->getChannel();
-        } catch (ChannelNotFoundException $exception) {
+        } catch (ChannelNotFoundException) {
             throw new CartNotFoundException('Sylius was not able to find the cart, as there is no current channel.');
         }
 
@@ -58,7 +43,7 @@ final class CustomerAndChannelBasedCartContext implements CartContextInterface
             throw new CartNotFoundException('Sylius was not able to find the cart, as there is no logged in user.');
         }
 
-        $cart = $this->orderRepository->findLatestCartByChannelAndCustomer($channel, $customer);
+        $cart = $this->orderRepository->findLatestNotEmptyCartByChannelAndCustomer($channel, $customer);
         if (null === $cart) {
             throw new CartNotFoundException('Sylius was not able to find the cart for currently logged in user.');
         }

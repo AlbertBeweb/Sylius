@@ -21,6 +21,8 @@ interface IndexPageInterface extends BaseIndexPageInterface
 
     public function chooseChannelFilter(string $channelName): void;
 
+    public function chooseShippingMethodFilter(string $shippingMethodName): void;
+
     public function isShipmentWithOrderNumberInPosition(string $orderNumber, int $position): bool;
 
     public function shipShipmentOfOrderWithNumber(string $orderNumber): void;
@@ -28,4 +30,8 @@ interface IndexPageInterface extends BaseIndexPageInterface
     public function getShipmentStatusByOrderNumber(string $orderNumber): string;
 
     public function showOrderPageForNthShipment(int $position): void;
+
+    public function shipShipmentOfOrderWithTrackingCode(string $orderNumber, string $trackingCode): void;
+
+    public function getShippedAtDate(string $orderNumber): string;
 }

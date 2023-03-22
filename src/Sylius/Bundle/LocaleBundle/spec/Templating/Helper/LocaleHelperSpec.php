@@ -53,7 +53,7 @@ final class LocaleHelperSpec extends ObjectBehavior
 
     function it_converts_locales_code_to_name_using_locale_from_the_context(
         LocaleConverterInterface $localeConverter,
-        LocaleContextInterface $localeContext
+        LocaleContextInterface $localeContext,
     ): void {
         $this->beConstructedWith($localeConverter, $localeContext);
 
@@ -66,7 +66,7 @@ final class LocaleHelperSpec extends ObjectBehavior
 
     function it_converts_locale_code_to_name_using_default_locale_if_passed_locale_context_throws_an_exception(
         LocaleConverterInterface $localeConverter,
-        LocaleContextInterface $localeContext
+        LocaleContextInterface $localeContext,
     ): void {
         $this->beConstructedWith($localeConverter, $localeContext);
 
@@ -75,6 +75,13 @@ final class LocaleHelperSpec extends ObjectBehavior
         $localeConverter->convertCodeToName('en', null)->willReturn('English');
 
         $this->convertCodeToName('en')->shouldReturn('English');
+    }
+
+    function it_fallbacks_to_the_code_if_the_name_is_not_in_the_database(LocaleConverterInterface $localeConverter): void
+    {
+        $localeConverter->convertCodeToName('en_DG', null)->willThrow(new \InvalidArgumentException());
+
+        $this->convertCodeToName('en_DG')->shouldReturn('en_DG');
     }
 
     function it_has_a_name(): void

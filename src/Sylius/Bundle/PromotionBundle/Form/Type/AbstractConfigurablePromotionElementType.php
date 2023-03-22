@@ -24,22 +24,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractConfigurablePromotionElementType extends AbstractResourceType
 {
-    /** @var FormTypeRegistryInterface */
-    private $formTypeRegistry;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(string $dataClass, array $validationGroups = [], FormTypeRegistryInterface $formTypeRegistry)
+    public function __construct(string $dataClass, array $validationGroups, private FormTypeRegistryInterface $formTypeRegistry)
     {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->formTypeRegistry = $formTypeRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -73,9 +62,6 @@ abstract class AbstractConfigurablePromotionElementType extends AbstractResource
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -99,10 +85,6 @@ abstract class AbstractConfigurablePromotionElementType extends AbstractResource
             return $data->getType();
         }
 
-        if (null !== $form->getConfig()->hasOption('configuration_type')) {
-            return $form->getConfig()->getOption('configuration_type');
-        }
-
-        return null;
+        return $form->getConfig()->getOption('configuration_type');
     }
 }

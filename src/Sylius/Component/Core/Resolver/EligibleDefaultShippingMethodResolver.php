@@ -20,7 +20,7 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ShipmentInterface as CoreShipmentInterface;
 use Sylius\Component\Core\Repository\ShippingMethodRepositoryInterface;
-use Sylius\Component\Shipping\Checker\ShippingMethodEligibilityCheckerInterface;
+use Sylius\Component\Shipping\Checker\Eligibility\ShippingMethodEligibilityCheckerInterface;
 use Sylius\Component\Shipping\Exception\UnresolvedDefaultShippingMethodException;
 use Sylius\Component\Shipping\Model\ShipmentInterface;
 use Sylius\Component\Shipping\Model\ShippingMethodInterface;
@@ -29,28 +29,13 @@ use Webmozart\Assert\Assert;
 
 final class EligibleDefaultShippingMethodResolver implements DefaultShippingMethodResolverInterface
 {
-    /** @var ShippingMethodRepositoryInterface */
-    private $shippingMethodRepository;
-
-    /** @var ShippingMethodEligibilityCheckerInterface */
-    private $shippingMethodEligibilityChecker;
-
-    /** @var ZoneMatcherInterface */
-    private $zoneMatcher;
-
     public function __construct(
-        ShippingMethodRepositoryInterface $shippingMethodRepository,
-        ShippingMethodEligibilityCheckerInterface $shippingMethodEligibilityChecker,
-        ZoneMatcherInterface $zoneMatcher
+        private ShippingMethodRepositoryInterface $shippingMethodRepository,
+        private ShippingMethodEligibilityCheckerInterface $shippingMethodEligibilityChecker,
+        private ZoneMatcherInterface $zoneMatcher,
     ) {
-        $this->shippingMethodRepository = $shippingMethodRepository;
-        $this->shippingMethodEligibilityChecker = $shippingMethodEligibilityChecker;
-        $this->zoneMatcher = $zoneMatcher;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultShippingMethod(ShipmentInterface $shipment): ShippingMethodInterface
     {
         /** @var CoreShipmentInterface $shipment */

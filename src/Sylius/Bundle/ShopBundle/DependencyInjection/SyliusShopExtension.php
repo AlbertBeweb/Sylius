@@ -27,12 +27,9 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 final class SyliusShopExtension extends Extension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function load(array $config, ContainerBuilder $container): void
+    public function load(array $configs, ContainerBuilder $container): void
     {
-        $config = $this->processConfiguration($this->getConfiguration([], $container), $config);
+        $config = $this->processConfiguration($this->getConfiguration([], $container), $configs);
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
 
         $loader->load('services.xml');
@@ -42,7 +39,7 @@ final class SyliusShopExtension extends Extension
         $container->setParameter('sylius_shop.firewall_context_name', $config['firewall_context_name']);
         $container->setParameter(
             'sylius_shop.product_grid.include_all_descendants',
-            $config['product_grid']['include_all_descendants']
+            $config['product_grid']['include_all_descendants'],
         );
         $this->configureCheckoutResolverIfNeeded($config['checkout_resolver'], $container);
     }
@@ -53,13 +50,14 @@ final class SyliusShopExtension extends Extension
             return;
         }
 
-        $checkoutResolverDefinition = new Definition(CheckoutResolver::class,
+        $checkoutResolverDefinition = new Definition(
+            CheckoutResolver::class,
             [
                 new Reference('sylius.context.cart'),
                 new Reference('sylius.router.checkout_state'),
                 new Definition(RequestMatcher::class, [$config['pattern']]),
                 new Reference('sm.factory'),
-            ]
+            ],
         );
         $checkoutResolverDefinition->addTag('kernel.event_subscriber');
 
@@ -68,7 +66,7 @@ final class SyliusShopExtension extends Extension
             [
                 new Reference('router'),
                 $config['route_map'],
-            ]
+            ],
         );
 
         $container->setDefinition('sylius.resolver.checkout', $checkoutResolverDefinition);

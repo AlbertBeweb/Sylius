@@ -15,6 +15,10 @@ namespace Sylius\Bundle\CoreBundle\Controller;
 
 use FOS\RestBundle\View\View;
 use Sylius\Bundle\OrderBundle\Controller\OrderController as BaseOrderController;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
+use Sylius\Component\Order\SyliusCartEvents;
+use Sylius\Component\Resource\ResourceActions;
+use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Webmozart\Assert\Assert;
@@ -27,7 +31,18 @@ class OrderController extends BaseOrderController
 
         $cart = $this->getCurrentCart();
         if (null !== $cart->getId()) {
-            $cart = $this->getOrderRepository()->findCartForSummary($cart->getId());
+            $orderRepository = $this->getOrderRepository();
+
+            Assert::isInstanceOf($orderRepository, OrderRepositoryInterface::class);
+
+            $cart = $orderRepository->findCartForSummary($cart->getId());
+        }
+
+        $this->getEventDispatcher()->dispatch(new GenericEvent($cart), SyliusCartEvents::CART_SUMMARY);
+        $event = $this->eventDispatcher->dispatch(ResourceActions::SHOW, $configuration, $cart);
+        $eventResponse = $event->getResponse();
+        if (null !== $eventResponse) {
+            return $eventResponse;
         }
 
         if (!$configuration->isHtmlRequest()) {
@@ -36,15 +51,13 @@ class OrderController extends BaseOrderController
 
         $form = $this->resourceFormFactory->create($configuration, $cart);
 
-        $view = View::create()
-            ->setTemplate($configuration->getTemplate('summary.html'))
-            ->setData([
+        return $this->render(
+            $configuration->getTemplate('summary.html'),
+            [
                 'cart' => $cart,
                 'form' => $form->createView(),
-            ])
-        ;
-
-        return $this->viewHandler->handle($configuration, $view);
+            ],
+        );
     }
 
     public function thankYouAction(Request $request): Response
@@ -59,7 +72,7 @@ class OrderController extends BaseOrderController
             return $this->redirectHandler->redirectToRoute(
                 $configuration,
                 $options['route'] ?? 'sylius_shop_homepage',
-                $options['parameters'] ?? []
+                $options['parameters'] ?? [],
             );
         }
 
@@ -67,13 +80,11 @@ class OrderController extends BaseOrderController
         $order = $this->repository->find($orderId);
         Assert::notNull($order);
 
-        $view = View::create()
-            ->setData([
+        return $this->render(
+            $configuration->getParameters()->get('template'),
+            [
                 'order' => $order,
-            ])
-            ->setTemplate($configuration->getParameters()->get('template'))
-        ;
-
-        return $this->viewHandler->handle($configuration, $view);
+            ],
+        );
     }
 }

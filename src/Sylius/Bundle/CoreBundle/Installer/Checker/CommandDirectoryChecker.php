@@ -19,15 +19,10 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class CommandDirectoryChecker
 {
-    /** @var string */
-    private $name;
+    private ?string $name = null;
 
-    /** @var Filesystem */
-    private $filesystem;
-
-    public function __construct(Filesystem $filesystem)
+    public function __construct(private Filesystem $filesystem)
     {
-        $this->filesystem = $filesystem;
     }
 
     public function ensureDirectoryExists($directory, OutputInterface $output): void
@@ -40,7 +35,7 @@ final class CommandDirectoryChecker
             $this->filesystem->mkdir($directory, 0755);
 
             $output->writeln(sprintf('<comment>Created "%s" directory.</comment>', realpath($directory)));
-        } catch (IOException $exception) {
+        } catch (IOException) {
             $output->writeln('');
             $output->writeln('<error>Cannot run command due to unexisting directory (tried to create it automatically, failed).</error>');
             $output->writeln('');
@@ -48,7 +43,7 @@ final class CommandDirectoryChecker
             throw new \RuntimeException(sprintf(
                 'Create directory "%s" and run command "<comment>%s</comment>"',
                 realpath($directory),
-                $this->name
+                $this->name,
             ));
         }
     }
@@ -63,7 +58,7 @@ final class CommandDirectoryChecker
             $this->filesystem->chmod($directory, 0755);
 
             $output->writeln(sprintf('<comment>Changed "%s" permissions to 0755.</comment>', realpath($directory)));
-        } catch (IOException $exception) {
+        } catch (IOException) {
             $output->writeln('');
             $output->writeln('<error>Cannot run command due to bad directory permissions (tried to change permissions to 0755).</error>');
             $output->writeln('');
@@ -71,7 +66,7 @@ final class CommandDirectoryChecker
             throw new \RuntimeException(sprintf(
                 'Set "%s" writable and run command "<comment>%s</comment>"',
                 realpath(dirname($directory)),
-                $this->name
+                $this->name,
             ));
         }
     }

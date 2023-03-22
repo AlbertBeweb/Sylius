@@ -8,6 +8,11 @@ All models in Sylius are placed in the ``Sylius\Component\*ComponentName*\Model`
     Many models in Sylius are **extended in the Core component**.
     If the model you are willing to override exists in the ``Core`` you should be extending the ``Core`` one, not the base model from the component.
 
+.. warning::
+
+    Removing the generated and executed doctrine migration may cause warnings while a new migration is executed.
+    To avoid it, we suggest you do not delete the migration.
+
 .. note::
 
     Note that there are **translatable models** in Sylius also. The guide to translatable entities can be found below the regular one.
@@ -40,7 +45,7 @@ For the ``Country`` run:
 
 .. code-block:: bash
 
-    $ php bin/console debug:container --parameter=sylius.model.country.class
+    php bin/console debug:container --parameter=sylius.model.country.class
 
 As a result you will get the ``Sylius\Component\Addressing\Model\Country`` - this is the class that you need to be extending.
 
@@ -86,7 +91,7 @@ Apply the following changes to the ``src/Entity/Addressing/Country.php`` file th
 
 Under the ``sylius_*`` where ``*`` is the name of the bundle of the model you are customizing, in our case it will be the ``SyliusAddressingBundle`` -> ``sylius_addressing``.
 
-That in Sylius-Standard configuration is overriden already.
+That in Sylius-Standard configuration is overridden already.
 
 .. code-block:: yaml
 
@@ -100,7 +105,7 @@ You can check if the configuration in ``config/_sylius.yaml`` is correct by runn
 
 .. code-block:: bash
 
-    $ php bin/console debug:container --parameter=sylius.model.country.class
+    php bin/console debug:container --parameter=sylius.model.country.class
 
 If all is well the output should look like:
 
@@ -109,7 +114,7 @@ If all is well the output should look like:
     ---------------------------- -------------------------------------------
      Parameter                    Value
     ---------------------------- -------------------------------------------
-     sylius.model.country.class   App\Entity\Country
+     sylius.model.country.class   App\Entity\Addressing\Country
     ---------------------------- -------------------------------------------
 
 .. tip::
@@ -124,7 +129,7 @@ If all is well the output should look like:
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:schema:update --force
+    php bin/console doctrine:schema:update --force
 
 * via migrations:
 
@@ -132,12 +137,12 @@ Which we strongly recommend over updating the schema.
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:migrations:diff
-    $ php bin/console doctrine:migrations:migrate
+    php bin/console doctrine:migrations:diff
+    php bin/console doctrine:migrations:migrate
 
 .. tip::
 
-    Read more about the database modifications and migrations in the `Symfony documentation here <http://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
+    Read more about the database modifications and migrations in the `Symfony documentation here <https://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
 
 **4.** Additionally if you want to give the administrator an ability to add the ``flag`` to any of countries,
 you'll need to update its form type. Check how to do it :doc:`here </customization/form>`.
@@ -167,7 +172,7 @@ Just like for regular models you can also check the class of translatable models
 
 .. code-block:: bash
 
-    $ php bin/console debug:container --parameter=sylius.model.shipping_method.class
+    php bin/console debug:container --parameter=sylius.model.shipping_method.class
 
 **1.** The first thing to do is to add your own fields in class ``App\Entity\Shipping\ShippingMethod`` extending the base ``Sylius\Component\Core\Model\ShippingMethod`` class.
 
@@ -222,7 +227,7 @@ Apply the following changes to the ``src/Entity/Shipping/ShippingMethod.php`` fi
 Under the ``sylius_*`` where ``*`` is the name of the bundle of the model you are customizing,
 in our case it will be the ``SyliusShippingBundle`` -> ``sylius_shipping``.
 
-That in Sylius-Standard configuration is overriden already, but you may check if it correctly overriden.
+That in Sylius-Standard configuration is overridden already, but you may check if it is correctly overridden.
 
 .. code-block:: yaml
 
@@ -240,7 +245,7 @@ Configuration ``sylius_shipping:`` is provided by default in the sylius-standard
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:schema:update --force
+    php bin/console doctrine:schema:update --force
 
 * via migrations:
 
@@ -248,12 +253,12 @@ Which we strongly recommend over updating the schema.
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:migrations:diff
-    $ php bin/console doctrine:migrations:migrate
+    php bin/console doctrine:migrations:diff
+    php bin/console doctrine:migrations:migrate
 
 .. tip::
 
-    Read more about the database modifications and migrations in the `Symfony documentation here <http://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
+    Read more about the database modifications and migrations in the `Symfony documentation here <https://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
 
 **4.** Additionally if you need  to add the ``estimatedDeliveryTime`` to any of your shipping methods in the admin panel,
 you'll need to update its form type. Check how to do it :doc:`here </customization/form>`.
@@ -278,7 +283,7 @@ Just like for regular models you can also check the class of translatable models
 
 .. code-block:: bash
 
-    $ php bin/console debug:container --parameter=sylius.model.shipping_method_translation.class
+    php bin/console debug:container --parameter=sylius.model.shipping_method_translation.class
 
 **1.** In order to add a translatable property to your entity, start from defining it on the class `App\Entity\Shipping\ShippingMethodTranslation` is already there in the right place.
 
@@ -382,7 +387,7 @@ Configuration ``sylius_addressing:`` is provided by default in the sylius-standa
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:schema:update --force
+    php bin/console doctrine:schema:update --force
 
 * via migrations:
 
@@ -390,14 +395,14 @@ Which we strongly recommend over updating the schema.
 
 .. code-block:: bash
 
-    $ php bin/console doctrine:migrations:diff
-    $ php bin/console doctrine:migrations:migrate
+    php bin/console doctrine:migrations:diff
+    php bin/console doctrine:migrations:migrate
 
 .. tip::
 
-    Read more about the database modifications and migrations in the `Symfony documentation here <http://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
+    Read more about the database modifications and migrations in the `Symfony documentation here <https://symfony.com/doc/current/book/doctrine.html#creating-the-database-tables-schema>`_.
 
 **5.** If you need to add delivery conditions to your shipping methods in the admin panel,
 you'll need to update its form type. Check how to do it :doc:`here </customization/form>`.
 
-.. include:: /customization/plugins.rst.inc
+.. include:: /customization/plugins.rst

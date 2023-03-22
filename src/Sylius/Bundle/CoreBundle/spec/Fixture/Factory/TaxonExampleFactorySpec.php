@@ -23,13 +23,13 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\Component\Taxonomy\Generator\TaxonSlugGeneratorInterface;
 use Sylius\Component\Taxonomy\Repository\TaxonRepositoryInterface;
 
-class TaxonExampleFactorySpec extends ObjectBehavior
+final class TaxonExampleFactorySpec extends ObjectBehavior
 {
     function let(
         FactoryInterface $taxonFactory,
         TaxonRepositoryInterface $taxonRepository,
         RepositoryInterface $localeRepository,
-        TaxonSlugGeneratorInterface $taxonSlugGenerator
+        TaxonSlugGeneratorInterface $taxonSlugGenerator,
     ) {
         $this->beConstructedWith($taxonFactory, $taxonRepository, $localeRepository, $taxonSlugGenerator);
     }
@@ -43,7 +43,7 @@ class TaxonExampleFactorySpec extends ObjectBehavior
         FactoryInterface $taxonFactory,
         RepositoryInterface $localeRepository,
         Locale $locale,
-        TaxonInterface $taxon
+        TaxonInterface $taxon,
     ) {
         $taxonFactory->createNew()->willReturn($taxon);
         $localeRepository->findAll()->willReturn([$locale]);
@@ -66,7 +66,7 @@ class TaxonExampleFactorySpec extends ObjectBehavior
         FactoryInterface $taxonFactory,
         RepositoryInterface $localeRepository,
         Locale $locale,
-        TaxonInterface $taxon
+        TaxonInterface $taxon,
     ) {
         $taxonFactory->createNew()->willReturn($taxon);
         $localeRepository->findAll()->willReturn([$locale]);
@@ -101,7 +101,7 @@ class TaxonExampleFactorySpec extends ObjectBehavior
         FactoryInterface $taxonFactory,
         RepositoryInterface $localeRepository,
         Locale $locale,
-        TaxonInterface $taxon
+        TaxonInterface $taxon,
     ) {
         $taxonFactory->createNew()->willReturn($taxon);
         $localeRepository->findAll()->willReturn([$locale]);

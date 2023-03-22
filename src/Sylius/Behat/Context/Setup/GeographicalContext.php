@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Addressing\Converter\CountryNameConverterInterface;
 use Sylius\Component\Addressing\Model\CountryInterface;
@@ -24,38 +24,14 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class GeographicalContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var FactoryInterface */
-    private $countryFactory;
-
-    /** @var FactoryInterface */
-    private $provinceFactory;
-
-    /** @var RepositoryInterface */
-    private $countryRepository;
-
-    /** @var CountryNameConverterInterface */
-    private $countryNameConverter;
-
-    /** @var ObjectManager */
-    private $countryManager;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        FactoryInterface $countryFactory,
-        FactoryInterface $provinceFactory,
-        RepositoryInterface $countryRepository,
-        CountryNameConverterInterface $countryNameConverter,
-        ObjectManager $countryManager
+        private SharedStorageInterface $sharedStorage,
+        private FactoryInterface $countryFactory,
+        private FactoryInterface $provinceFactory,
+        private RepositoryInterface $countryRepository,
+        private CountryNameConverterInterface $countryNameConverter,
+        private ObjectManager $countryManager,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->countryFactory = $countryFactory;
-        $this->provinceFactory = $provinceFactory;
-        $this->countryRepository = $countryRepository;
-        $this->countryNameConverter = $countryNameConverter;
-        $this->countryManager = $countryManager;
     }
 
     /**

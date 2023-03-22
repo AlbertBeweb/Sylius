@@ -31,6 +31,8 @@ interface CreatePageInterface extends BaseCreatePageInterface
 
     public function setContactEmail(string $contactEmail): void;
 
+    public function setContactPhoneNumber(string $contactPhoneNumber): void;
+
     public function defineColor(string $color): void;
 
     public function chooseLocale(string $language): void;
@@ -41,6 +43,9 @@ interface CreatePageInterface extends BaseCreatePageInterface
 
     public function chooseDefaultLocale(?string $locale): void;
 
+    /** @param string[] $countries */
+    public function chooseOperatingCountries(array $countries): void;
+
     public function chooseBaseCurrency(?string $currency): void;
 
     public function chooseTaxCalculationStrategy(string $taxCalculationStrategy): void;
@@ -48,4 +53,6 @@ interface CreatePageInterface extends BaseCreatePageInterface
     public function allowToSkipShippingStep(): void;
 
     public function allowToSkipPaymentStep(): void;
+
+    public function specifyMenuTaxon(string $menuTaxon): void;
 }

@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Sylius\Behat\Page\Admin\Taxon;
 
-use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Exception\ElementNotFoundException;
 use Sylius\Behat\Behaviour\SpecifiesItsCode;
 use Sylius\Behat\Page\Admin\Crud\CreatePage as BaseCreatePage;
+use Sylius\Behat\Service\DriverHelper;
 use Sylius\Behat\Service\JQueryHelper;
 use Sylius\Behat\Service\SlugGenerationHelper;
 use Sylius\Component\Core\Model\TaxonInterface;
@@ -37,7 +37,7 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
         $matchedLeavesCounter = 0;
         $leaves = $this->getLeaves();
         foreach ($leaves as $leaf) {
-            if (strpos($leaf->getText(), $name) !== false) {
+            if (str_contains($leaf->getText(), $name)) {
                 ++$matchedLeavesCounter;
             }
         }
@@ -78,10 +78,10 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
         $this->activateLanguageTab($languageCode);
         $this->getElement('name', ['%language%' => $languageCode])->setValue($name);
 
-        if ($this->getDriver() instanceof Selenium2Driver) {
+        if (DriverHelper::isJavascript($this->getDriver())) {
             SlugGenerationHelper::waitForSlugGeneration(
                 $this->getSession(),
-                $this->getElement('slug', ['%language%' => $languageCode])
+                $this->getElement('slug', ['%language%' => $languageCode]),
             );
         }
     }
@@ -109,7 +109,7 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
 
     public function activateLanguageTab(string $locale): void
     {
-        if (!$this->getDriver() instanceof Selenium2Driver) {
+        if (DriverHelper::isNotJavascript($this->getDriver())) {
             return;
         }
 
@@ -117,6 +117,31 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
         if (!$languageTabTitle->hasClass('active')) {
             $languageTabTitle->click();
         }
+    }
+
+    public function moveUpTaxon(string $name): void
+    {
+        $taxonElement = $this->getElement('tree_item', ['%taxon%' => $name]);
+        $treeAction = $taxonElement->getParent()->getParent()->find('css', '.sylius-tree__action');
+        $treeAction->click();
+        JQueryHelper::waitForAsynchronousActionsToFinish($this->getSession());
+        $treeAction->find('css', '.sylius-taxon-move-up .up')->click();
+        JQueryHelper::waitForAsynchronousActionsToFinish($this->getSession());
+    }
+
+    public function moveDownTaxon(string $name): void
+    {
+        $taxonElement = $this->getElement('tree_item', ['%taxon%' => $name]);
+        $treeAction = $taxonElement->getParent()->getParent()->find('css', '.sylius-tree__action');
+        $treeAction->click();
+        JQueryHelper::waitForAsynchronousActionsToFinish($this->getSession());
+        $treeAction->find('css', '.sylius-taxon-move-down .down')->click();
+        JQueryHelper::waitForAsynchronousActionsToFinish($this->getSession());
+    }
+
+    public function getFirstTaxonOnTheList(): string
+    {
+        return $this->getLeaves()[0]->getText();
     }
 
     protected function getElement(string $name, array $parameters = []): NodeElement
@@ -139,6 +164,7 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
             'name' => '#sylius_taxon_translations_%language%_name',
             'slug' => '#sylius_taxon_translations_%language%_slug',
             'tree' => '.sylius-tree',
+            'tree_item' => '.sylius-tree__item a:contains("%taxon%")',
         ]);
     }
 

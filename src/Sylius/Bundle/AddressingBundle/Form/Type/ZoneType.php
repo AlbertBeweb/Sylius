@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\AddressingBundle\Form\Type;
 
+use Sylius\Bundle\AddressingBundle\Form\EventListener\BuildZoneFormSubscriber;
 use Sylius\Bundle\ResourceBundle\Form\EventSubscriber\AddCodeFormSubscriber;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
 use Sylius\Component\Addressing\Model\ZoneInterface;
@@ -25,23 +26,15 @@ use Symfony\Component\Form\FormEvents;
 
 final class ZoneType extends AbstractResourceType
 {
-    /** @var array */
-    private $scopeChoices;
-
     /**
      * @param string[] $validationGroups
      * @param string[] $scopeChoices
      */
-    public function __construct(string $dataClass, array $validationGroups, array $scopeChoices = [])
+    public function __construct(string $dataClass, array $validationGroups, private array $scopeChoices = [])
     {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->scopeChoices = $scopeChoices;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -75,9 +68,7 @@ final class ZoneType extends AbstractResourceType
             ];
 
             if ($zone->getType() === ZoneInterface::TYPE_ZONE) {
-                $entryOptions['entry_options']['choice_filter'] = function (ZoneInterface $subZone) use ($zone): bool {
-                    return $zone->getId() !== $subZone->getId();
-                };
+                $entryOptions['entry_options']['choice_filter'] = static fn (?ZoneInterface $subZone): bool => $subZone !== null && $zone->getId() !== $subZone->getId();
             }
 
             $event->getForm()->add('members', CollectionType::class, [
@@ -90,11 +81,10 @@ final class ZoneType extends AbstractResourceType
                 'delete_empty' => true,
             ]);
         });
+
+        $builder->addEventSubscriber(new BuildZoneFormSubscriber());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_zone';
@@ -114,7 +104,11 @@ final class ZoneType extends AbstractResourceType
     private function getZoneMemberEntryOptions(string $zoneMemberType): array
     {
         $zoneMemberEntryOptions = [
-            ZoneInterface::TYPE_COUNTRY => ['label' => 'sylius.form.zone.types.country'],
+            ZoneInterface::TYPE_COUNTRY => [
+                'label' => 'sylius.form.zone.types.country',
+                'enabled' => false,
+                'attr' => ['class' => 'country_search_dropdown ui fluid search selection dropdown'],
+            ],
             ZoneInterface::TYPE_PROVINCE => ['label' => 'sylius.form.zone.types.province'],
             ZoneInterface::TYPE_ZONE => ['label' => 'sylius.form.zone.types.zone'],
         ];

@@ -23,16 +23,11 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 
 final class ChannelCollector extends DataCollector
 {
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
     public function __construct(
         ChannelRepositoryInterface $channelRepository,
-        ChannelContextInterface $channelContext,
-        bool $channelChangeSupport = false
+        private ChannelContextInterface $channelContext,
+        bool $channelChangeSupport = false,
     ) {
-        $this->channelContext = $channelContext;
-
         $this->data = [
             'channel' => null,
             'channels' => array_map([$this, 'pluckChannel'], $channelRepository->findAll()),
@@ -58,28 +53,19 @@ final class ChannelCollector extends DataCollector
         return $this->data['channel_change_support'];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function collect(Request $request, Response $response, \Exception $exception = null): void
+    public function collect(Request $request, Response $response, \Throwable $exception = null): void
     {
         try {
             $this->data['channel'] = $this->pluckChannel($this->channelContext->getChannel());
-        } catch (ChannelNotFoundException $exception) {
+        } catch (ChannelNotFoundException) {
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reset(): void
     {
         $this->data['channel'] = null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'sylius.channel_collector';

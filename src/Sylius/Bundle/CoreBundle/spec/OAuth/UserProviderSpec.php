@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Bundle\CoreBundle\OAuth;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use HWI\Bundle\OAuthBundle\Connect\AccountConnectorInterface;
 use HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface;
 use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
@@ -29,7 +29,9 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Sylius\Component\User\Model\UserOAuthInterface;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use SyliusLabs\Polyfill\Symfony\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 final class UserProviderSpec extends ObjectBehavior
 {
@@ -41,7 +43,7 @@ final class UserProviderSpec extends ObjectBehavior
         RepositoryInterface $oauthRepository,
         ObjectManager $userManager,
         CanonicalizerInterface $canonicalizer,
-        CustomerRepositoryInterface $customerRepository
+        CustomerRepositoryInterface $customerRepository,
     ): void {
         $this->beConstructedWith(
             ShopUser::class,
@@ -52,7 +54,7 @@ final class UserProviderSpec extends ObjectBehavior
             $oauthRepository,
             $userManager,
             $canonicalizer,
-            $customerRepository
+            $customerRepository,
         );
     }
 
@@ -72,7 +74,7 @@ final class UserProviderSpec extends ObjectBehavior
         ShopUserInterface $user,
         UserResponseInterface $response,
         ResourceOwnerInterface $resourceOwner,
-        UserOAuthInterface $oauth
+        UserOAuthInterface $oauth,
     ): void {
         $resourceOwner->getName()->willReturn('google');
 
@@ -102,7 +104,7 @@ final class UserProviderSpec extends ObjectBehavior
         ShopUserInterface $user,
         UserOAuthInterface $oauth,
         UserResponseInterface $response,
-        ResourceOwnerInterface $resourceOwner
+        ResourceOwnerInterface $resourceOwner,
     ): void {
         $resourceOwner->getName()->willReturn('google');
 
@@ -123,7 +125,7 @@ final class UserProviderSpec extends ObjectBehavior
         ShopUserInterface $user,
         UserResponseInterface $response,
         ResourceOwnerInterface $resourceOwner,
-        UserOAuthInterface $oauth
+        UserOAuthInterface $oauth,
     ): void {
         $resourceOwner->getName()->willReturn('google');
 
@@ -161,7 +163,7 @@ final class UserProviderSpec extends ObjectBehavior
         ShopUserInterface $user,
         UserResponseInterface $response,
         ResourceOwnerInterface $resourceOwner,
-        UserOAuthInterface $oauth
+        UserOAuthInterface $oauth,
     ): void {
         $resourceOwner->getName()->willReturn('google');
 
@@ -209,7 +211,7 @@ final class UserProviderSpec extends ObjectBehavior
         ShopUserInterface $user,
         UserResponseInterface $response,
         ResourceOwnerInterface $resourceOwner,
-        UserOAuthInterface $oauth
+        UserOAuthInterface $oauth,
     ): void {
         $response->getResourceOwner()->willReturn($resourceOwner);
         $resourceOwner->getName()->willReturn('google');
@@ -221,6 +223,12 @@ final class UserProviderSpec extends ObjectBehavior
         $response->getEmail()->willReturn(null);
         $userRepository->findOneByEmail(Argument::any())->shouldNotBeCalled();
 
-        $this->shouldThrow(UsernameNotFoundException::class)->during('loadUserByOAuthUserResponse', [$response]);
+        $this->shouldThrow(UserNotFoundException::class)->during('loadUserByOAuthUserResponse', [$response]);
+    }
+
+    function it_should_throw_exception_when_unsupported_user_is_used(
+        UserInterface $user,
+    ): void {
+        $this->shouldThrow(UnsupportedUserException::class)->during('refreshUser', [$user]);
     }
 }

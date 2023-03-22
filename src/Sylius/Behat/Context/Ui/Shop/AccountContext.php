@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Ui\Shop;
 
 use Behat\Behat\Context\Context;
+use FriendsOfBehat\PageObjectExtension\Page\UnexpectedPageException;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Shop\Account\ChangePasswordPageInterface;
 use Sylius\Behat\Page\Shop\Account\DashboardPageInterface;
@@ -22,49 +23,24 @@ use Sylius\Behat\Page\Shop\Account\Order\IndexPageInterface;
 use Sylius\Behat\Page\Shop\Account\Order\ShowPageInterface;
 use Sylius\Behat\Page\Shop\Account\ProfileUpdatePageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
+use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Formatter\StringInflector;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Webmozart\Assert\Assert;
 
 final class AccountContext implements Context
 {
-    /** @var DashboardPageInterface */
-    private $dashboardPage;
-
-    /** @var ProfileUpdatePageInterface */
-    private $profileUpdatePage;
-
-    /** @var ChangePasswordPageInterface */
-    private $changePasswordPage;
-
-    /** @var IndexPageInterface */
-    private $orderIndexPage;
-
-    /** @var ShowPageInterface */
-    private $orderShowPage;
-
-    /** @var LoginPageInterface */
-    private $loginPage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        DashboardPageInterface $dashboardPage,
-        ProfileUpdatePageInterface $profileUpdatePage,
-        ChangePasswordPageInterface $changePasswordPage,
-        IndexPageInterface $orderIndexPage,
-        ShowPageInterface $orderShowPage,
-        LoginPageInterface $loginPage,
-        NotificationCheckerInterface $notificationChecker
+        private DashboardPageInterface $dashboardPage,
+        private ProfileUpdatePageInterface $profileUpdatePage,
+        private ChangePasswordPageInterface $changePasswordPage,
+        private IndexPageInterface $orderIndexPage,
+        private ShowPageInterface $orderShowPage,
+        private LoginPageInterface $loginPage,
+        private NotificationCheckerInterface $notificationChecker,
+        private SharedStorageInterface $sharedStorage,
     ) {
-        $this->dashboardPage = $dashboardPage;
-        $this->profileUpdatePage = $profileUpdatePage;
-        $this->changePasswordPage = $changePasswordPage;
-        $this->orderIndexPage = $orderIndexPage;
-        $this->orderShowPage = $orderShowPage;
-        $this->loginPage = $loginPage;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -148,7 +124,7 @@ final class AccountContext implements Context
     {
         Assert::true($this->profileUpdatePage->checkValidationMessageFor(
             StringInflector::nameToCode($element),
-            sprintf('Please enter your %s.', $element)
+            sprintf('Please enter your %s.', $element),
         ));
     }
 
@@ -159,7 +135,7 @@ final class AccountContext implements Context
     {
         Assert::true($this->profileUpdatePage->checkValidationMessageFor(
             StringInflector::nameToCode($element),
-            sprintf('This %s is invalid.', $element)
+            sprintf('This %s is invalid.', $element),
         ));
     }
 
@@ -172,7 +148,7 @@ final class AccountContext implements Context
     }
 
     /**
-     * @Given /^I want to change my password$/
+     * @When /^I want to change my password$/
      */
     public function iWantToChangeMyPassword()
     {
@@ -228,7 +204,7 @@ final class AccountContext implements Context
     {
         Assert::true($this->changePasswordPage->checkValidationMessageFor(
             'current_password',
-            'Provided password is different than the current one.'
+            'Provided password is different than the current one.',
         ));
     }
 
@@ -239,27 +215,41 @@ final class AccountContext implements Context
     {
         Assert::true($this->changePasswordPage->checkValidationMessageFor(
             'new_password',
-            'The entered passwords don\'t match'
+            'The entered passwords don\'t match',
         ));
     }
 
     /**
-     * @Then I should be notified that the password should be at least 4 characters long
+     * @Then I should be notified that the password should be at least :length characters long
      */
-    public function iShouldBeNotifiedThatThePasswordShouldBeAtLeastCharactersLong()
+    public function iShouldBeNotifiedThatThePasswordShouldBeAtLeastCharactersLong(int $length)
     {
         Assert::true($this->changePasswordPage->checkValidationMessageFor(
             'new_password',
-            'Password must be at least 4 characters long.'
+            sprintf('Password must be at least %s characters long.', $length),
         ));
     }
 
     /**
+     * @Given I am browsing my orders
      * @When I browse my orders
      */
-    public function iBrowseMyOrders()
+    public function iBrowseMyOrders(): void
     {
         $this->orderIndexPage->open();
+    }
+
+    /**
+     * @When I change my payment method to :paymentMethod
+     */
+    public function iChangeMyPaymentMethodTo(PaymentMethodInterface $paymentMethod): void
+    {
+        /** @var OrderInterface $order */
+        $order = $this->sharedStorage->get('order');
+
+        $this->orderIndexPage->changePaymentMethod($order);
+        $this->orderShowPage->choosePaymentMethod($paymentMethod);
+        $this->orderShowPage->pay();
     }
 
     /**
@@ -280,8 +270,9 @@ final class AccountContext implements Context
 
     /**
      * @When I view the summary of the order :order
+     * @When I view the summary of my order :order
      */
-    public function iViewTheSummaryOfTheOrder(OrderInterface $order)
+    public function iViewTheSummaryOfTheOrder(OrderInterface $order): void
     {
         $this->orderShowPage->open(['number' => $order->getNumber()]);
     }
@@ -296,9 +287,21 @@ final class AccountContext implements Context
     }
 
     /**
-     * @Then it should has number :orderNumber
+     * @When I log in as :email with :password password
      */
-    public function itShouldHasNumber($orderNumber)
+    public function iLogInAsWithPassword(string $email, string $password): void
+    {
+        $this->loginPage->open();
+        $this->loginPage->specifyUsername($email);
+        $this->loginPage->specifyPassword($password);
+        $this->loginPage->logIn();
+    }
+
+    /**
+     * @Then it should has number :orderNumber
+     * @Then it should have the number :orderNumber
+     */
+    public function itShouldHasNumber(string $orderNumber): void
     {
         Assert::same($this->orderShowPage->getNumber(), $orderNumber);
     }
@@ -361,6 +364,21 @@ final class AccountContext implements Context
     }
 
     /**
+     * @Then I should have :paymentMethod payment method on my order
+     */
+    public function iShouldHavePaymentMethodOnMyOrder(PaymentMethodInterface $paymentMethod): void
+    {
+        /** @var OrderInterface $order */
+        $order = $this->sharedStorage->get('order');
+
+        $this->orderIndexPage->open();
+        $this->orderIndexPage->changePaymentMethod($order);
+        $this->orderShowPage->choosePaymentMethod($paymentMethod);
+
+        Assert::same($this->orderShowPage->getChosenPaymentMethod(), $paymentMethod->getName());
+    }
+
+    /**
      * @Then I should see :itemPrice as item price
      */
     public function iShouldSeeAsItemPrice($itemPrice)
@@ -398,14 +416,6 @@ final class AccountContext implements Context
     public function iShouldSeeAsProvinceInTheBillingAddress($provinceName)
     {
         Assert::true($this->orderShowPage->hasBillingProvinceName($provinceName));
-    }
-
-    /**
-     * @Then /^I should be able to change payment method for (this order)$/
-     */
-    public function iShouldBeAbleToChangePaymentMethodForThisOrder(OrderInterface $order)
-    {
-        Assert::true($this->orderIndexPage->isItPossibleToChangePaymentMethodForOrder($order));
     }
 
     /**
@@ -454,5 +464,56 @@ final class AccountContext implements Context
     public function theShipmentStatusShouldBe(string $shipmentStatus): void
     {
         Assert::same($this->orderShowPage->getShipmentStatus(), $shipmentStatus);
+    }
+
+    /**
+     * @Then I should be notified that the verification email has been sent
+     */
+    public function iShouldBeNotifiedThatTheVerificationEmailHasBeenSent(): void
+    {
+        $this->notificationChecker->checkNotification(
+            'An email with the verification link has been sent to your email address.',
+            NotificationType::success(),
+        );
+    }
+
+    /**
+     * @Then /^(?:my|his|her) account should not be verified$/
+     */
+    public function myAccountShouldNotBeVerified(): void
+    {
+        $this->dashboardPage->open();
+
+        Assert::false($this->dashboardPage->isVerified());
+    }
+
+    /**
+     * @Then I should not be logged in
+     */
+    public function iShouldNotBeLoggedIn(): void
+    {
+        try {
+            $this->dashboardPage->open();
+        } catch (UnexpectedPageException) {
+            return;
+        }
+
+        throw new \InvalidArgumentException('Dashboard has been openned, but it shouldn\'t as customer should not be logged in');
+    }
+
+    /**
+     * @Then I should not see my orders
+     */
+    public function iShouldNotSeeMyOrders(): void
+    {
+        Assert::false($this->orderIndexPage->isOpen());
+    }
+
+    /**
+     * @Then I should be on the login page
+     */
+    public function iShouldBeOnTheLoginPage(): void
+    {
+        Assert::true($this->loginPage->isOpen());
     }
 }

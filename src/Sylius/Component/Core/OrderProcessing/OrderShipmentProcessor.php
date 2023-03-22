@@ -25,39 +25,27 @@ use Webmozart\Assert\Assert;
 
 final class OrderShipmentProcessor implements OrderProcessorInterface
 {
-    /** @var DefaultShippingMethodResolverInterface */
-    private $defaultShippingMethodResolver;
-
-    /** @var FactoryInterface */
-    private $shipmentFactory;
-
-    /** @var ShippingMethodsResolverInterface|null */
-    private $shippingMethodsResolver;
-
     public function __construct(
-        DefaultShippingMethodResolverInterface $defaultShippingMethodResolver,
-        FactoryInterface $shipmentFactory,
-        ?ShippingMethodsResolverInterface $shippingMethodsResolver = null
+        private DefaultShippingMethodResolverInterface $defaultShippingMethodResolver,
+        private FactoryInterface $shipmentFactory,
+        private ?ShippingMethodsResolverInterface $shippingMethodsResolver = null,
     ) {
-        $this->defaultShippingMethodResolver = $defaultShippingMethodResolver;
-        $this->shipmentFactory = $shipmentFactory;
-        $this->shippingMethodsResolver = $shippingMethodsResolver;
-
         if (2 === func_num_args() || null === $shippingMethodsResolver) {
             @trigger_error(
                 'Not passing ShippingMethodsResolverInterface explicitly is deprecated since 1.2 and will be prohibited in 2.0',
-                \E_USER_DEPRECATED
+                \E_USER_DEPRECATED,
             );
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function process(BaseOrderInterface $order): void
     {
         /** @var OrderInterface $order */
         Assert::isInstanceOf($order, OrderInterface::class);
+
+        if (OrderInterface::STATE_CART !== $order->getState()) {
+            return;
+        }
 
         if ($order->isEmpty() || !$order->isShippingRequired()) {
             $order->removeShipments();
@@ -66,13 +54,7 @@ final class OrderShipmentProcessor implements OrderProcessorInterface
         }
 
         if ($order->hasShipments()) {
-            $shipment = $this->getExistingShipmentWithProperMethod($order);
-
-            if (null === $shipment) {
-                return;
-            }
-
-            $this->processShipmentUnits($order, $shipment);
+            $this->recalculateExistingShipmentWithProperMethod($order);
 
             return;
         }
@@ -92,7 +74,7 @@ final class OrderShipmentProcessor implements OrderProcessorInterface
             $shipment->setMethod($this->defaultShippingMethodResolver->getDefaultShippingMethod($shipment));
 
             $order->addShipment($shipment);
-        } catch (UnresolvedDefaultShippingMethodException $exception) {
+        } catch (UnresolvedDefaultShippingMethodException) {
             foreach ($shipment->getUnits() as $unit) {
                 $shipment->removeUnit($unit);
             }
@@ -105,6 +87,9 @@ final class OrderShipmentProcessor implements OrderProcessorInterface
             $shipment->removeUnit($unit);
         }
 
+        /** @var OrderInterface $order */
+        Assert::isInstanceOf($order, OrderInterface::class);
+
         foreach ($order->getItemUnits() as $itemUnit) {
             if (null === $itemUnit->getShipment()) {
                 $shipment->addUnit($itemUnit);
@@ -112,23 +97,23 @@ final class OrderShipmentProcessor implements OrderProcessorInterface
         }
     }
 
-    private function getExistingShipmentWithProperMethod(OrderInterface $order): ?ShipmentInterface
+    private function recalculateExistingShipmentWithProperMethod(OrderInterface $order): void
     {
         /** @var ShipmentInterface $shipment */
         $shipment = $order->getShipments()->first();
 
+        $this->processShipmentUnits($order, $shipment);
+
         if (null === $this->shippingMethodsResolver) {
-            return $shipment;
+            return;
         }
 
         if (!in_array($shipment->getMethod(), $this->shippingMethodsResolver->getSupportedMethods($shipment), true)) {
             try {
                 $shipment->setMethod($this->defaultShippingMethodResolver->getDefaultShippingMethod($shipment));
-            } catch (UnresolvedDefaultShippingMethodException $exception) {
-                return null;
+            } catch (UnresolvedDefaultShippingMethodException) {
+                return;
             }
         }
-
-        return $shipment;
     }
 }

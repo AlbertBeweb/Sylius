@@ -18,17 +18,10 @@ use Behat\Mink\Session;
 
 final class NotificationAccessor implements NotificationAccessorInterface
 {
-    /** @var Session */
-    private $session;
-
-    public function __construct(Session $session)
+    public function __construct(private Session $session)
     {
-        $this->session = $session;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getMessageElements(): array
     {
         $messageElements = $this->session->getPage()->findAll('css', '.sylius-flash-message');

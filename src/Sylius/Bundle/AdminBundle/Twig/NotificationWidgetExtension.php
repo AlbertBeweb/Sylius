@@ -13,37 +13,32 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\AdminBundle\Twig;
 
-use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
+use Twig\Environment;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
-final class NotificationWidgetExtension extends \Twig_Extension
+final class NotificationWidgetExtension extends AbstractExtension
 {
-    /** @var bool */
-    private $areNotificationsEnabled;
-
-    /** @var int */
-    private $checkFrequency;
-
-    public function __construct(bool $areNotificationsEnabled, int $checkFrequency)
+    public function __construct(private bool $areNotificationsEnabled, private int $checkFrequency)
     {
-        $this->areNotificationsEnabled = $areNotificationsEnabled;
-        $this->checkFrequency = $checkFrequency;
     }
 
     public function getFunctions(): array
     {
         return [
-            new \Twig_Function(
+            new TwigFunction(
                 'sylius_render_notifications_widget',
                 [$this, 'renderWidget'],
                 [
                     'needs_environment' => true,
                     'is_safe' => ['html'],
-                ]
+                ],
             ),
         ];
     }
 
-    public function renderWidget(\Twig_Environment $environment): string
+    public function renderWidget(Environment $environment): string
     {
         if (!$this->areNotificationsEnabled) {
             return '';
@@ -51,7 +46,7 @@ final class NotificationWidgetExtension extends \Twig_Extension
 
         return $environment->render('@SyliusAdmin/_notification.html.twig', [
             'frequency' => $this->checkFrequency,
-            'currentVersion' => Kernel::VERSION,
+            'currentVersion' => SyliusCoreBundle::VERSION,
         ]);
     }
 }

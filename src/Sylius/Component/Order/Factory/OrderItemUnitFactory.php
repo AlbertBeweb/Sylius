@@ -19,17 +19,14 @@ use Sylius\Component\Resource\Exception\UnsupportedMethodException;
 
 class OrderItemUnitFactory implements OrderItemUnitFactoryInterface
 {
-    /** @var string */
-    private $className;
-
-    public function __construct(string $className)
+    /**
+     * @psalm-param class-string $className
+     */
+    public function __construct(private string $className)
     {
-        $this->className = $className;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws UnsupportedMethodException
      */
     public function createNew(): OrderItemUnitInterface

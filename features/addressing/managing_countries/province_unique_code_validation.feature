@@ -9,10 +9,10 @@ Feature: Province unique code validation
         And this country has the "Northern Ireland" province with "GB-NIR" code
         And I am logged in as an administrator
 
-    @ui @javascript
+    @ui @javascript @api
     Scenario: Trying to add a new province with taken code
         When I want to edit this country
         And I add the "Scotland" province with "GB-NIR" code
-        And I try to save changes
+        And I try to save my changes
         Then I should be notified that province code must be unique
         And province with name "Scotland" should not be added in this country

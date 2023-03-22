@@ -23,32 +23,16 @@ use Webmozart\Assert\Assert;
 
 final class ManagingCustomerGroupsContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        CurrentPageResolverInterface $currentPageResolver,
-        UpdatePageInterface $updatePage
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private UpdatePageInterface $updatePage,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->updatePage = $updatePage;
     }
 
     /**
-     * @Given I want to create a new customer group
+     * @When I want to create a new customer group
      */
     public function iWantToCreateANewCustomerGroup()
     {
@@ -173,7 +157,7 @@ final class ManagingCustomerGroupsContext implements Context
     {
         Assert::same(
             $this->updatePage->getValidationMessage('name'),
-            'Please enter a customer group name.'
+            'Please enter a customer group name.',
         );
     }
 
@@ -197,9 +181,9 @@ final class ManagingCustomerGroupsContext implements Context
     }
 
     /**
-     * @Then the code field should be disabled
+     * @Then I should not be able to edit its code
      */
-    public function theCodeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsCode(): void
     {
         Assert::true($this->updatePage->isCodeDisabled());
     }
@@ -223,8 +207,8 @@ final class ManagingCustomerGroupsContext implements Context
             $this->indexPage->isSingleResourceOnPage(['name' => $customerGroup->getName()]),
             sprintf(
                 'Customer group %s should no longer exist in the registry',
-                $customerGroup->getName()
-            )
+                $customerGroup->getName(),
+            ),
         );
     }
 }

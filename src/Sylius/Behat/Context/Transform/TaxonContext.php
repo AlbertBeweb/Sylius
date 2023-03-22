@@ -19,12 +19,10 @@ use Webmozart\Assert\Assert;
 
 final class TaxonContext implements Context
 {
-    /** @var TaxonRepositoryInterface */
-    private $taxonRepository;
-
-    public function __construct(TaxonRepositoryInterface $taxonRepository)
-    {
-        $this->taxonRepository = $taxonRepository;
+    public function __construct(
+        private TaxonRepositoryInterface $taxonRepository,
+        private string $locale,
+    ) {
     }
 
     /**
@@ -34,18 +32,19 @@ final class TaxonContext implements Context
      * @Transform /^"([^"]+)" as a parent taxon$/
      * @Transform /^"([^"]+)" parent taxon$/
      * @Transform /^parent taxon to "([^"]+)"$/
+     * @Transform /^taxon should be "([^"]+)"$/
      * @Transform /^taxon with "([^"]+)" name/
      * @Transform /^taxon "([^"]+)"$/
      * @Transform :taxon
      */
     public function getTaxonByName($name)
     {
-        $taxons = $this->taxonRepository->findByName($name, 'en_US');
+        $taxons = $this->taxonRepository->findByName($name, $this->locale);
 
         Assert::eq(
             count($taxons),
             1,
-            sprintf('%d taxons has been found with name "%s".', count($taxons), $name)
+            sprintf('%d taxons has been found with name "%s".', count($taxons), $name),
         );
 
         return $taxons[0];

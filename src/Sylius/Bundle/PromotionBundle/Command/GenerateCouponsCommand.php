@@ -26,30 +26,22 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class GenerateCouponsCommand extends Command
 {
-    /** @var PromotionRepositoryInterface */
-    private $promotionRepository;
-
-    /** @var PromotionCouponGeneratorInterface */
-    private $couponGenerator;
+    protected static $defaultName = 'sylius:promotion:generate-coupons';
 
     public function __construct(
-        PromotionRepositoryInterface $promotionRepository,
-        PromotionCouponGeneratorInterface $couponGenerator
+        private PromotionRepositoryInterface $promotionRepository,
+        private PromotionCouponGeneratorInterface $couponGenerator,
     ) {
         parent::__construct();
-
-        $this->promotionRepository = $promotionRepository;
-        $this->couponGenerator = $couponGenerator;
     }
 
     protected function configure(): void
     {
         $this
-            ->setName('sylius:promotion:generate-coupons')
             ->setDescription('Generates coupons for a given promotion')
             ->addArgument('promotion-code', InputArgument::REQUIRED, 'Code of the promotion')
             ->addArgument('count', InputArgument::REQUIRED, 'Amount of coupons to generate')
-            ->addOption('length', 'len', InputOption::VALUE_OPTIONAL, 'Length of the coupon code (default 10)', 10)
+            ->addOption('length', 'len', InputOption::VALUE_OPTIONAL, 'Length of the coupon code (default 10)', '10')
         ;
     }
 
@@ -75,7 +67,7 @@ final class GenerateCouponsCommand extends Command
 
         $instruction = $this->getGeneratorInstructions(
             (int) $input->getArgument('count'),
-            (int) $input->getOption('length')
+            (int) $input->getOption('length'),
         );
 
         try {

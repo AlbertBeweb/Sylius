@@ -24,19 +24,11 @@ use Symfony\Component\Validator\Constraints\Valid;
 
 final class CustomerSimpleRegistrationType extends AbstractResourceType
 {
-    /** @var RepositoryInterface */
-    private $customerRepository;
-
-    public function __construct(string $dataClass, array $validationGroups, RepositoryInterface $customerRepository)
+    public function __construct(string $dataClass, array $validationGroups, private RepositoryInterface $customerRepository)
     {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->customerRepository = $customerRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options = []): void
     {
         $builder
@@ -52,9 +44,6 @@ final class CustomerSimpleRegistrationType extends AbstractResourceType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -63,9 +52,6 @@ final class CustomerSimpleRegistrationType extends AbstractResourceType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_customer_simple_registration';

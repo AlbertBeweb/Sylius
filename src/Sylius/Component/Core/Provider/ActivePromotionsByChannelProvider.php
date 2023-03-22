@@ -21,17 +21,10 @@ use Sylius\Component\Resource\Exception\UnexpectedTypeException;
 
 final class ActivePromotionsByChannelProvider implements PreQualifiedPromotionsProviderInterface
 {
-    /** @var PromotionRepositoryInterface */
-    private $promotionRepository;
-
-    public function __construct(PromotionRepositoryInterface $promotionRepository)
+    public function __construct(private PromotionRepositoryInterface $promotionRepository)
     {
-        $this->promotionRepository = $promotionRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPromotions(PromotionSubjectInterface $subject): array
     {
         if (!$subject instanceof OrderInterface) {

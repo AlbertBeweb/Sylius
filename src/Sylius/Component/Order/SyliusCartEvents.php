@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Order;
 
-final class SyliusCartEvents
+interface SyliusCartEvents
 {
     public const CART_CHANGE = 'sylius.cart_change';
 
-    private function __construct()
-    {
-    }
+    public const CART_SUMMARY = 'sylius.cart_summary';
 }

@@ -1,0 +1,14 @@
+# This file is part of the Sylius package.
+# (c) Paweł Jędrzejewski
+
+sylius:
+    email:
+        order_confirmation:
+            subject: 'Confirmació de la comanda'
+    homepage:
+        about_us: 'Sobre nosaltres'
+        banner_content: 'Prepara''t! Arriba l''hivern'
+    menu:
+        shop:
+            account:
+                change_password: 'Canviar la contrasenya'

@@ -27,47 +27,19 @@ use Webmozart\Assert\Assert;
 
 final class ManagingAdministratorsContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var TopBarElementInterface */
-    private $topBarElement;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    /** @var RepositoryInterface */
-    private $adminUserRepository;
-
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        UpdatePageInterface $updatePage,
-        TopBarElementInterface $topBarElement,
-        NotificationCheckerInterface $notificationChecker,
-        RepositoryInterface $adminUserRepository,
-        SharedStorageInterface $sharedStorage
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private UpdatePageInterface $updatePage,
+        private TopBarElementInterface $topBarElement,
+        private NotificationCheckerInterface $notificationChecker,
+        private RepositoryInterface $adminUserRepository,
+        private SharedStorageInterface $sharedStorage,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
-        $this->topBarElement = $topBarElement;
-        $this->notificationChecker = $notificationChecker;
-        $this->adminUserRepository = $adminUserRepository;
-        $this->sharedStorage = $sharedStorage;
     }
 
     /**
-     * @Given I want to create a new administrator
+     * @When I want to create a new administrator
      */
     public function iWantToCreateANewAdministrator()
     {
@@ -90,6 +62,14 @@ final class ManagingAdministratorsContext implements Context
     public function iWantToBrowseAdministrators()
     {
         $this->indexPage->open();
+    }
+
+    /**
+     * @When I try to browse administrators
+     */
+    public function iTryToBrowseAdministrators(): void
+    {
+        $this->indexPage->tryToOpen();
     }
 
     /**
@@ -292,16 +272,6 @@ final class ManagingAdministratorsContext implements Context
     }
 
     /**
-     * @Then this administrator should not be added
-     */
-    public function thisAdministratorShouldNotBeAdded()
-    {
-        $this->indexPage->open();
-
-        Assert::same($this->indexPage->countItems(), 1);
-    }
-
-    /**
      * @Then there should not be :email administrator anymore
      */
     public function thereShouldBeNoAnymore($email)
@@ -316,7 +286,7 @@ final class ManagingAdministratorsContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Cannot remove currently logged in user.',
-            NotificationType::failure()
+            NotificationType::failure(),
         );
     }
 

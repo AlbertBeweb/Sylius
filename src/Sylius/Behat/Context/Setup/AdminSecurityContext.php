@@ -22,36 +22,21 @@ use Webmozart\Assert\Assert;
 
 final class AdminSecurityContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var SecurityServiceInterface */
-    private $securityService;
-
-    /** @var ExampleFactoryInterface */
-    private $userFactory;
-
-    /** @var UserRepositoryInterface */
-    private $userRepository;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        SecurityServiceInterface $securityService,
-        ExampleFactoryInterface $userFactory,
-        UserRepositoryInterface $userRepository
+        private SharedStorageInterface $sharedStorage,
+        private SecurityServiceInterface $securityService,
+        private ExampleFactoryInterface $userFactory,
+        private UserRepositoryInterface $userRepository,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->securityService = $securityService;
-        $this->userFactory = $userFactory;
-        $this->userRepository = $userRepository;
     }
 
     /**
      * @Given I am logged in as an administrator
+     * @Given there is logged in the administrator
      */
     public function iAmLoggedInAsAnAdministrator()
     {
-        $user = $this->userFactory->create(['email' => 'sylius@example.com', 'password' => 'sylius']);
+        $user = $this->userFactory->create(['email' => 'sylius@example.com', 'password' => 'sylius', 'api' => true]);
         $this->userRepository->add($user);
 
         $this->securityService->logIn($user);

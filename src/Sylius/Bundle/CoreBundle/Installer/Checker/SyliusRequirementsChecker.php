@@ -22,20 +22,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class SyliusRequirementsChecker implements RequirementsCheckerInterface
 {
-    /** @var SyliusRequirements */
-    private $syliusRequirements;
+    private bool $fulfilled = true;
 
-    /** @var bool */
-    private $fulfilled = true;
-
-    public function __construct(SyliusRequirements $syliusRequirements)
+    public function __construct(private SyliusRequirements $syliusRequirements)
     {
-        $this->syliusRequirements = $syliusRequirements;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function check(InputInterface $input, OutputInterface $output): bool
     {
         $helpTable = new TableRenderer($output);
@@ -58,7 +50,7 @@ final class SyliusRequirementsChecker implements RequirementsCheckerInterface
         RequirementCollection $collection,
         TableRenderer $notFulfilledTable,
         TableRenderer $helpTable,
-        $verbose
+        $verbose,
     ): void {
         /** @var Requirement $requirement */
         foreach ($collection as $requirement) {

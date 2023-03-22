@@ -6,14 +6,13 @@ Feature: Completing a payment from its list
 
     Background:
         Given the store operates on a single channel in "United States"
-        And the store ships everywhere for free
+        And the store ships everywhere for Free
         And the store has a product "Apple"
         And the store allows paying with "Cash on Delivery"
-        And there is a customer "donald@duck.com" that placed an order "#00000001" in channel "United States"
-        And there is a "New" "#00000001" order with "Apple" product
+        And there is an "#00000001" order with "Apple" product
         And I am logged in as an administrator
 
-    @ui
+    @ui @api
     Scenario: Completing a payment from payments index
         When I browse payments
         And I complete the payment of order "#00000001"

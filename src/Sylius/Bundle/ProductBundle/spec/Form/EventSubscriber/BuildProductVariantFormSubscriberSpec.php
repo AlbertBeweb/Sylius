@@ -35,7 +35,7 @@ final class BuildProductVariantFormSubscriberSpec extends ObjectBehavior
     function it_subscribes_to_event(): void
     {
         static::getSubscribedEvents()->shouldReturn(
-            [FormEvents::PRE_SET_DATA => 'preSetData']
+            [FormEvents::PRE_SET_DATA => 'preSetData'],
         );
     }
 
@@ -47,7 +47,7 @@ final class BuildProductVariantFormSubscriberSpec extends ObjectBehavior
         ProductInterface $variable,
         ProductOptionInterface $options,
         ProductOptionValueInterface $optionValue,
-        ProductVariantInterface $variant
+        ProductVariantInterface $variant,
     ): void {
         $event->getForm()->willReturn($form);
         $event->getData()->willReturn($variant);
@@ -65,10 +65,10 @@ final class BuildProductVariantFormSubscriberSpec extends ObjectBehavior
                 'options' => new ArrayCollection([$options->getWrappedObject()]),
                 'auto_initialize' => false,
                 'disabled' => false,
-            ]
+            ],
         )->willReturn($optionsForm);
 
-        $form->add($optionsForm)->shouldBeCalled();
+        $form->add($optionsForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSetData($event);
     }
@@ -81,7 +81,7 @@ final class BuildProductVariantFormSubscriberSpec extends ObjectBehavior
         ProductInterface $variable,
         ProductOptionInterface $options,
         ProductOptionValueInterface $optionValue,
-        ProductVariantInterface $variant
+        ProductVariantInterface $variant,
     ): void {
         $this->beConstructedWith($factory, true);
 
@@ -101,10 +101,10 @@ final class BuildProductVariantFormSubscriberSpec extends ObjectBehavior
                 'options' => new ArrayCollection([$options->getWrappedObject()]),
                 'auto_initialize' => false,
                 'disabled' => true,
-            ]
+            ],
         )->willReturn($optionsForm);
 
-        $form->add($optionsForm)->shouldBeCalled();
+        $form->add($optionsForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSetData($event);
     }

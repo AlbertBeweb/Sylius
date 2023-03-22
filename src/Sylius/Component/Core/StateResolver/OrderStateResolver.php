@@ -23,17 +23,10 @@ use Sylius\Component\Order\StateResolver\StateResolverInterface;
 
 final class OrderStateResolver implements StateResolverInterface
 {
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    public function __construct(FactoryInterface $stateMachineFactory)
+    public function __construct(private FactoryInterface $stateMachineFactory)
     {
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function resolve(BaseOrderInterface $order): void
     {
         $stateMachine = $this->stateMachineFactory->get($order, OrderTransitions::GRAPH);
@@ -46,7 +39,8 @@ final class OrderStateResolver implements StateResolverInterface
     private function canOrderBeFulfilled(OrderInterface $order): bool
     {
         return
-            OrderPaymentStates::STATE_PAID === $order->getPaymentState() &&
+            (OrderPaymentStates::STATE_PAID === $order->getPaymentState() ||
+            OrderPaymentStates::STATE_PARTIALLY_REFUNDED === $order->getPaymentState()) &&
             OrderShippingStates::STATE_SHIPPED === $order->getShippingState()
         ;
     }

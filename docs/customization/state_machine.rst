@@ -40,7 +40,7 @@ After that your new step will be available alongside other steps that already we
 
 .. tip::
 
-    Run ``$ php bin/console debug:winzou:state-machine sylius_order``
+    Run ``php bin/console debug:winzou:state-machine sylius_order``
     to check if the state machine has changed to your implementation.
 
 How to add a new transition?
@@ -65,7 +65,7 @@ After that your new transition will be available alongside other transitions tha
 
 .. tip::
 
-    Run ``$ php bin/console debug:winzou:state-machine sylius_order``
+    Run ``php bin/console debug:winzou:state-machine sylius_order``
     to check if the state machine has changed to your implementation.
 
 How to remove a state and its transitions?
@@ -78,6 +78,11 @@ How to remove a state and its transitions?
 
 How to add a new callback?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+    From Sylius v1.11 we strongly encourage to use priorities to any callback you are adding.
+    If you declare too many callbacks per action, this could lead to unexpected execution behavior.
 
 Let's assume that you would like to add a new **callback** to :doc:`the Product Review state machine </book/products/product_reviews>`,
 that will do something on an already defined transition.
@@ -98,8 +103,15 @@ You will need to add these few lines to the ``config/packages/_sylius.yaml``:
                         do: ["@App\\ProductReview\\Mailer\\ConfirmationMailer", "sendEmail"]
                         # this will be the object of an Order here
                         args: ["object"]
+                        priority: 100
 
 .. tip::
+
+    Declared priorities will be executed in ascending order. If you are adding callback to existing state, you can find declared states and callbacks
+    under path `Sylius/Bundle/CoreBundle/Resources/config/app/state_machine`.
+
+.. tip::
+
     If you want to see the implementation of ``ConfirmationMailer`` check it on `this GitHub Pull Request.
     <https://github.com/Sylius/Customizations/pull/20>`_
 
@@ -123,6 +135,7 @@ so that it does not count the average rating but does something else - you need 
                         # here you can change the service and its method that is called for your own service
                         do: ["@sylius.review.updater.your_service", update]
                         args: ["object"]
+                        priority: 100
 
 How to disable a callback?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,7 +153,7 @@ On the example of the state machine of ProductReview, we can turn off the ``upda
                     update_price:
                         disabled: true
 
-.. include:: /customization/plugins.rst.inc
+.. include:: /customization/plugins.rst
 
 Learn more
 ----------

@@ -30,9 +30,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         UnitOfWork $unitOfWork,
         CustomerInterface $customer,
         ShopUserInterface $user,
-        ClassMetadata $userMetadata
+        ClassMetadata $userMetadata,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([$customer]);
@@ -47,7 +47,36 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         $user->setUsername('customer+extra@email.com')->shouldBeCalled();
         $user->setUsernameCanonical('customer@email.com')->shouldBeCalled();
 
-        $entityManager->getClassMetadata(get_class($user->getWrappedObject()))->willReturn($userMetadata);
+        $entityManager->getClassMetadata($user->getWrappedObject()::class)->willReturn($userMetadata);
+        $unitOfWork->recomputeSingleEntityChangeSet($userMetadata, $user)->shouldBeCalled();
+
+        $this->onFlush($onFlushEventArgs);
+    }
+
+    function it_sets_usernames_on_customer_update_when_user_is_associated(
+        OnFlushEventArgs $onFlushEventArgs,
+        EntityManager $entityManager,
+        UnitOfWork $unitOfWork,
+        CustomerInterface $customer,
+        ShopUserInterface $user,
+        ClassMetadata $userMetadata,
+    ): void {
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
+        $entityManager->getUnitOfWork()->willReturn($unitOfWork);
+
+        $unitOfWork->getScheduledEntityInsertions()->willReturn([$user]);
+        $unitOfWork->getScheduledEntityUpdates()->willReturn([]);
+
+        $user->getUsername()->willReturn(null);
+        $user->getUsernameCanonical()->willReturn(null);
+        $customer->getEmail()->willReturn('customer+extra@email.com');
+        $customer->getEmailCanonical()->willReturn('customer@email.com');
+
+        $user->getCustomer()->willReturn($customer);
+        $user->setUsername('customer+extra@email.com')->shouldBeCalled();
+        $user->setUsernameCanonical('customer@email.com')->shouldBeCalled();
+
+        $entityManager->getClassMetadata($user->getWrappedObject()::class)->willReturn($userMetadata);
         $unitOfWork->recomputeSingleEntityChangeSet($userMetadata, $user)->shouldBeCalled();
 
         $this->onFlush($onFlushEventArgs);
@@ -59,9 +88,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         UnitOfWork $unitOfWork,
         CustomerInterface $customer,
         ShopUserInterface $user,
-        ClassMetadata $userMetadata
+        ClassMetadata $userMetadata,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([]);
@@ -76,7 +105,7 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         $user->setUsername('customer+extra@email.com')->shouldBeCalled();
         $user->setUsernameCanonical('customer@email.com')->shouldBeCalled();
 
-        $entityManager->getClassMetadata(get_class($user->getWrappedObject()))->willReturn($userMetadata);
+        $entityManager->getClassMetadata($user->getWrappedObject()::class)->willReturn($userMetadata);
         $unitOfWork->recomputeSingleEntityChangeSet($userMetadata, $user)->shouldBeCalled();
 
         $this->onFlush($onFlushEventArgs);
@@ -88,9 +117,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         UnitOfWork $unitOfWork,
         CustomerInterface $customer,
         ShopUserInterface $user,
-        ClassMetadata $userMetadata
+        ClassMetadata $userMetadata,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([]);
@@ -105,7 +134,7 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         $user->setUsername('customer+extra@email.com')->shouldBeCalled();
         $user->setUsernameCanonical('customer@email.com')->shouldBeCalled();
 
-        $entityManager->getClassMetadata(get_class($user->getWrappedObject()))->willReturn($userMetadata);
+        $entityManager->getClassMetadata($user->getWrappedObject()::class)->willReturn($userMetadata);
         $unitOfWork->recomputeSingleEntityChangeSet($userMetadata, $user)->shouldBeCalled();
 
         $this->onFlush($onFlushEventArgs);
@@ -117,9 +146,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         UnitOfWork $unitOfWork,
         CustomerInterface $customer,
         ShopUserInterface $user,
-        ClassMetadata $userMetadata
+        ClassMetadata $userMetadata,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([]);
@@ -143,9 +172,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         OnFlushEventArgs $onFlushEventArgs,
         EntityManager $entityManager,
         UnitOfWork $unitOfWork,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([$customer]);
@@ -162,9 +191,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         OnFlushEventArgs $onFlushEventArgs,
         EntityManager $entityManager,
         UnitOfWork $unitOfWork,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([]);
@@ -181,9 +210,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
     function it_does_nothing_when_there_are_no_objects_scheduled_in_the_unit_of_work(
         OnFlushEventArgs $onFlushEventArgs,
         EntityManager $entityManager,
-        UnitOfWork $unitOfWork
+        UnitOfWork $unitOfWork,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([]);
@@ -199,9 +228,9 @@ final class DefaultUsernameORMListenerSpec extends ObjectBehavior
         EntityManager $entityManager,
         UnitOfWork $unitOfWork,
         \stdClass $stdObject,
-        \stdClass $stdObject2
+        \stdClass $stdObject2,
     ): void {
-        $onFlushEventArgs->getEntityManager()->willReturn($entityManager);
+        $onFlushEventArgs->getObjectManager()->willReturn($entityManager);
         $entityManager->getUnitOfWork()->willReturn($unitOfWork);
 
         $unitOfWork->getScheduledEntityInsertions()->willReturn([$stdObject]);

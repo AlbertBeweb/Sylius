@@ -7,11 +7,11 @@ Feature: Placing an order after moving back in checkout process
     Background:
         Given the store operates on a single channel in "United States"
         And the store has a product "PHP T-Shirt" priced at "$19.99"
-        And the store ships everywhere for free
-        And the store allows paying offline
+        And the store ships everywhere for Free
+        And the store allows paying Offline
         And I am a logged in customer
 
-    @ui
+    @ui @no-api
     Scenario: Placing an order after moving back from the checkout summary to the addressing step but without any address modification
         Given I had product "PHP T-Shirt" in the cart
         And I was at the checkout summary step
@@ -20,7 +20,7 @@ Feature: Placing an order after moving back in checkout process
         And I confirm my order
         Then I should see the thank you page
 
-    @ui
+    @ui @no-api
     Scenario: Placing an order after moving back from the checkout summary to the shipping method step but without any shipping method modification
         Given I had product "PHP T-Shirt" in the cart
         And I was at the checkout summary step
@@ -29,7 +29,7 @@ Feature: Placing an order after moving back in checkout process
         And I confirm my order
         Then I should see the thank you page
 
-    @ui
+    @ui @no-api
     Scenario: Placing an order after moving back from the checkout summary to the payment method step but without any payment method modification
         Given I had product "PHP T-Shirt" in the cart
         And I was at the checkout summary step

@@ -2,6 +2,11 @@
 # (c) Paweł Jędrzejewski
 
 sylius:
+    email:
+        password_reset:
+            hello: 'Zdravo'
+        verification_token:
+            hello: 'Zdravo'
     menu:
         shop:
             account:

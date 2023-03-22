@@ -21,16 +21,8 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class HasTaxonRuleUpdater implements TaxonAwareRuleUpdaterInterface
 {
-    /** @var RepositoryInterface */
-    private $promotionRuleRepository;
-
-    /** @var EntityManagerInterface */
-    private $manager;
-
-    public function __construct(RepositoryInterface $promotionRuleRepository, EntityManagerInterface $manager)
+    public function __construct(private RepositoryInterface $promotionRuleRepository, private EntityManagerInterface $manager)
     {
-        $this->promotionRuleRepository = $promotionRuleRepository;
-        $this->manager = $manager;
     }
 
     public function updateAfterDeletingTaxon(TaxonInterface $taxon): array

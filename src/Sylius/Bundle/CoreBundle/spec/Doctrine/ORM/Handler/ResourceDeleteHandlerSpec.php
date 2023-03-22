@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Bundle\CoreBundle\Doctrine\ORM\Handler;
 
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMException;
 use PhpSpec\ObjectBehavior;
 use Sylius\Bundle\ResourceBundle\Controller\ResourceDeleteHandlerInterface;
@@ -22,9 +24,9 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class ResourceDeleteHandlerSpec extends ObjectBehavior
 {
-    function let(ResourceDeleteHandlerInterface $decoratedHandler): void
+    function let(ResourceDeleteHandlerInterface $decoratedHandler, EntityManagerInterface $entityManager): void
     {
-        $this->beConstructedWith($decoratedHandler);
+        $this->beConstructedWith($decoratedHandler, $entityManager);
     }
 
     function it_implements_resource_delete_handler_interface(): void
@@ -34,20 +36,41 @@ final class ResourceDeleteHandlerSpec extends ObjectBehavior
 
     function it_uses_decorated_handler_to_handle_resource_deletion(
         ResourceDeleteHandlerInterface $decoratedHandler,
+        EntityManagerInterface $entityManager,
         RepositoryInterface $repository,
-        ResourceInterface $resource
+        ResourceInterface $resource,
     ): void {
+        $entityManager->beginTransaction()->shouldBeCalled();
         $decoratedHandler->handle($resource, $repository)->shouldBeCalled();
+        $entityManager->commit()->shouldBeCalled();
 
         $this->handle($resource, $repository);
     }
 
+    function it_throws_delete_handling_exception_if_foreign_key_constraint_violation_exception_occurs_while_deleting_resource(
+        ResourceDeleteHandlerInterface $decoratedHandler,
+        EntityManagerInterface $entityManager,
+        RepositoryInterface $repository,
+        ResourceInterface $resource,
+    ): void {
+        $entityManager->beginTransaction()->shouldBeCalled();
+        $decoratedHandler->handle($resource, $repository)->willThrow(ForeignKeyConstraintViolationException::class);
+        $entityManager->commit()->shouldNotBeCalled();
+        $entityManager->rollback()->shouldBeCalled();
+
+        $this->shouldThrow(DeleteHandlingException::class)->during('handle', [$resource, $repository]);
+    }
+
     function it_throws_delete_handling_exception_if_something_gone_wrong_with_orm_while_deleting_resource(
         ResourceDeleteHandlerInterface $decoratedHandler,
+        EntityManagerInterface $entityManager,
         RepositoryInterface $repository,
-        ResourceInterface $resource
+        ResourceInterface $resource,
     ): void {
+        $entityManager->beginTransaction()->shouldBeCalled();
         $decoratedHandler->handle($resource, $repository)->willThrow(ORMException::class);
+        $entityManager->commit()->shouldNotBeCalled();
+        $entityManager->rollback()->shouldBeCalled();
 
         $this->shouldThrow(DeleteHandlingException::class)->during('handle', [$resource, $repository]);
     }

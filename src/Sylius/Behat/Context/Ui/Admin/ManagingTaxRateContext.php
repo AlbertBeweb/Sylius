@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use Sylius\Behat\Element\Admin\TaxRate\FilterElementInterface;
 use Sylius\Behat\Page\Admin\Crud\IndexPageInterface;
 use Sylius\Behat\Page\Admin\TaxRate\CreatePageInterface;
 use Sylius\Behat\Page\Admin\TaxRate\UpdatePageInterface;
@@ -23,32 +24,17 @@ use Webmozart\Assert\Assert;
 
 final class ManagingTaxRateContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private FilterElementInterface $filterElement,
     ) {
-        $this->indexPage = $indexPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
     }
 
     /**
-     * @Given I want to create a new tax rate
+     * @When I want to create a new tax rate
      */
     public function iWantToCreateNewTaxRate()
     {
@@ -65,13 +51,38 @@ final class ManagingTaxRateContext implements Context
     }
 
     /**
-     * @When I specify its amount as :amount%
+     * @When /^I specify its amount as ([^"]+)%$/
      * @When I do not specify its amount
      * @When I remove its amount
      */
     public function iSpecifyItsAmountAs($amount = null)
     {
         $this->createPage->specifyAmount($amount ?? '');
+    }
+
+    /**
+     * @When I make it start at :startDate and end at :endDate
+     */
+    public function iMakeItStartAtAndEndAt(string $startDate, string $endDate): void
+    {
+        $this->createPage->specifyStartDate(new \DateTime($startDate));
+        $this->createPage->specifyEndDate(new \DateTime($endDate));
+    }
+
+    /**
+     * @When I set the start date to :startDate
+     */
+    public function iSetTheStartDateTo(string $startDate): void
+    {
+        $this->createPage->specifyStartDate(new \DateTime($startDate));
+    }
+
+    /**
+     * @When I set the end date to :endDate
+     */
+    public function iSetTheEndDateTo(string $endDate): void
+    {
+        $this->createPage->specifyStartDate(new \DateTime($endDate));
     }
 
     /**
@@ -132,6 +143,30 @@ final class ManagingTaxRateContext implements Context
     }
 
     /**
+     * @Then the tax rate :taxRate should be included in price
+     */
+    public function theTaxRateShouldIncludePrice(TaxRateInterface $taxRate): void
+    {
+        $this->updatePage->open(['id' => $taxRate->getId()]);
+
+        Assert::true(
+            $taxRate->isIncludedInPrice(),
+            sprintf('Tax rate is not included in price'),
+        );
+    }
+
+    /**
+     * @Then I should not see a tax rate with name :name
+     */
+    public function iShouldNotSeeATaxRateWithName(string $taxRateName): void
+    {
+        Assert::false(
+            $this->indexPage->isSingleResourceOnPage(['name' => $taxRateName]),
+            sprintf('Tax rate with name "%s" has been found, but should not.', $taxRateName),
+        );
+    }
+
+    /**
      * @When I delete tax rate :taxRate
      */
     public function iDeletedTaxRate(TaxRateInterface $taxRate)
@@ -149,8 +184,8 @@ final class ManagingTaxRateContext implements Context
     }
 
     /**
-     * @Given I want to modify a tax rate :taxRate
-     * @Given /^I want to modify (this tax rate)$/
+     * @When I want to modify a tax rate :taxRate
+     * @When /^I want to modify (this tax rate)$/
      */
     public function iWantToModifyTaxRate(TaxRateInterface $taxRate)
     {
@@ -243,6 +278,14 @@ final class ManagingTaxRateContext implements Context
     }
 
     /**
+     * @Then I should be notified that :element is invalid
+     */
+    public function iShouldBeNotifiedThatIsInvalid(string $element): void
+    {
+        $this->assertFieldValidationMessage($element, sprintf('The tax rate %s is invalid.', $element));
+    }
+
+    /**
      * @Then tax rate with :element :name should not be added
      */
     public function taxRateWithElementValueShouldNotBeAdded($element, $name)
@@ -321,7 +364,7 @@ final class ManagingTaxRateContext implements Context
                     'code' => $taxRate->getCode(),
                     $element => $taxRateElement,
             ]),
-            sprintf('Tax rate %s %s has not been assigned properly.', $element, $taxRateElement)
+            sprintf('Tax rate %s %s has not been assigned properly.', $element, $taxRateElement),
         );
     }
 
@@ -343,5 +386,41 @@ final class ManagingTaxRateContext implements Context
     public function iChooseOption()
     {
         $this->createPage->chooseIncludedInPrice();
+    }
+
+    /**
+     * @Then I should be notified that tax rate should not end before it starts
+     */
+    public function iShouldBeNotifiedThatTaxRateShouldNotEndBeforeItStarts(): void
+    {
+        $this->assertFieldValidationMessage('end_date', 'The tax rate should not end before it starts');
+    }
+
+    /**
+     * @When /^I filter tax rates by (end|start) date from "(\d{4}-\d{2}-\d{2})"$/
+     */
+    public function iFilterTaxRatesByDateFrom(string $dateType, string $date): void
+    {
+        $this->filterElement->specifyDateFrom($dateType, $date);
+        $this->filterElement->filter();
+    }
+
+    /**
+     * @When /^I filter tax rates by (end|start) date up to "(\d{4}-\d{2}-\d{2})"$/
+     */
+    public function iFilterTaxRatesByDateUpTo(string $dateType, string $date): void
+    {
+        $this->filterElement->specifyDateTo($dateType, $date);
+        $this->filterElement->filter();
+    }
+
+    /**
+     * @When /^I filter tax rates by (end|start) date from "(\d{4}-\d{2}-\d{2})" up to "(\d{4}-\d{2}-\d{2})"$/
+     */
+    public function iFilterTaxRatesByDateFromDateToDate(string $dateType, string $fromDate, string $toDate): void
+    {
+        $this->filterElement->specifyDateFrom($dateType, $fromDate);
+        $this->filterElement->specifyDateTo($dateType, $toDate);
+        $this->filterElement->filter();
     }
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Component\Core\Cart\Context;
 
 use Sylius\Component\Channel\Context\ChannelNotFoundException;
+use Sylius\Component\Core\Cart\Resolver\CreatedByGuestFlagResolverInterface;
 use Sylius\Component\Core\Context\ShopperContextInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
@@ -27,32 +28,37 @@ use Webmozart\Assert\Assert;
 
 final class ShopBasedCartContext implements CartContextInterface
 {
-    /** @var CartContextInterface */
-    private $cartContext;
+    private CartContextInterface $cartContext;
 
-    /** @var ShopperContextInterface */
-    private $shopperContext;
+    private ShopperContextInterface $shopperContext;
 
-    /** @var OrderInterface|null */
-    private $cart;
+    private ?CreatedByGuestFlagResolverInterface $createdByGuestFlagResolver;
 
-    public function __construct(CartContextInterface $cartContext, ShopperContextInterface $shopperContext)
-    {
+    private ?OrderInterface $cart = null;
+
+    public function __construct(
+        CartContextInterface $cartContext,
+        ShopperContextInterface $shopperContext,
+        ?CreatedByGuestFlagResolverInterface $createdByGuestFlagResolver = null,
+    ) {
         $this->cartContext = $cartContext;
         $this->shopperContext = $shopperContext;
+        $this->createdByGuestFlagResolver = $createdByGuestFlagResolver;
+
+        if ($createdByGuestFlagResolver === null) {
+            @trigger_error('Not passing createdByGuestFlagResolver through constructor is deprecated in Sylius 1.10.9 and it will be prohibited in Sylius 2.0');
+        }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCart(): BaseOrderInterface
     {
         if (null !== $this->cart) {
             return $this->cart;
         }
 
-        /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
+
+        /** @var OrderInterface $cart */
         Assert::isInstanceOf($cart, OrderInterface::class);
 
         try {
@@ -66,7 +72,7 @@ final class ShopBasedCartContext implements CartContextInterface
             throw new CartNotFoundException('Sylius was not able to prepare the cart.', $exception);
         }
 
-        /** @var CustomerInterface $customer */
+        /** @var CustomerInterface|null $customer */
         $customer = $this->shopperContext->getCustomer();
         if (null !== $customer) {
             $this->setCustomerAndAddressOnCart($cart, $customer);
@@ -77,20 +83,31 @@ final class ShopBasedCartContext implements CartContextInterface
         return $cart;
     }
 
+    public function reset(): void
+    {
+        $this->cart = null;
+    }
+
     private function setCustomerAndAddressOnCart(OrderInterface $cart, CustomerInterface $customer): void
     {
-        $cart->setCustomer($customer);
+        $this->setCustomer($cart, $customer);
 
         $defaultAddress = $customer->getDefaultAddress();
         if (null !== $defaultAddress) {
             $clonedAddress = clone $defaultAddress;
             $clonedAddress->setCustomer(null);
-            $cart->setShippingAddress($clonedAddress);
+            $cart->setBillingAddress($clonedAddress);
         }
     }
 
-    public function reset(): void
+    private function setCustomer(OrderInterface $cart, CustomerInterface $customer): void
     {
-        $this->cart = null;
+        if ($this->createdByGuestFlagResolver !== null && !$this->createdByGuestFlagResolver->resolveFlag()) {
+            $cart->setCustomerWithAuthorization($customer);
+
+            return;
+        }
+
+        $cart->setCustomer($customer);
     }
 }

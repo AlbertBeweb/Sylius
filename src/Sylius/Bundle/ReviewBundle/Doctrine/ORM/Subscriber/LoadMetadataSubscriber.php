@@ -16,21 +16,13 @@ namespace Sylius\Bundle\ReviewBundle\Doctrine\ORM\Subscriber;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Webmozart\Assert\Assert;
 
 final class LoadMetadataSubscriber implements EventSubscriber
 {
-    /** @var array */
-    private $subjects;
-
-    public function __construct(array $subjects)
+    public function __construct(private array $subjects)
     {
-        $this->subjects = $subjects;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getSubscribedEvents(): array
     {
         return [
@@ -41,9 +33,6 @@ final class LoadMetadataSubscriber implements EventSubscriber
     public function loadClassMetadata(LoadClassMetadataEventArgs $eventArguments): void
     {
         $metadata = $eventArguments->getClassMetadata();
-
-        /** @var ClassMetadata $metadata */
-        Assert::isInstanceOf($metadata, ClassMetadata::class);
 
         $metadataFactory = $eventArguments->getEntityManager()->getMetadataFactory();
 
@@ -69,7 +58,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
     private function createSubjectMapping(
         string $reviewableEntity,
         string $subject,
-        ClassMetadata $reviewableEntityMetadata
+        ClassMetadata $reviewableEntityMetadata,
     ): array {
         return [
             'fieldName' => 'reviewSubject',
@@ -77,7 +66,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
             'inversedBy' => 'reviews',
             'joinColumns' => [[
                 'name' => $subject . '_id',
-                'referencedColumnName' => $reviewableEntityMetadata->fieldMappings['id']['columnName'],
+                'referencedColumnName' => $reviewableEntityMetadata->fieldMappings['id']['columnName'] ?? $reviewableEntityMetadata->fieldMappings['id']['fieldName'],
                 'nullable' => false,
                 'onDelete' => 'CASCADE',
             ]],
@@ -91,7 +80,7 @@ final class LoadMetadataSubscriber implements EventSubscriber
             'targetEntity' => $reviewerEntity,
             'joinColumns' => [[
                 'name' => 'author_id',
-                'referencedColumnName' => $reviewerEntityMetadata->fieldMappings['id']['columnName'],
+                'referencedColumnName' => $reviewerEntityMetadata->fieldMappings['id']['columnName'] ?? $reviewerEntityMetadata->fieldMappings['id']['fieldName'],
                 'nullable' => false,
                 'onDelete' => 'CASCADE',
             ]],

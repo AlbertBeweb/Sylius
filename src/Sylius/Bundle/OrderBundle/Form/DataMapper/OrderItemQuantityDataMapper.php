@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\OrderBundle\Form\DataMapper;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Symfony\Component\Form\DataMapperInterface;
 
@@ -21,38 +22,24 @@ use Symfony\Component\Form\DataMapperInterface;
  */
 class OrderItemQuantityDataMapper implements DataMapperInterface
 {
-    /** @var OrderItemQuantityModifierInterface */
-    private $orderItemQuantityModifier;
-
-    /** @var DataMapperInterface */
-    private $propertyPathDataMapper;
-
     public function __construct(
-        OrderItemQuantityModifierInterface $orderItemQuantityModifier,
-        DataMapperInterface $propertyPathDataMapper
+        private OrderItemQuantityModifierInterface $orderItemQuantityModifier,
+        private DataMapperInterface $propertyPathDataMapper,
     ) {
-        $this->orderItemQuantityModifier = $orderItemQuantityModifier;
-        $this->propertyPathDataMapper = $propertyPathDataMapper;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function mapDataToForms($data, $forms): void
+    public function mapDataToForms($viewData, $forms): void
     {
-        $this->propertyPathDataMapper->mapDataToForms($data, $forms);
+        $this->propertyPathDataMapper->mapDataToForms($viewData, $forms);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function mapFormsToData($forms, &$data): void
+    public function mapFormsToData($forms, &$viewData): void
     {
         $formsOtherThanQuantity = [];
         foreach ($forms as $form) {
             if ('quantity' === $form->getName()) {
                 $targetQuantity = $form->getData();
-                $this->orderItemQuantityModifier->modify($data, (int) $targetQuantity);
+                $this->orderItemQuantityModifier->modify($viewData, (int) $targetQuantity);
 
                 continue;
             }
@@ -61,7 +48,7 @@ class OrderItemQuantityDataMapper implements DataMapperInterface
         }
 
         if (!empty($formsOtherThanQuantity)) {
-            $this->propertyPathDataMapper->mapFormsToData($formsOtherThanQuantity, $data);
+            $this->propertyPathDataMapper->mapFormsToData(new ArrayCollection($formsOtherThanQuantity), $viewData);
         }
     }
 }

@@ -6,6 +6,7 @@ default:
         ui_viewing_product_reviews:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.customer
                 - sylius.behat.context.transform.lexical
@@ -21,4 +22,4 @@ default:
                 - sylius.behat.context.ui.shop.product
 
             filters:
-                tags: "@viewing_product_reviews && @ui"
+                tags: "@viewing_product_reviews&&@ui"

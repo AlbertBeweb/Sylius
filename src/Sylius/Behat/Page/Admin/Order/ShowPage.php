@@ -24,23 +24,14 @@ use Symfony\Component\Routing\RouterInterface;
 
 class ShowPage extends SymfonyPage implements ShowPageInterface
 {
-    /** @var TableAccessorInterface */
-    private $tableAccessor;
-
-    /** @var MoneyFormatterInterface */
-    private $moneyFormatter;
-
     public function __construct(
         Session $session,
         $minkParameters,
         RouterInterface $router,
-        TableAccessorInterface $tableAccessor,
-        MoneyFormatterInterface $moneyFormatter
+        private TableAccessorInterface $tableAccessor,
+        private MoneyFormatterInterface $moneyFormatter,
     ) {
         parent::__construct($session, $minkParameters, $router);
-
-        $this->tableAccessor = $tableAccessor;
-        $this->moneyFormatter = $moneyFormatter;
     }
 
     public function hasCustomer(string $customerName): bool
@@ -61,7 +52,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
     {
         try {
             $this->getElement('shipping_address');
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return false;
         }
 
@@ -130,7 +121,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
             $table = $this->getElement('table');
             $rows = $this->tableAccessor->getRowsWithFields(
                 $table,
-                ['item' => $productName]
+                ['item' => $productName],
             );
 
             foreach ($rows as $row) {
@@ -142,7 +133,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
             }
 
             return false;
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException) {
             return false;
         }
     }
@@ -175,32 +166,41 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         return trim(str_replace('Tax total:', '', $taxTotalElement->getText()));
     }
 
-    public function hasShippingCharge(string $shippingCharge): bool
+    public function hasShippingCharge(string $shippingCharge, string $shippingMethodName): bool
     {
-        $shippingChargesText = sprintf(
-            '%s %s',
-            substr($this->getElement('shipping_adjustment_name')->getText(), 0, -1),
-            $this->getElement('shipping_charges')->getText()
-        );
+        $shippingBaseValues = $this->getDocument()->findAll('css', '#shipping-base-value');
+        foreach ($shippingBaseValues as $shippingBaseValueElement) {
+            $shippingBaseValueWithLabel = $shippingBaseValueElement->getParent()->getText();
+            if (stripos($shippingBaseValueWithLabel, $shippingCharge) !== false &&
+                stripos($shippingBaseValueWithLabel, $shippingMethodName) !== false
+            ) {
+                return true;
+            }
+        }
 
-        return stripos($shippingChargesText, $shippingCharge) !== false;
+        return false;
+    }
+
+    public function hasShippingTax(string $shippingTax, string $shippingMethodName): bool
+    {
+        $shippingTaxes = $this->getDocument()->findAll('css', '#shipping-tax-value');
+        foreach ($shippingTaxes as $shippingTaxElement) {
+            $shippingTaxWithLabel = $shippingTaxElement->getParent()->getParent()->getText();
+            if (stripos($shippingTaxWithLabel, $shippingTax) !== false &&
+                stripos($shippingTaxWithLabel, $shippingMethodName) !== false
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getOrderPromotionTotal(): string
     {
-        /** @var NodeElement[] $rows */
-        $rows = $this->getElement('table')->findAll('css', 'tbody tr');
+        $promotionTotalElement = $this->getElement('promotion_total');
 
-        $orderPromotionTotal = 0;
-
-        foreach ($rows as $row) {
-            $unitOrderPromotion = $row->find('css', 'td:nth-child(4)')->getText();
-            $quantity = $row->find('css', 'td:nth-child(6)')->getText();
-            $itemOrderPromotion = (float) trim(str_replace('-$', '', $unitOrderPromotion)) * $quantity;
-            $orderPromotionTotal += (int) ($itemOrderPromotion * 100);
-        }
-
-        return $this->getFormattedMoney($orderPromotionTotal > 0 ? -1 * $orderPromotionTotal : $orderPromotionTotal);
+        return trim(str_replace('Promotion total:', '', $promotionTotalElement->getText()));
     }
 
     public function hasPromotionDiscount(string $promotionName, string $promotionAmount): bool
@@ -278,7 +278,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
     {
         try {
             $payments = $this->getElement('payments')->findAll('css', '.item');
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return 0;
         }
 
@@ -289,7 +289,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
     {
         try {
             $shipments = $this->getElement('shipments')->findAll('css', '.item');
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
             return 0;
         }
 
@@ -377,6 +377,21 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         return $this->getDocument()->has('css', '#no-payments:contains("Order without payments")');
     }
 
+    public function resendOrderConfirmationEmail(): void
+    {
+        $this->getElement('resend_order_confirmation_email')->click();
+    }
+
+    public function resendShipmentConfirmationEmail(): void
+    {
+        $this->getElement('resend_shipment_confirmation_email')->click();
+    }
+
+    public function getShippedAtDate(): string
+    {
+        return  $this->getElement('shipment_shipped_at_date')->getText();
+    }
+
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
@@ -393,10 +408,14 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
             'promotion_discounts' => '#promotion-discounts',
             'promotion_shipping_discounts' => '#shipping-discount-value',
             'promotion_total' => '#promotion-total',
+            'resend_order_confirmation_email' => '[data-test-resend-order-confirmation-email]',
+            'resend_shipment_confirmation_email' => '[data-test-resend-shipment-confirmation-email]',
+            'shipment_shipped_at_date' => '#sylius-shipments .shipped-at-date',
             'shipments' => '#sylius-shipments',
             'shipping_address' => '#shipping-address',
             'shipping_adjustment_name' => '#shipping-adjustment-label',
             'shipping_charges' => '#shipping-base-value',
+            'shipping_tax' => '#shipping-tax-value',
             'shipping_total' => '#shipping-total',
             'table' => '.table',
             'tax_total' => '#tax-total',
@@ -410,7 +429,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         return $this->tableAccessor;
     }
 
-    private function hasAddress(string $elementText, string $customerName, string $street, string $postcode, string $city, string $countryName): bool
+    protected function hasAddress(string $elementText, string $customerName, string $street, string $postcode, string $city, string $countryName): bool
     {
         return
             (stripos($elementText, $customerName) !== false) &&
@@ -420,22 +439,22 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         ;
     }
 
-    private function getItemProperty(string $itemName, string $property): string
+    protected function getItemProperty(string $itemName, string $property): string
     {
         $rows = $this->tableAccessor->getRowsWithFields(
             $this->getElement('table'),
-            ['item' => $itemName]
+            ['item' => $itemName],
         );
 
         return $rows[0]->find('css', '.' . $property)->getText();
     }
 
-    private function getRowWithItem(string $itemName): ?NodeElement
+    protected function getRowWithItem(string $itemName): ?NodeElement
     {
         return $this->tableAccessor->getRowWithFields($this->getElement('table'), ['item' => $itemName]);
     }
 
-    private function getLastOrderPaymentElement(OrderInterface $order): ?NodeElement
+    protected function getLastOrderPaymentElement(OrderInterface $order): ?NodeElement
     {
         $payment = $order->getPayments()->last();
 
@@ -445,7 +464,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         return $paymentStateElement->getParent()->getParent();
     }
 
-    private function getLastOrderShipmentElement(OrderInterface $order): ?NodeElement
+    protected function getLastOrderShipmentElement(OrderInterface $order): ?NodeElement
     {
         $shipment = $order->getShipments()->last();
 
@@ -455,7 +474,7 @@ class ShowPage extends SymfonyPage implements ShowPageInterface
         return $shipmentStateElement->getParent()->getParent();
     }
 
-    private function getFormattedMoney(int $orderPromotionTotal): string
+    protected function getFormattedMoney(int $orderPromotionTotal): string
     {
         return $this->moneyFormatter->format($orderPromotionTotal, $this->getDocument()->find('css', '#sylius-order-currency')->getText());
     }

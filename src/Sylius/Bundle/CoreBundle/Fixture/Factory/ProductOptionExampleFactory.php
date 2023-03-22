@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture\Factory;
 
+use Faker\Factory;
+use Faker\Generator;
 use Sylius\Component\Core\Formatter\StringInflector;
 use Sylius\Component\Locale\Model\LocaleInterface;
 use Sylius\Component\Product\Model\ProductOptionInterface;
@@ -24,39 +26,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ProductOptionExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $productOptionFactory;
+    private Generator $faker;
 
-    /** @var FactoryInterface */
-    private $productOptionValueFactory;
-
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var \Faker\Generator */
-    private $faker;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
 
     public function __construct(
-        FactoryInterface $productOptionFactory,
-        FactoryInterface $productOptionValueFactory,
-        RepositoryInterface $localeRepository
+        private FactoryInterface $productOptionFactory,
+        private FactoryInterface $productOptionValueFactory,
+        private RepositoryInterface $localeRepository,
     ) {
-        $this->productOptionFactory = $productOptionFactory;
-        $this->productOptionValueFactory = $productOptionValueFactory;
-        $this->localeRepository = $localeRepository;
-
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver = new OptionsResolver();
 
         $this->configureOptions($this->optionsResolver);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(array $options = []): ProductOptionInterface
     {
         $options = $this->optionsResolver->resolve($options);
@@ -90,20 +74,18 @@ class ProductOptionExampleFactory extends AbstractExampleFactory implements Exam
         return $productOption;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
             ->setDefault('name', function (Options $options): string {
-                return $this->faker->words(3, true);
+                /** @var string $words */
+                $words = $this->faker->words(3, true);
+
+                return $words;
             })
-            ->setDefault('code', function (Options $options): string {
-                return StringInflector::nameToCode($options['name']);
-            })
+            ->setDefault('code', fn (Options $options): string => StringInflector::nameToCode($options['name']))
             ->setDefault('values', null)
-            ->setDefault('values', function (Options $options, $values): array {
+            ->setDefault('values', function (Options $options, ?array $values): array {
                 if (is_array($values)) {
                     return $values;
                 }

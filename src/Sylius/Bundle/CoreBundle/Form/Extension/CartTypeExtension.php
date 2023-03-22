@@ -24,9 +24,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class CartTypeExtension extends AbstractTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -40,27 +37,24 @@ final class CartTypeExtension extends AbstractTypeExtension
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setNormalizer('validation_groups', function (Options $options, array $validationGroups) {
-            return function (FormInterface $form) use ($validationGroups) {
-                if ((bool) $form->get('promotionCoupon')->getNormData()) { // Validate the coupon if it was sent
-                    $validationGroups[] = 'sylius_promotion_coupon';
-                }
+        $resolver->setNormalizer('validation_groups', fn (Options $options, array $validationGroups) => function (FormInterface $form) use ($validationGroups) {
+            if ((bool) $form->get('promotionCoupon')->getNormData()) { // Validate the coupon if it was sent
+                $validationGroups[] = 'sylius_promotion_coupon';
+            }
 
-                return $validationGroups;
-            };
+            return $validationGroups;
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getExtendedType(): string
     {
         return CartType::class;
+    }
+
+    public static function getExtendedTypes(): iterable
+    {
+        return [CartType::class];
     }
 }

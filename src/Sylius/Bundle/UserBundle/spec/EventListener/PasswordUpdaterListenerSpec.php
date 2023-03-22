@@ -30,7 +30,7 @@ final class PasswordUpdaterListenerSpec extends ObjectBehavior
     function it_updates_password_for_generic_event(
         PasswordUpdaterInterface $passwordUpdater,
         GenericEvent $event,
-        UserInterface $user
+        UserInterface $user,
     ): void {
         $event->getSubject()->willReturn($user);
 
@@ -54,9 +54,9 @@ final class PasswordUpdaterListenerSpec extends ObjectBehavior
     function it_updates_password_on_pre_persist_doctrine_event(
         PasswordUpdaterInterface $passwordUpdater,
         LifecycleEventArgs $event,
-        UserInterface $user
+        UserInterface $user,
     ): void {
-        $event->getEntity()->willReturn($user);
+        $event->getObject()->willReturn($user);
 
         $user->getPlainPassword()->willReturn('testPassword');
 
@@ -68,9 +68,9 @@ final class PasswordUpdaterListenerSpec extends ObjectBehavior
     function it_updates_password_on_pre_update_doctrine_event(
         PasswordUpdaterInterface $passwordUpdater,
         LifecycleEventArgs $event,
-        UserInterface $user
+        UserInterface $user,
     ): void {
-        $event->getEntity()->willReturn($user);
+        $event->getObject()->willReturn($user);
 
         $user->getPlainPassword()->willReturn('testPassword');
 
@@ -81,9 +81,9 @@ final class PasswordUpdaterListenerSpec extends ObjectBehavior
 
     function it_updates_password_on_pre_persist_doctrine_event_for_user_interface_implementation_only(
         PasswordUpdaterInterface $passwordUpdater,
-        LifecycleEventArgs $event): void
-    {
-        $event->getEntity()->willReturn('user');
+        LifecycleEventArgs $event,
+    ): void {
+        $event->getObject()->willReturn('user');
         $passwordUpdater->updatePassword(Argument::any())->shouldNotBeCalled();
 
         $this->prePersist($event);
@@ -91,9 +91,9 @@ final class PasswordUpdaterListenerSpec extends ObjectBehavior
 
     function it_updates_password_on_pre_update_doctrine_event_for_user_interface_implementation_only(
         PasswordUpdaterInterface $passwordUpdater,
-        LifecycleEventArgs $event
+        LifecycleEventArgs $event,
     ): void {
-        $event->getEntity()->willReturn('user');
+        $event->getObject()->willReturn('user');
         $passwordUpdater->updatePassword(Argument::any())->shouldNotBeCalled();
 
         $this->preUpdate($event);

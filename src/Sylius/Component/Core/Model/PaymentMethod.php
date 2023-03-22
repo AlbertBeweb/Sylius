@@ -22,38 +22,34 @@ use Sylius\Component\Payment\Model\PaymentMethodTranslation;
 
 class PaymentMethod extends BasePaymentMethod implements PaymentMethodInterface
 {
-    /** @var Collection */
+    /**
+     * @var Collection|BaseChannelInterface[]
+     *
+     * @psalm-var Collection<array-key, BaseChannelInterface>
+     */
     protected $channels;
 
-    /** @var GatewayConfigInterface */
+    /** @var GatewayConfigInterface|null */
     protected $gatewayConfig;
 
     public function __construct()
     {
         parent::__construct();
 
+        /** @var ArrayCollection<array-key, BaseChannelInterface> $this->channels */
         $this->channels = new ArrayCollection();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannels(): Collection
     {
         return $this->channels;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasChannel(BaseChannelInterface $channel): bool
     {
         return $this->channels->contains($channel);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addChannel(BaseChannelInterface $channel): void
     {
         if (!$this->hasChannel($channel)) {
@@ -61,9 +57,6 @@ class PaymentMethod extends BasePaymentMethod implements PaymentMethodInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeChannel(BaseChannelInterface $channel): void
     {
         if ($this->hasChannel($channel)) {
@@ -71,25 +64,16 @@ class PaymentMethod extends BasePaymentMethod implements PaymentMethodInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setGatewayConfig(?GatewayConfigInterface $gatewayConfig): void
+    public function setGatewayConfig(?GatewayConfigInterface $gateway): void
     {
-        $this->gatewayConfig = $gatewayConfig;
+        $this->gatewayConfig = $gateway;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getGatewayConfig(): ?GatewayConfigInterface
     {
         return $this->gatewayConfig;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getTranslationClass(): string
     {
         return PaymentMethodTranslation::class;

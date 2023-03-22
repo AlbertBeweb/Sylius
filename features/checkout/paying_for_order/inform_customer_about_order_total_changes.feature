@@ -9,8 +9,8 @@ Feature: Inform customer about any order total changes during checkout process
         And the store has "NA VAT" tax rate of 23% for "Clothes" within the "US" zone
         And the store has a product "PHP T-Shirt" priced at "$19.99"
         And it belongs to "Clothes" tax category
-        And the store ships everywhere for free
-        And the store allows paying offline
+        And the store ships everywhere for Free
+        And the store allows paying Offline
 
     @ui
     Scenario: Inform customer about order total change due to product price change
@@ -46,7 +46,7 @@ Feature: Inform customer about any order total changes during checkout process
     Scenario: Inform customer about order total change due to shipping method fee change
         Given the store has "UPS" shipping method with "$20.00" fee
         And I added product "PHP T-Shirt" to the cart
-        And I have completed addressing step with email "guest@example.com" and "United States" based shipping address
+        And I have completed addressing step with email "guest@example.com" and "United States" based billing address
         And I have proceeded order with "UPS" shipping method and "Offline" payment
         And the shipping fee for "UPS" shipping method has been changed to "$30.00"
         When I confirm my order

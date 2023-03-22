@@ -20,25 +20,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ChannelBasedTotalOfItemsFromTaxonConfigurationType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'entry_type' => TotalOfItemsFromTaxonConfigurationType::class,
-            'entry_options' => function (ChannelInterface $channel): array {
-                return [
-                    'label' => $channel->getName(),
-                    'currency' => $channel->getBaseCurrency()->getCode(),
-                ];
-            },
+            'entry_options' => fn (ChannelInterface $channel): array => [
+                'label' => $channel->getName(),
+                'currency' => $channel->getBaseCurrency()->getCode(),
+            ],
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChannelCollectionType::class;

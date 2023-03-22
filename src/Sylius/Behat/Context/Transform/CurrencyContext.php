@@ -20,18 +20,10 @@ use Webmozart\Assert\Assert;
 
 final class CurrencyContext implements Context
 {
-    /** @var CurrencyNameConverterInterface */
-    private $currencyNameConverter;
-
-    /** @var RepositoryInterface */
-    private $currencyRepository;
-
     public function __construct(
-        CurrencyNameConverterInterface $currencyNameConverter,
-        RepositoryInterface $currencyRepository
+        private CurrencyNameConverterInterface $currencyNameConverter,
+        private RepositoryInterface $currencyRepository,
     ) {
-        $this->currencyNameConverter = $currencyNameConverter;
-        $this->currencyRepository = $currencyRepository;
     }
 
     /**
@@ -46,7 +38,7 @@ final class CurrencyContext implements Context
         $currency = $this->currencyRepository->findOneBy(['code' => $this->getCurrencyCodeByName($currencyName)]);
         Assert::notNull(
             $currency,
-            sprintf('Currency with name %s does not exist.', $currencyName)
+            sprintf('Currency with name %s does not exist.', $currencyName),
         );
 
         return $currency;

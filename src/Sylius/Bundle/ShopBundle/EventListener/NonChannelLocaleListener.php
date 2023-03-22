@@ -16,18 +16,14 @@ namespace Sylius\Bundle\ShopBundle\EventListener;
 use Sylius\Component\Locale\Provider\LocaleProviderInterface;
 use Symfony\Bundle\SecurityBundle\Security\FirewallConfig;
 use Symfony\Bundle\SecurityBundle\Security\FirewallMap;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\RouterInterface;
 use Webmozart\Assert\Assert;
 
 final class NonChannelLocaleListener
 {
-    /** @var LocaleProviderInterface */
-    private $channelBasedLocaleProvider;
-
-    /** @var FirewallMap */
-    private $firewallMap;
-
     /** @var string[] */
     private $firewallNames;
 
@@ -35,29 +31,34 @@ final class NonChannelLocaleListener
      * @param string[] $firewallNames
      */
     public function __construct(
-        LocaleProviderInterface $channelBasedLocaleProvider,
-        FirewallMap $firewallMap,
-        array $firewallNames
+        private RouterInterface $router,
+        private LocaleProviderInterface $channelBasedLocaleProvider,
+        private FirewallMap $firewallMap,
+        array $firewallNames,
     ) {
         Assert::notEmpty($firewallNames);
         Assert::allString($firewallNames);
-
-        $this->channelBasedLocaleProvider = $channelBasedLocaleProvider;
-        $this->firewallMap = $firewallMap;
         $this->firewallNames = $firewallNames;
     }
 
     /**
      * @throws NotFoundHttpException
      */
-    public function restrictRequestLocale(GetResponseEvent $event): void
+    public function restrictRequestLocale(RequestEvent $event): void
     {
-        if (!$event->isMasterRequest()) {
+        if (\method_exists($event, 'isMainRequest')) {
+            $isMainRequest = $event->isMainRequest();
+        } else {
+            /** @phpstan-ignore-next-line */
+            $isMainRequest = $event->isMasterRequest();
+        }
+        if (!$isMainRequest) {
             return;
         }
 
         $request = $event->getRequest();
-        if ($request->attributes && in_array($request->attributes->get('_route'), ['_wdt', '_profiler'])) {
+        /** @psalm-suppress RedundantConditionGivenDocblockType Symfony docblock is not always true */
+        if ($request->attributes && in_array($request->attributes->get('_route'), ['_wdt', '_profiler', '_profiler_search', '_profiler_search_results'])) {
             return;
         }
 
@@ -68,8 +69,13 @@ final class NonChannelLocaleListener
 
         $requestLocale = $request->getLocale();
         if (!in_array($requestLocale, $this->channelBasedLocaleProvider->getAvailableLocalesCodes(), true)) {
-            throw new NotFoundHttpException(
-                sprintf('The "%s" locale is unavailable in this channel.', $requestLocale)
+            $event->setResponse(
+                new RedirectResponse(
+                    $this->router->generate(
+                        'sylius_shop_homepage',
+                        ['_locale' => $this->channelBasedLocaleProvider->getDefaultLocaleCode()],
+                    ),
+                ),
             );
         }
     }

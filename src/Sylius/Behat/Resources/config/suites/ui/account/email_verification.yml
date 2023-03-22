@@ -6,7 +6,8 @@ default:
         ui_email_verification:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
-                - sylius.behat.context.hook.email_spool
+                - sylius.behat.context.hook.session
+                - sylius.behat.context.hook.mailer
 
                 - sylius.behat.context.transform.channel
                 - sylius.behat.context.transform.shared_storage
@@ -20,4 +21,4 @@ default:
                 - sylius.behat.context.ui.shop.registration
 
             filters:
-                tags: "@email_verification && @ui"
+                tags: "@email_verification&&@ui"

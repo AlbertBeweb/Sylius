@@ -19,6 +19,7 @@ use Sylius\Behat\Page\Admin\Order\HistoryPageInterface;
 use Sylius\Behat\Page\Admin\Order\IndexPageInterface;
 use Sylius\Behat\Page\Admin\Order\ShowPageInterface;
 use Sylius\Behat\Page\Admin\Order\UpdatePageInterface;
+use Sylius\Behat\Page\ErrorPageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\SharedSecurityServiceInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
@@ -30,43 +31,16 @@ use Webmozart\Assert\Assert;
 
 final class ManagingOrdersContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var ShowPageInterface */
-    private $showPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var HistoryPageInterface */
-    private $historyPage;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
-    /** @var SharedSecurityServiceInterface */
-    private $sharedSecurityService;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        IndexPageInterface $indexPage,
-        ShowPageInterface $showPage,
-        UpdatePageInterface $updatePage,
-        HistoryPageInterface $historyPage,
-        NotificationCheckerInterface $notificationChecker,
-        SharedSecurityServiceInterface $sharedSecurityService
+        private SharedStorageInterface $sharedStorage,
+        private IndexPageInterface $indexPage,
+        private ShowPageInterface $showPage,
+        private UpdatePageInterface $updatePage,
+        private HistoryPageInterface $historyPage,
+        private ErrorPageInterface $errorPage,
+        private NotificationCheckerInterface $notificationChecker,
+        private SharedSecurityServiceInterface $sharedSecurityService,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->indexPage = $indexPage;
-        $this->showPage = $showPage;
-        $this->updatePage = $updatePage;
-        $this->historyPage = $historyPage;
-        $this->notificationChecker = $notificationChecker;
-        $this->sharedSecurityService = $sharedSecurityService;
     }
 
     /**
@@ -93,6 +67,14 @@ final class ManagingOrdersContext implements Context
     public function iSeeTheOrder(OrderInterface $order)
     {
         $this->showPage->open(['id' => $order->getId()]);
+    }
+
+    /**
+     * @When /^I try to view the summary of the (customer's latest cart)$/
+     */
+    public function iTryToViewTheSummaryOfTheCustomersLatestCart(OrderInterface $cart): void
+    {
+        $this->showPage->tryToOpen(['id' => $cart->getId()]);
     }
 
     /**
@@ -161,6 +143,14 @@ final class ManagingOrdersContext implements Context
     }
 
     /**
+     * @When I choose :methodName as a shipping method filter
+     */
+    public function iChooseMethodAsAShippingMethodFilter($methodName)
+    {
+        $this->indexPage->chooseShippingMethodFilter($methodName);
+    }
+
+    /**
      * @When I choose :currencyName as the filter currency
      */
     public function iChooseCurrencyAsTheFilterCurrency($currencyName)
@@ -193,11 +183,61 @@ final class ManagingOrdersContext implements Context
     }
 
     /**
+     * @When I filter by product :productName
+     * @When I filter by products :firstProduct and :secondProduct
+     */
+    public function iFilterByProduct(string ...$productsNames): void
+    {
+        foreach ($productsNames as $productName) {
+            $this->indexPage->specifyFilterProduct($productName);
+        }
+
+        $this->iFilter();
+    }
+
+    /**
+     * @When I filter by variant :variantName
+     * @When I filter by variants :firstVariant and :secondVariant
+     */
+    public function iFilterByVariant(string ...$variantsNames): void
+    {
+        foreach ($variantsNames as $variantName) {
+            $this->indexPage->specifyFilterVariant($variantName);
+        }
+
+        $this->iFilter();
+    }
+
+    /**
+     * @When I resend the order confirmation email
+     */
+    public function iResendTheOrderConfirmationEmail(): void
+    {
+        $this->showPage->resendOrderConfirmationEmail();
+    }
+
+    /**
+     * @When I resend the shipment confirmation email
+     */
+    public function iResendTheShipmentConfirmationEmail(): void
+    {
+        $this->showPage->resendShipmentConfirmationEmail();
+    }
+
+    /**
      * @Then I should see a single order from customer :customer
      */
     public function iShouldSeeASingleOrderFromCustomer(CustomerInterface $customer)
     {
         Assert::true($this->indexPage->isSingleResourceOnPage(['customer' => $customer->getEmail()]));
+    }
+
+    /**
+     * @Then I should see a single order in the list
+     */
+    public function iShouldSeeASingleOrderInTheList(): void
+    {
+        Assert::same($this->indexPage->countItems(), 1);
     }
 
     /**
@@ -210,15 +250,27 @@ final class ManagingOrdersContext implements Context
 
     /**
      * @Then it should be shipped to :customerName, :street, :postcode, :city, :countryName
+     */
+    public function itShouldBeShippedToCustomerAtAddress(
+        string $customerName,
+        string $street,
+        string $postcode,
+        string $city,
+        string $countryName,
+    ) {
+        $this->itShouldBeShippedTo(null, $customerName, $street, $postcode, $city, $countryName);
+    }
+
+    /**
      * @Then /^(this order) should (?:|still )be shipped to "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"$/
      */
     public function itShouldBeShippedTo(
-        OrderInterface $order = null,
-        $customerName,
-        $street,
-        $postcode,
-        $city,
-        $countryName
+        ?OrderInterface $order,
+        string $customerName,
+        string $street,
+        string $postcode,
+        string $city,
+        string $countryName,
     ) {
         if (null !== $order) {
             $this->iSeeTheOrder($order);
@@ -230,15 +282,27 @@ final class ManagingOrdersContext implements Context
     /**
      * @Then it should be billed to :customerName, :street, :postcode, :city, :countryName
      * @Then the order should be billed to :customerName, :street, :postcode, :city, :countryName
+     */
+    public function itShouldBeBilledToCustomerAtAddress(
+        string $customerName,
+        string $street,
+        string $postcode,
+        string $city,
+        string $countryName,
+    ) {
+        $this->itShouldBeBilledTo(null, $customerName, $street, $postcode, $city, $countryName);
+    }
+
+    /**
      * @Then /^(this order) bill should (?:|still )be shipped to "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"$/
      */
     public function itShouldBeBilledTo(
-        OrderInterface $order = null,
-        $customerName,
-        $street,
-        $postcode,
-        $city,
-        $countryName
+        ?OrderInterface $order,
+        string $customerName,
+        string $street,
+        string $postcode,
+        string $city,
+        string $countryName,
     ) {
         if (null !== $order) {
             $this->iSeeTheOrder($order);
@@ -274,7 +338,6 @@ final class ManagingOrdersContext implements Context
     /**
      * @Then /^it should have (\d+) items$/
      * @Then I should see :amount orders in the list
-     * @Then I should see a single order in the list
      */
     public function itShouldHaveAmountOfItems($amount = 1)
     {
@@ -306,11 +369,19 @@ final class ManagingOrdersContext implements Context
     }
 
     /**
-     * @Then there should be a shipping charge :shippingCharge
+     * @Then there should be a shipping charge :shippingCharge for :shippingMethodName method
      */
-    public function theOrdersShippingChargesShouldBe($shippingCharge)
+    public function thereShouldBeAShippingChargeForMethod(string $shippingCharge, string $shippingMethodName): void
     {
-        Assert::true($this->showPage->hasShippingCharge($shippingCharge));
+        Assert::true($this->showPage->hasShippingCharge($shippingCharge, $shippingMethodName));
+    }
+
+    /**
+     * @Then there should be a shipping tax :shippingTax for :shippingMethodName method
+     */
+    public function thereShouldBeAShippingTaxForMethod(string $shippingTax, string $shippingMethodName): void
+    {
+        Assert::true($this->showPage->hasShippingTax($shippingTax, $shippingMethodName));
     }
 
     /**
@@ -456,7 +527,7 @@ final class ManagingOrdersContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Payment has been successfully updated.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -467,7 +538,7 @@ final class ManagingOrdersContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Payment has been successfully refunded.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -519,7 +590,7 @@ final class ManagingOrdersContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Shipment has been successfully updated.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -546,7 +617,7 @@ final class ManagingOrdersContext implements Context
     {
         $this->notificationChecker->checkNotification(
             'Order has been successfully updated.',
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -581,7 +652,7 @@ final class ManagingOrdersContext implements Context
     public function theCustomerServiceShouldKnowAboutThisAdditionalNotes(
         AdminUserInterface $user,
         $note,
-        OrderInterface $order
+        OrderInterface $order,
     ) {
         $this->sharedSecurityService->performActionAsAdminUser(
             $user,
@@ -589,7 +660,7 @@ final class ManagingOrdersContext implements Context
                 $this->showPage->open(['id' => $order->getId()]);
 
                 Assert::true($this->showPage->hasNote($note));
-            }
+            },
         );
     }
 
@@ -740,7 +811,7 @@ final class ManagingOrdersContext implements Context
      */
     public function theAdministratorShouldKnowAboutIPAddressOfThisOrderMadeBy(
         AdminUserInterface $user,
-        OrderInterface $order
+        OrderInterface $order,
     ) {
         $this->sharedSecurityService->performActionAsAdminUser(
             $user,
@@ -748,7 +819,7 @@ final class ManagingOrdersContext implements Context
                 $this->showPage->open(['id' => $order->getId()]);
 
                 Assert::notSame($this->showPage->getIpAddressAssigned(), '');
-            }
+            },
         );
     }
 
@@ -879,6 +950,33 @@ final class ManagingOrdersContext implements Context
     {
         Assert::same($this->showPage->getPaymentsCount(), 0);
         Assert::true($this->showPage->hasInformationAboutNoPayment());
+    }
+
+    /**
+     * @Then /^I should be notified that the (order|shipment) confirmation email has been successfully resent to the customer$/
+     */
+    public function iShouldBeNotifiedThatTheOrderConfirmationEmailHasBeenSuccessfullyResentToTheCustomer(string $type): void
+    {
+        $this->notificationChecker->checkNotification(
+            sprintf('%s confirmation has been successfully resent to the customer.', ucfirst($type)),
+            NotificationType::success(),
+        );
+    }
+
+    /**
+     * @Then I should see the shipping date as :dateTime
+     */
+    public function iShouldSeeTheShippingDateAs(string $dateTime): void
+    {
+        Assert::same($this->showPage->getShippedAtDate(), $dateTime);
+    }
+
+    /**
+     * @Then I should be informed that the order does not exist
+     */
+    public function iShouldBeInformedThatTheOrderDoesNotExist(): void
+    {
+        Assert::same($this->errorPage->getCode(), 404);
     }
 
     /**

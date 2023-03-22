@@ -33,7 +33,7 @@ Overwrite the state machine of Checkout
 
 Open the `CoreBundle/Resources/config/app/state_machine/sylius_order_checkout.yml <https://github.com/Sylius/Sylius/blob/master/src/Sylius/Bundle/CoreBundle/Resources/config/app/state_machine/sylius_order_checkout.yml>`_
 and place its content in the ``src/Resources/SyliusCoreBundle/config/app/state_machine/sylius_order_checkout.yml``
-which is a `standard procedure of overriding configs in Symfony <http://symfony.com/doc/current/bundles/inheritance.html#overriding-resources-templates-routing-etc>`_.
+which is a `standard procedure of overriding configs in Symfony <https://symfony.com/doc/current/bundles/inheritance.html#overriding-resources-templates-routing-etc>`_.
 Remove the ``shipping_selected`` and ``shipping_skipped`` states, ``select_shipping`` and ``skip_shipping`` transitions.
 Remove the ``select_shipping`` and ``skip_shipping`` transition from the ``sylius_process_cart`` callback.
 
@@ -93,7 +93,7 @@ Remove the ``select_shipping`` and ``skip_shipping`` transition from the ``syliu
 .. tip::
 
     To check if your new state machine configuration is overriding the old one run:
-    ``$ php bin/console debug:winzou:state-machine`` and check the configuration of ``sylius_order_checkout``.
+    ``php bin/console debug:winzou:state-machine`` and check the configuration of ``sylius_order_checkout``.
 
 Adjust Checkout Resolver
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,7 +126,7 @@ You will achieve that by overriding two files:
 * `ShopBundle/Resources/views/Checkout/_steps.html.twig <https://github.com/Sylius/Sylius/blob/master/src/Sylius/Bundle/ShopBundle/Resources/views/Checkout/_steps.html.twig>`_
 * `ShopBundle/Resources/views/Checkout/SelectPayment/_navigation.html.twig <https://github.com/Sylius/Sylius/blob/master/src/Sylius/Bundle/ShopBundle/Resources/views/Checkout/SelectPayment/_navigation.html.twig>`_
 
-.. code-block:: html
+.. code-block:: twig
 
     {# templates/SyliusShopBundle/Checkout/_steps.html.twig #}
     {% if active is not defined or active == 'address' %}
@@ -170,7 +170,7 @@ You will achieve that by overriding two files:
         </div>
     </div>
 
-.. code-block:: html
+.. code-block:: twig
 
     {# templates/SyliusShopBundle/Checkout/SelectPayment/_navigation.html.twig #}
     {% set enabled = order.payments|length %}
@@ -203,7 +203,7 @@ to the ``app/Resources/SyliusShopBundle/config/routing/checkout.yml`` file.
         path: /
         methods: [GET]
         defaults:
-            _controller: FrameworkBundle:Redirect:redirect
+            _controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController:redirectAction
             route: sylius_shop_checkout_address
 
     sylius_shop_checkout_address:
@@ -272,7 +272,7 @@ to the ``app/Resources/SyliusShopBundle/config/routing/checkout.yml`` file.
 
 .. tip::
 
-    If you do not see any changes run ``$ php bin/console cache:clear``.
+    If you do not see any changes run ``php bin/console cache:clear``.
 
 Learn more
 ----------

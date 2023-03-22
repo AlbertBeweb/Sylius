@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Component\Promotion\Generator;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use Sylius\Component\Promotion\Exception\FailedGenerationException;
@@ -31,13 +31,13 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
         FactoryInterface $promotionCouponFactory,
         PromotionCouponRepositoryInterface $promotionCouponRepository,
         ObjectManager $objectManager,
-        GenerationPolicyInterface $generationPolicy
+        GenerationPolicyInterface $generationPolicy,
     ): void {
         $this->beConstructedWith(
             $promotionCouponFactory,
             $promotionCouponRepository,
             $objectManager,
-            $generationPolicy
+            $generationPolicy,
         );
     }
 
@@ -53,7 +53,7 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
         PromotionInterface $promotion,
         PromotionCouponInterface $promotionCoupon,
         PromotionCouponGeneratorInstructionInterface $instruction,
-        GenerationPolicyInterface $generationPolicy
+        GenerationPolicyInterface $generationPolicy,
     ): void {
         $instruction->getAmount()->willReturn(1);
         $instruction->getUsageLimit()->willReturn(null);
@@ -83,7 +83,7 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
         PromotionInterface $promotion,
         PromotionCouponInterface $promotionCoupon,
         PromotionCouponGeneratorInstructionInterface $instruction,
-        GenerationPolicyInterface $generationPolicy
+        GenerationPolicyInterface $generationPolicy,
     ): void {
         $instruction->getAmount()->willReturn(1);
         $instruction->getUsageLimit()->willReturn(null);
@@ -99,7 +99,7 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
         $promotionCoupon->setPromotion($promotion)->shouldBeCalled();
         $promotionCoupon->setCode(Argument::that(function (string $couponCode): bool {
             return
-                strpos($couponCode, 'PREFIX_') === 0 &&
+                str_starts_with($couponCode, 'PREFIX_') &&
                 strpos($couponCode, '_SUFFIX') === strlen($couponCode) - strlen('_SUFFIX')
             ;
         }))->shouldBeCalled();
@@ -115,7 +115,7 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
     function it_throws_a_failed_generation_exception_when_generation_is_not_possible(
         GenerationPolicyInterface $generationPolicy,
         PromotionInterface $promotion,
-        PromotionCouponGeneratorInstructionInterface $instruction
+        PromotionCouponGeneratorInstructionInterface $instruction,
     ): void {
         $instruction->getAmount()->willReturn(16);
         $instruction->getCodeLength()->willReturn(1);
@@ -131,7 +131,7 @@ final class PromotionCouponGeneratorSpec extends ObjectBehavior
         FactoryInterface $promotionCouponFactory,
         GenerationPolicyInterface $generationPolicy,
         PromotionInterface $promotion,
-        PromotionCouponGeneratorInstructionInterface $instruction
+        PromotionCouponGeneratorInstructionInterface $instruction,
     ): void {
         $instruction->getAmount()->willReturn(16);
         $instruction->getCodeLength()->willReturn(-1);

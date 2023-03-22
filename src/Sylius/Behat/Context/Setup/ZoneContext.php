@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Addressing\Factory\ZoneFactoryInterface;
 use Sylius\Component\Addressing\Model\CountryInterface;
@@ -27,37 +27,17 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Model\CodeAwareInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\Intl\Intl;
+use Symfony\Component\Intl\Countries;
 
 final class ZoneContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
-    /** @var ObjectManager */
-    private $objectManager;
-
-    /** @var ZoneFactoryInterface */
-    private $zoneFactory;
-
-    /** @var FactoryInterface */
-    private $zoneMemberFactory;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        RepositoryInterface $zoneRepository,
-        ObjectManager $objectManager,
-        ZoneFactoryInterface $zoneFactory,
-        FactoryInterface $zoneMemberFactory
+        private SharedStorageInterface $sharedStorage,
+        private RepositoryInterface $zoneRepository,
+        private ObjectManager $objectManager,
+        private ZoneFactoryInterface $zoneFactory,
+        private FactoryInterface $zoneMemberFactory,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->zoneRepository = $zoneRepository;
-        $this->objectManager = $objectManager;
-        $this->zoneFactory = $zoneFactory;
-        $this->zoneMemberFactory = $zoneMemberFactory;
     }
 
     /**
@@ -65,7 +45,7 @@ final class ZoneContext implements Context
      */
     public function thereIsAZoneTheRestOfTheWorldContainingAllOtherCountries()
     {
-        $restOfWorldCountries = Intl::getRegionBundle()->getCountryNames('en');
+        $restOfWorldCountries = Countries::getNames('en');
         unset($restOfWorldCountries['US']);
 
         $zone = $this->zoneFactory->createWithMembers(array_keys($restOfWorldCountries));
@@ -134,10 +114,37 @@ final class ZoneContext implements Context
      */
     public function itHasTheCountryMemberAndTheCountryMember(
         ZoneInterface $zone,
-        CountryInterface $country
+        CountryInterface $country,
     ) {
         $zone->setType(ZoneInterface::TYPE_COUNTRY);
         $zone->addMember($this->createZoneMember($country));
+
+        $this->objectManager->flush();
+    }
+
+    /**
+     * @Given /^(the "([^"]*)" (?:country|province|zone) member) has been removed from (this zone)$/
+     */
+    public function theZoneMemberHasBeenRemoved(
+        ZoneMemberInterface $zoneMember,
+        string $zoneMemberName,
+        ZoneInterface $zone,
+    ): void {
+        $zone->removeMember($zoneMember);
+
+        $this->objectManager->flush();
+    }
+
+    /**
+     * @Given /^(it)(?:| also) has the ("([^"]+)", "([^"]+)" and "([^"]+)" country) members$/
+     */
+    public function itHasCountryMembers(ZoneInterface $zone, array $countries): void
+    {
+        $zone->setType(ZoneInterface::TYPE_COUNTRY);
+
+        foreach ($countries as $country) {
+            $zone->addMember($this->createZoneMember($country));
+        }
 
         $this->objectManager->flush();
     }
@@ -148,7 +155,7 @@ final class ZoneContext implements Context
      */
     public function itHasTheProvinceMemberAndTheProvinceMember(
         ZoneInterface $zone,
-        ProvinceInterface $province
+        ProvinceInterface $province,
     ) {
         $zone->setType(ZoneInterface::TYPE_PROVINCE);
         $zone->addMember($this->createZoneMember($province));
@@ -162,7 +169,7 @@ final class ZoneContext implements Context
      */
     public function itHasTheZoneMemberAndTheZoneMember(
         ZoneInterface $parentZone,
-        ZoneInterface $childZone
+        ZoneInterface $childZone,
     ) {
         $parentZone->setType(ZoneInterface::TYPE_ZONE);
         $parentZone->addMember($this->createZoneMember($childZone));

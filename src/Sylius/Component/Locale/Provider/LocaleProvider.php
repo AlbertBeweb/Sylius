@@ -18,36 +18,22 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class LocaleProvider implements LocaleProviderInterface
 {
-    /** @var RepositoryInterface */
-    private $localeRepository;
-
-    /** @var string */
-    private $defaultLocaleCode;
-
-    public function __construct(RepositoryInterface $localeRepository, string $defaultLocaleCode)
+    public function __construct(private RepositoryInterface $localeRepository, private string $defaultLocaleCode)
     {
-        $this->localeRepository = $localeRepository;
-        $this->defaultLocaleCode = $defaultLocaleCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAvailableLocalesCodes(): array
     {
         $locales = $this->localeRepository->findAll();
 
         return array_map(
             function (LocaleInterface $locale) {
-                return $locale->getCode();
+                return (string) $locale->getCode();
             },
-            $locales
+            $locales,
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultLocaleCode(): string
     {
         return $this->defaultLocaleCode;

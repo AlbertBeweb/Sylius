@@ -15,9 +15,6 @@ namespace Sylius\Component\Currency\Context;
 
 final class CurrencyNotFoundException extends \RuntimeException
 {
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(?string $message = null, ?\Exception $previousException = null)
     {
         parent::__construct($message ?: 'Currency could not be found!', 0, $previousException);
@@ -41,7 +38,7 @@ final class CurrencyNotFoundException extends \RuntimeException
         return new self(sprintf(
             'Currency "%s" is not available! The available ones are: "%s".',
             $currencyCode,
-            implode('", "', $availableCurrenciesCodes)
+            implode('", "', $availableCurrenciesCodes),
         ));
     }
 }

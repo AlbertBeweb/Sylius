@@ -20,17 +20,11 @@ use Sylius\Component\Promotion\Model\PromotionSubjectInterface;
 
 final class ItemTotalRuleChecker implements RuleCheckerInterface
 {
-    /** @var RuleCheckerInterface */
-    private $itemTotalRuleChecker;
-
-    public function __construct(RuleCheckerInterface $itemTotalRuleChecker)
+    public function __construct(private RuleCheckerInterface $itemTotalRuleChecker)
     {
-        $this->itemTotalRuleChecker = $itemTotalRuleChecker;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws UnsupportedTypeException
      */
     public function isEligible(PromotionSubjectInterface $subject, array $configuration): bool

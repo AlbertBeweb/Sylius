@@ -14,25 +14,20 @@ declare(strict_types=1);
 namespace Sylius\Bundle\AddressingBundle\Twig;
 
 use Sylius\Component\Addressing\Provider\ProvinceNamingProviderInterface;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 
-class ProvinceNamingExtension extends \Twig_Extension
+class ProvinceNamingExtension extends AbstractExtension
 {
-    /** @var ProvinceNamingProviderInterface */
-    private $provinceNamingProvider;
-
-    public function __construct(ProvinceNamingProviderInterface $provinceNamingProvider)
+    public function __construct(private ProvinceNamingProviderInterface $provinceNamingProvider)
     {
-        $this->provinceNamingProvider = $provinceNamingProvider;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFilters(): array
     {
         return [
-            new \Twig_Filter('sylius_province_name', [$this->provinceNamingProvider, 'getName']),
-            new \Twig_Filter('sylius_province_abbreviation', [$this->provinceNamingProvider, 'getAbbreviation']),
+            new TwigFilter('sylius_province_name', [$this->provinceNamingProvider, 'getName']),
+            new TwigFilter('sylius_province_abbreviation', [$this->provinceNamingProvider, 'getAbbreviation']),
         ];
     }
 }

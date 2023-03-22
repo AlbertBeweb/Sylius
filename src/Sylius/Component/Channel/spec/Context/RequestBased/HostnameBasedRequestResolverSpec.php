@@ -34,22 +34,22 @@ final class HostnameBasedRequestResolverSpec extends ObjectBehavior
     function it_finds_the_channel_by_request_hostname(
         ChannelRepositoryInterface $channelRepository,
         Request $request,
-        ChannelInterface $channel
+        ChannelInterface $channel,
     ): void {
         $request->getHost()->willReturn('example.org');
 
-        $channelRepository->findOneByHostname('example.org')->willReturn($channel);
+        $channelRepository->findOneEnabledByHostname('example.org')->willReturn($channel);
 
         $this->findChannel($request)->shouldReturn($channel);
     }
 
     function it_returns_null_if_channel_was_not_found(
         ChannelRepositoryInterface $channelRepository,
-        Request $request
+        Request $request,
     ): void {
         $request->getHost()->willReturn('example.org');
 
-        $channelRepository->findOneByHostname('example.org')->willReturn(null);
+        $channelRepository->findOneEnabledByHostname('example.org')->willReturn(null);
 
         $this->findChannel($request)->shouldReturn(null);
     }

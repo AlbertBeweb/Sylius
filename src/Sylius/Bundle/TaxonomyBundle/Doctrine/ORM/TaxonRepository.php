@@ -20,9 +20,6 @@ use Sylius\Component\Taxonomy\Repository\TaxonRepositoryInterface;
 
 class TaxonRepository extends EntityRepository implements TaxonRepositoryInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function findChildren(string $parentCode, ?string $locale = null): array
     {
         return $this->createTranslationBasedQueryBuilder($locale)
@@ -37,26 +34,53 @@ class TaxonRepository extends EntityRepository implements TaxonRepositoryInterfa
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findChildrenByChannelMenuTaxon(?TaxonInterface $menuTaxon = null, ?string $locale = null): array
+    {
+        $hydrationQuery = $this->createTranslationBasedQueryBuilder($locale)
+            ->addSelect('o')
+            ->addSelect('oc')
+            ->leftJoin('o.children', 'oc')
+        ;
+
+        if (null !== $menuTaxon) {
+            $hydrationQuery
+                ->andWhere('o.root = :root')
+                ->setParameter('root', $menuTaxon)
+            ;
+        }
+
+        $hydrationQuery->getQuery()->getResult();
+
+        return $this->createTranslationBasedQueryBuilder($locale)
+            ->addSelect('child')
+            ->innerJoin('o.parent', 'parent')
+            ->leftJoin('o.children', 'child')
+            ->andWhere('o.enabled = :enabled')
+            ->andWhere('parent.code = :parentCode')
+            ->addOrderBy('o.position')
+            ->setParameter('parentCode', ($menuTaxon !== null) ? $menuTaxon->getCode() : 'category')
+            ->setParameter('enabled', true)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
     public function findOneBySlug(string $slug, string $locale): ?TaxonInterface
     {
         return $this->createQueryBuilder('o')
             ->addSelect('translation')
             ->innerJoin('o.translations', 'translation')
+            ->andWhere('o.enabled = :enabled')
             ->andWhere('translation.slug = :slug')
             ->andWhere('translation.locale = :locale')
             ->setParameter('slug', $slug)
             ->setParameter('locale', $locale)
+            ->setParameter('enabled', true)
             ->getQuery()
             ->getOneOrNullResult()
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByName(string $name, string $locale): array
     {
         return $this->createQueryBuilder('o')
@@ -71,9 +95,6 @@ class TaxonRepository extends EntityRepository implements TaxonRepositoryInterfa
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findRootNodes(): array
     {
         return $this->createQueryBuilder('o')
@@ -84,23 +105,37 @@ class TaxonRepository extends EntityRepository implements TaxonRepositoryInterfa
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function findHydratedRootNodes(): array
+    {
+        $this->createQueryBuilder('o')
+            ->select(['o', 'oc', 'ot'])
+            ->leftJoin('o.children', 'oc')
+            ->leftJoin('o.translations', 'ot')
+            ->getQuery()
+            ->getResult()
+        ;
+
+        return $this->findRootNodes();
+    }
+
     public function findByNamePart(string $phrase, ?string $locale = null, ?int $limit = null): array
     {
-        return $this->createTranslationBasedQueryBuilder($locale)
+        /** @var TaxonInterface[] $results */
+        $results = $this->createTranslationBasedQueryBuilder($locale)
             ->andWhere('translation.name LIKE :name')
             ->setParameter('name', '%' . $phrase . '%')
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult()
         ;
+
+        foreach ($results as $result) {
+            $result->setFallbackLocale(array_key_first($result->getTranslations()->toArray()));
+        }
+
+        return $results;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createListQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('o')->leftJoin('o.translations', 'translation');

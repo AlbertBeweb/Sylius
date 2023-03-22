@@ -2,6 +2,13 @@
 # (c) Paweł Jędrzejewski
 
 sylius:
+    email:
+        order_confirmation:
+            subject: 'تایید سفارش'
+        password_reset:
+            subject: 'بازیابی کلمه عبور'
+        verification_token:
+            subject: 'تایید آدرس ایمیل'
     menu:
         shop:
             account:

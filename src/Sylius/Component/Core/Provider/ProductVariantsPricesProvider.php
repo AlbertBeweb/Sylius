@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Core\Provider;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Sylius\Component\Core\Calculator\ProductVariantPriceCalculatorInterface;
+use Sylius\Component\Core\Calculator\ProductVariantPricesCalculatorInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -21,23 +23,16 @@ use Sylius\Component\Product\Model\ProductOptionValueInterface;
 
 final class ProductVariantsPricesProvider implements ProductVariantsPricesProviderInterface
 {
-    /** @var ProductVariantPriceCalculatorInterface */
-    private $productVariantPriceCalculator;
-
-    public function __construct(ProductVariantPriceCalculatorInterface $productVariantPriceCalculator)
+    public function __construct(private ProductVariantPriceCalculatorInterface $productVariantPriceCalculator)
     {
-        $this->productVariantPriceCalculator = $productVariantPriceCalculator;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function provideVariantsPrices(ProductInterface $product, ChannelInterface $channel): array
     {
         $variantsPrices = [];
 
         /** @var ProductVariantInterface $variant */
-        foreach ($product->getVariants() as $variant) {
+        foreach ($product->getEnabledVariants() as $variant) {
             $variantsPrices[] = $this->constructOptionsMap($variant, $channel);
         }
 
@@ -53,7 +48,22 @@ final class ProductVariantsPricesProvider implements ProductVariantsPricesProvid
             $optionMap[$option->getOptionCode()] = $option->getCode();
         }
 
-        $optionMap['value'] = $this->productVariantPriceCalculator->calculate($variant, ['channel' => $channel]);
+        $price = $this->productVariantPriceCalculator->calculate($variant, ['channel' => $channel]);
+        $optionMap['value'] = $price;
+
+        if ($this->productVariantPriceCalculator instanceof ProductVariantPricesCalculatorInterface) {
+            $originalPrice = $this->productVariantPriceCalculator->calculateOriginal($variant, ['channel' => $channel]);
+
+            if ($originalPrice > $price) {
+                $optionMap['original-price'] = $originalPrice;
+            }
+        }
+
+        /** @var ArrayCollection $appliedPromotions */
+        $appliedPromotions = $variant->getAppliedPromotionsForChannel($channel);
+        if (!$appliedPromotions->isEmpty()) {
+            $optionMap['applied_promotions'] = $appliedPromotions->toArray();
+        }
 
         return $optionMap;
     }

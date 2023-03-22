@@ -20,38 +20,28 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestMatcherInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 final class CheckoutResolver implements EventSubscriberInterface
 {
-    /** @var CartContextInterface */
-    private $cartContext;
-
-    /** @var CheckoutStateUrlGeneratorInterface */
-    private $urlGenerator;
-
-    /** @var RequestMatcherInterface */
-    private $requestMatcher;
-
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
     public function __construct(
-        CartContextInterface $cartContext,
-        CheckoutStateUrlGeneratorInterface $urlGenerator,
-        RequestMatcherInterface $requestMatcher,
-        FactoryInterface $stateMachineFactory
+        private CartContextInterface $cartContext,
+        private CheckoutStateUrlGeneratorInterface $urlGenerator,
+        private RequestMatcherInterface $requestMatcher,
+        private FactoryInterface $stateMachineFactory,
     ) {
-        $this->cartContext = $cartContext;
-        $this->urlGenerator = $urlGenerator;
-        $this->requestMatcher = $requestMatcher;
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
-    public function onKernelRequest(GetResponseEvent $event): void
+    public function onKernelRequest(RequestEvent $event): void
     {
-        if (!$event->isMasterRequest()) {
+        if (\method_exists($event, 'isMainRequest')) {
+            $isMainRequest = $event->isMainRequest();
+        } else {
+            /** @phpstan-ignore-next-line */
+            $isMainRequest = $event->isMasterRequest();
+        }
+        if (!$isMainRequest) {
             return;
         }
 
@@ -76,9 +66,6 @@ final class CheckoutResolver implements EventSubscriberInterface
         $event->setResponse(new RedirectResponse($this->urlGenerator->generateForOrderCheckoutState($order)));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [

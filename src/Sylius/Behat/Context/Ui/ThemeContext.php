@@ -24,28 +24,12 @@ use Webmozart\Assert\Assert;
 
 final class ThemeContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var IndexPageInterface */
-    private $channelIndexPage;
-
-    /** @var UpdatePageInterface */
-    private $channelUpdatePage;
-
-    /** @var HomePageInterface */
-    private $homePage;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        IndexPageInterface $channelIndexPage,
-        UpdatePageInterface $channelUpdatePage,
-        HomePageInterface $homePage
+        private SharedStorageInterface $sharedStorage,
+        private IndexPageInterface $channelIndexPage,
+        private UpdatePageInterface $channelUpdatePage,
+        private HomePageInterface $homePage,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->channelIndexPage = $channelIndexPage;
-        $this->channelUpdatePage = $channelUpdatePage;
-        $this->homePage = $homePage;
     }
 
     /**
@@ -96,9 +80,9 @@ final class ThemeContext implements Context
      */
     public function iShouldSeeThemedHomepage(ThemeInterface $theme)
     {
-        $content = file_get_contents(rtrim($theme->getPath(), '/') . '/SyliusShopBundle/views/Homepage/index.html.twig');
+        $content = file_get_contents(rtrim($theme->getPath(), '/') . '/templates/bundles/SyliusShopBundle/Homepage/index.html.twig');
 
-        Assert::same($this->homePage->getContents(), $content);
+        Assert::same($this->homePage->getContent(), $content);
     }
 
     /**
@@ -106,8 +90,8 @@ final class ThemeContext implements Context
      */
     public function iShouldNotSeeThemedHomepage(ThemeInterface $theme)
     {
-        $content = file_get_contents(rtrim($theme->getPath(), '/') . '/SyliusShopBundle/views/Homepage/index.html.twig');
+        $content = file_get_contents(rtrim($theme->getPath(), '/') . '/templates/bundles/SyliusShopBundle/Homepage/index.html.twig');
 
-        Assert::notSame($this->homePage->getContents(), $content);
+        Assert::notSame($this->homePage->getContent(), $content);
     }
 }

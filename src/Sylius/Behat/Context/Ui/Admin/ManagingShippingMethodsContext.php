@@ -26,33 +26,13 @@ use Webmozart\Assert\Assert;
 
 final class ManagingShippingMethodsContext implements Context
 {
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        IndexPageInterface $indexPage,
-        CreatePageInterface $createPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver,
-        NotificationCheckerInterface $notificationChecker
+        private IndexPageInterface $indexPage,
+        private CreatePageInterface $createPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->indexPage = $indexPage;
-        $this->createPage = $createPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -98,9 +78,9 @@ final class ManagingShippingMethodsContext implements Context
     }
 
     /**
-     * @When I define it for the :zoneName zone
+     * @When I define it for the zone named :zoneName
      */
-    public function iDefineItForTheZone($zoneName)
+    public function iDefineItForTheZone(string $zoneName): void
     {
         $this->createPage->chooseZone($zoneName);
     }
@@ -180,7 +160,7 @@ final class ManagingShippingMethodsContext implements Context
      */
     public function theShippingMethodShouldBeAvailableInChannel(
         ShippingMethodInterface $shippingMethod,
-        $channelName
+        $channelName,
     ) {
         $this->iWantToModifyAShippingMethod($shippingMethod);
 
@@ -206,8 +186,8 @@ final class ManagingShippingMethodsContext implements Context
     }
 
     /**
-     * @Given I want to modify a shipping method :shippingMethod
-     * @Given /^I want to modify (this shipping method)$/
+     * @When I want to modify a shipping method :shippingMethod
+     * @When /^I want to modify (this shipping method)$/
      */
     public function iWantToModifyAShippingMethod(ShippingMethodInterface $shippingMethod)
     {
@@ -215,7 +195,7 @@ final class ManagingShippingMethodsContext implements Context
     }
 
     /**
-     * @Then the code field should be disabled
+     * @Then I should not be able to edit its code
      */
     public function theCodeFieldShouldBeDisabled()
     {
@@ -260,7 +240,7 @@ final class ManagingShippingMethodsContext implements Context
     {
         $this->assertFieldValidationMessage(
             'code',
-            'Shipping method code can only be comprised of letters, numbers, dashes and underscores.'
+            'Shipping method code can only be comprised of letters, numbers, dashes and underscores.',
         );
     }
 
@@ -409,11 +389,11 @@ final class ManagingShippingMethodsContext implements Context
     }
 
     /**
-     * @When I switch the way shipping methods are sorted by :field
-     * @When I start sorting shipping methods by :field
-     * @Given the shipping methods are already sorted by :field
+     * @When I switch the way shipping methods are sorted :sortType by :field
+     * @When I sort the shipping methods :sortType by :field
+     * @Given the shipping methods are already sorted :sortType by :field
      */
-    public function iSortShippingMethodsBy($field)
+    public function iSortShippingMethodsBy(string $sortType, string $field): void
     {
         $this->indexPage->sortBy($field);
     }
@@ -473,7 +453,7 @@ final class ManagingShippingMethodsContext implements Context
      */
     public function iShouldBeNotifiedThatItIsInUse()
     {
-        $this->notificationChecker->checkNotification('Cannot delete, the shipping method is in use.', NotificationType::failure());
+        $this->notificationChecker->checkNotification('Cannot delete, the Shipping method is in use.', NotificationType::failure());
     }
 
     /**
@@ -486,7 +466,7 @@ final class ManagingShippingMethodsContext implements Context
 
         Assert::same(
             $currentPage->getValidationMessageForAmount($channel->getCode()),
-            'This value should not be blank.'
+            'This value should not be blank.',
         );
     }
 
@@ -500,7 +480,64 @@ final class ManagingShippingMethodsContext implements Context
 
         Assert::same(
             $currentPage->getValidationMessageForAmount($channel->getCode()),
-            'Shipping charge cannot be lower than 0.'
+            'Shipping charge cannot be lower than 0.',
+        );
+    }
+
+    /**
+     * @When I add the "Total weight greater than or equal" rule configured with :weight
+     */
+    public function iAddTheTotalWeightGreaterThanOrEqualRuleConfiguredWith(int $weight): void
+    {
+        $this->createPage->addRule('Total weight greater than or equal');
+        $this->createPage->fillRuleOption('Weight', (string) $weight);
+    }
+
+    /**
+     * @When I add the "Total weight less than or equal" rule configured with :weight
+     */
+    public function iAddTheTotalWeightLessThanOrEqualRuleConfiguredWith(int $weight): void
+    {
+        $this->createPage->addRule('Total weight less than or equal');
+        $this->createPage->fillRuleOption('Weight', (string) $weight);
+    }
+
+    /**
+     * @When /^I add the "Items total greater than or equal" rule configured with (?:€|£|\$)([^"]+) for ("[^"]+" channel)$/
+     */
+    public function iAddTheItemsTotalGreaterThanOrEqualRuleConfiguredWith($value, ChannelInterface $channel): void
+    {
+        $this->createPage->addRule('Items total greater than or equal');
+        $this->createPage->fillRuleOptionForChannel($channel->getCode(), 'Amount', (string) $value);
+    }
+
+    /**
+     * @When /^I add the "Items total less than or equal" rule configured with (?:€|£|\$)([^"]+) for ("[^"]+" channel)$/
+     */
+    public function iAddTheItemsTotalLessThanOrEqualRuleConfiguredWith($value, ChannelInterface $channel): void
+    {
+        $this->createPage->addRule('Items total less than or equal');
+        $this->createPage->fillRuleOptionForChannel($channel->getCode(), 'Amount', (string) $value);
+    }
+
+    /**
+     * @When /^I remove the shipping charges of ("[^"]+" channel)$/
+     */
+    public function iRemoveTheShippingChargesOfChannel(ChannelInterface $channel): void
+    {
+        $this->updatePage->removeShippingChargesAmount($channel->getCode());
+    }
+
+    /**
+     * @Then /^I should see that the shipping charges for ("[^"]+" channel) has (\d+) validation errors?$/
+     */
+    public function iShouldSeeThatTheShippingChargesForChannelHasCountValidationErrors(
+        ChannelInterface $channel,
+        int $count,
+    ): void {
+        Assert::same(
+            $this->updatePage->getShippingChargesValidationErrorsCount($channel->getCode()),
+            $count,
         );
     }
 

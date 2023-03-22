@@ -18,24 +18,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class TableRenderer
 {
-    /** @var Table */
-    private $table;
+    private Table $table;
 
-    /** @var OutputInterface */
-    private $output;
+    private ?array $headers = null;
 
-    /** @var array */
-    private $headers;
+    private array $rows = [];
 
-    /** @var array */
-    private $rows = [];
+    private ?string $label = null;
 
-    /** @var string */
-    private $label;
-
-    public function __construct(OutputInterface $output)
+    public function __construct(private OutputInterface $output)
     {
-        $this->output = $output;
         $this->table = new Table($output);
     }
 

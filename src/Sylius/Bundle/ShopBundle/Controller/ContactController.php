@@ -18,49 +18,27 @@ use Sylius\Bundle\ShopBundle\EmailManager\ContactEmailManagerInterface;
 use Sylius\Component\Channel\Context\ChannelContextInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
+use Sylius\Component\Locale\Context\LocaleContextInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Twig\Environment;
 use Webmozart\Assert\Assert;
 
 final class ContactController
 {
-    /** @var RouterInterface */
-    private $router;
-
-    /** @var FormFactoryInterface */
-    private $formFactory;
-
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    /** @var CustomerContextInterface */
-    private $customerContext;
-
-    /** @var ContactEmailManagerInterface */
-    private $contactEmailManager;
-
     public function __construct(
-        RouterInterface $router,
-        FormFactoryInterface $formFactory,
-        EngineInterface $templatingEngine,
-        ChannelContextInterface $channelContext,
-        CustomerContextInterface $customerContext,
-        ContactEmailManagerInterface $contactEmailManager
+        private RouterInterface $router,
+        private FormFactoryInterface $formFactory,
+        private Environment $templatingEngine,
+        private ChannelContextInterface $channelContext,
+        private CustomerContextInterface $customerContext,
+        private LocaleContextInterface $localeContext,
+        private ContactEmailManagerInterface $contactEmailManager,
     ) {
-        $this->router = $router;
-        $this->formFactory = $formFactory;
-        $this->templatingEngine = $templatingEngine;
-        $this->channelContext = $channelContext;
-        $this->customerContext = $customerContext;
-        $this->contactEmailManager = $contactEmailManager;
     }
 
     public function requestAction(Request $request): Response
@@ -68,11 +46,12 @@ final class ContactController
         $formType = $this->getSyliusAttribute($request, 'form', ContactType::class);
         $form = $this->formFactory->create($formType, null, $this->getFormOptions());
 
-        if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+        if ($request->isMethod('POST') && $form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
 
-            /** @var ChannelInterface $channel */
             $channel = $this->channelContext->getChannel();
+
+            /** @var ChannelInterface $channel */
             Assert::isInstanceOf($channel, ChannelInterface::class);
 
             $contactEmail = $channel->getContactEmail();
@@ -81,7 +60,7 @@ final class ContactController
                 $errorMessage = $this->getSyliusAttribute(
                     $request,
                     'error_flash',
-                    'sylius.contact.request_error'
+                    'sylius.contact.request_error',
                 );
 
                 /** @var FlashBagInterface $flashBag */
@@ -91,12 +70,13 @@ final class ContactController
                 return new RedirectResponse($request->headers->get('referer'));
             }
 
-            $this->contactEmailManager->sendContactRequest($data, [$contactEmail]);
+            $localeCode = $this->localeContext->getLocaleCode();
+            $this->contactEmailManager->sendContactRequest($data, [$contactEmail], $channel, $localeCode);
 
             $successMessage = $this->getSyliusAttribute(
                 $request,
                 'success_flash',
-                'sylius.contact.request_success'
+                'sylius.contact.request_success',
             );
 
             /** @var FlashBagInterface $flashBag */
@@ -110,7 +90,7 @@ final class ContactController
 
         $template = $this->getSyliusAttribute($request, 'template', '@SyliusShop/Contact/request.html.twig');
 
-        return $this->templatingEngine->renderResponse($template, ['form' => $form->createView()]);
+        return new Response($this->templatingEngine->render($template, ['form' => $form->createView()]));
     }
 
     private function getSyliusAttribute(Request $request, string $attributeName, ?string $default): ?string

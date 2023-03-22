@@ -18,6 +18,8 @@ use Sylius\Bundle\UserBundle\Provider\AbstractUserProvider;
 use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Sylius\Component\User\Model\User;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 final class UsernameProviderSpec extends ObjectBehavior
@@ -45,7 +47,7 @@ final class UsernameProviderSpec extends ObjectBehavior
     function it_loads_user_by_user_name(
         UserRepositoryInterface $userRepository,
         CanonicalizerInterface $canonicalizer,
-        User $user
+        User $user,
     ): void {
         $canonicalizer->canonicalize('testUser')->willReturn('testuser');
 
@@ -61,5 +63,11 @@ final class UsernameProviderSpec extends ObjectBehavior
         $user->getId()->willReturn(1);
 
         $this->refreshUser($user)->shouldReturn($user);
+    }
+
+    function it_should_throw_exception_when_unsupported_user_is_used(
+        UserInterface $user,
+    ): void {
+        $this->shouldThrow(UnsupportedUserException::class)->during('refreshUser', [$user]);
     }
 }

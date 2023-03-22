@@ -2,6 +2,16 @@
 # (c) Paweł Jędrzejewski
 
 sylius:
+    email:
+        order_confirmation:
+            subject: 'تأكيد طلب الشراء'
+            view_order_or_change_payment_method: 'عرض النظام أو تغيير طريقة الدفع'
+        password_reset:
+            hello: 'مرحباً'
+        verification_token:
+            hello: 'مرحباً'
+    lightbox:
+        image_album_label: 'الصورة   من %1 إلى %2'
     menu:
         shop:
             account:

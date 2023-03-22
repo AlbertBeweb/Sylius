@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class CurrencyContext implements Context
 {
-    /** @var HomePageInterface */
-    private $homePage;
-
-    public function __construct(HomePageInterface $homePage)
+    public function __construct(private HomePageInterface $homePage)
     {
-        $this->homePage = $homePage;
     }
 
     /**
@@ -68,7 +64,7 @@ final class CurrencyContext implements Context
             throw new \InvalidArgumentException(sprintf(
                 'Expected "%s" not to be in "%s"',
                 $currencyCode,
-                implode('", "', $this->homePage->getAvailableCurrencies())
+                implode('", "', $this->homePage->getAvailableCurrencies()),
             ));
         }
     }

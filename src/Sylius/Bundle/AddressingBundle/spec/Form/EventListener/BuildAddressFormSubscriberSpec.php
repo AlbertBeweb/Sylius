@@ -59,7 +59,7 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
         FormInterface $provinceForm,
         AddressInterface $address,
         CountryInterface $country,
-        RepositoryInterface $countryRepository
+        RepositoryInterface $countryRepository,
     ): void {
         $event->getData()->willReturn($address);
         $event->getForm()->willReturn($form);
@@ -72,9 +72,10 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
 
         $formFactory
             ->createNamed('provinceCode', ProvinceCodeChoiceType::class, 'province', Argument::withKey('country'))
-            ->willReturn($provinceForm);
+            ->willReturn($provinceForm)
+        ;
 
-        $form->add($provinceForm)->shouldBeCalled();
+        $form->add($provinceForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSetData($event);
     }
@@ -86,7 +87,7 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
         FormInterface $provinceForm,
         AddressInterface $address,
         CountryInterface $country,
-        RepositoryInterface $countryRepository
+        RepositoryInterface $countryRepository,
     ): void {
         $event->getData()->willReturn($address);
         $event->getForm()->willReturn($form);
@@ -99,9 +100,10 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
 
         $formFactory
             ->createNamed('provinceName', TextType::class, 'Utah', Argument::any())
-            ->willReturn($provinceForm);
+            ->willReturn($provinceForm)
+        ;
 
-        $form->add($provinceForm)->shouldBeCalled();
+        $form->add($provinceForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSetData($event);
     }
@@ -112,7 +114,7 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
         FormEvent $event,
         FormInterface $form,
         FormInterface $provinceForm,
-        CountryInterface $country
+        CountryInterface $country,
     ): void {
         $event->getForm()->willReturn($form);
         $event->getData()->willReturn([
@@ -124,9 +126,10 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
 
         $formFactory
             ->createNamed('provinceCode', ProvinceCodeChoiceType::class, null, Argument::withKey('country'))
-            ->willReturn($provinceForm);
+            ->willReturn($provinceForm)
+        ;
 
-        $form->add($provinceForm)->shouldBeCalled();
+        $form->add($provinceForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSubmit($event);
     }
@@ -137,7 +140,7 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
         FormInterface $form,
         FormInterface $provinceForm,
         CountryInterface $country,
-        RepositoryInterface $countryRepository
+        RepositoryInterface $countryRepository,
     ): void {
         $event->getData()->willReturn([
             'countryCode' => 'US',
@@ -149,9 +152,10 @@ final class BuildAddressFormSubscriberSpec extends ObjectBehavior
 
         $formFactory
             ->createNamed('provinceName', TextType::class, null, Argument::any())
-            ->willReturn($provinceForm);
+            ->willReturn($provinceForm)
+        ;
 
-        $form->add($provinceForm)->shouldBeCalled();
+        $form->add($provinceForm)->willReturn($form)->shouldBeCalled();
 
         $this->preSubmit($event);
     }

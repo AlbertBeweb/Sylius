@@ -23,35 +23,24 @@ use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Sylius\Component\Payment\Resolver\DefaultPaymentMethodResolverInterface;
 use Sylius\Component\Resource\StateMachine\StateMachineInterface;
+use Webmozart\Assert\Assert;
 
 final class OrderPaymentProvider implements OrderPaymentProviderInterface
 {
-    /** @var DefaultPaymentMethodResolverInterface */
-    private $defaultPaymentMethodResolver;
-
-    /** @var PaymentFactoryInterface */
-    private $paymentFactory;
-
-    /** @var StateMachineFactoryInterface */
-    private $stateMachineFactory;
-
     public function __construct(
-        DefaultPaymentMethodResolverInterface $defaultPaymentMethodResolver,
-        PaymentFactoryInterface $paymentFactory,
-        StateMachineFactoryInterface $stateMachineFactory
+        private DefaultPaymentMethodResolverInterface $defaultPaymentMethodResolver,
+        private PaymentFactoryInterface $paymentFactory,
+        private StateMachineFactoryInterface $stateMachineFactory,
     ) {
-        $this->defaultPaymentMethodResolver = $defaultPaymentMethodResolver;
-        $this->paymentFactory = $paymentFactory;
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function provideOrderPayment(OrderInterface $order, string $targetState): ?PaymentInterface
     {
         /** @var PaymentInterface $payment */
-        $payment = $this->paymentFactory->createWithAmountAndCurrencyCode($order->getTotal(), $order->getCurrencyCode());
+        $payment = $this->paymentFactory->createWithAmountAndCurrencyCode(
+            $order->getTotal(),
+            $order->getCurrencyCode(),
+        );
 
         $paymentMethod = $this->getDefaultPaymentMethod($payment, $order);
         $lastPayment = $this->getLastPayment($order);
@@ -84,9 +73,11 @@ final class OrderPaymentProvider implements OrderPaymentProviderInterface
     {
         try {
             $payment->setOrder($order);
+            $paymentMethod = $this->defaultPaymentMethodResolver->getDefaultPaymentMethod($payment);
+            Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
 
-            return $this->defaultPaymentMethodResolver->getDefaultPaymentMethod($payment);
-        } catch (UnresolvedDefaultPaymentMethodException $exception) {
+            return $paymentMethod;
+        } catch (UnresolvedDefaultPaymentMethodException) {
             return null;
         }
     }

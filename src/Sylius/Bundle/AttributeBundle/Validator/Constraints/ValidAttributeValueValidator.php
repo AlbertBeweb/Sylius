@@ -22,21 +22,14 @@ use Symfony\Component\Validator\ConstraintValidator;
 
 final class ValidAttributeValueValidator extends ConstraintValidator
 {
-    /** @var ServiceRegistryInterface */
-    private $attributeTypeRegistry;
-
-    public function __construct(ServiceRegistryInterface $attributeTypeRegistry)
+    public function __construct(private ServiceRegistryInterface $attributeTypeRegistry)
     {
-        $this->attributeTypeRegistry = $attributeTypeRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate($value, Constraint $constraint): void
     {
         if (!$value instanceof AttributeValueInterface) {
-            throw new UnexpectedTypeException(get_class($value), AttributeValueInterface::class);
+            throw new UnexpectedTypeException($value::class, AttributeValueInterface::class);
         }
 
         /** @var AttributeTypeInterface $attributeType */

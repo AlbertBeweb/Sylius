@@ -29,7 +29,7 @@ final class ConfigurationTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [[]],
             ['locale_switcher' => 'url'],
-            'locale_switcher'
+            'locale_switcher',
         );
     }
 
@@ -71,7 +71,7 @@ final class ConfigurationTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [[]],
             ['firewall_context_name' => 'shop'],
-            'firewall_context_name'
+            'firewall_context_name',
         );
     }
 
@@ -87,7 +87,7 @@ final class ConfigurationTest extends TestCase
                     'pattern' => '/checkout/.+',
                     'route_map' => [],
             ]],
-            'checkout_resolver'
+            'checkout_resolver',
         );
     }
 
@@ -126,7 +126,8 @@ final class ConfigurationTest extends TestCase
      */
     public function its_checkout_route_map_it_is_configurable(): void
     {
-        $this->assertProcessedConfigurationEquals([
+        $this->assertProcessedConfigurationEquals(
+            [
             ['checkout_resolver' => [
                 'route_map' => [
                     'addressed' => [
@@ -143,7 +144,7 @@ final class ConfigurationTest extends TestCase
                     ],
                 ],
             ]],
-            'checkout_resolver'
+            'checkout_resolver',
         );
     }
 
@@ -161,9 +162,6 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): Configuration
     {
         return new Configuration();

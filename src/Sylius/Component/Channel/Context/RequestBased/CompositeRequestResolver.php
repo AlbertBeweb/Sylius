@@ -13,14 +13,18 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Channel\Context\RequestBased;
 
+use Laminas\Stdlib\PriorityQueue;
 use Sylius\Component\Channel\Model\ChannelInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Zend\Stdlib\PriorityQueue;
 
 final class CompositeRequestResolver implements RequestResolverInterface
 {
-    /** @var PriorityQueue|RequestResolverInterface[] */
-    private $requestResolvers;
+    /**
+     * @var PriorityQueue|RequestResolverInterface[]
+     *
+     * @psalm-var PriorityQueue<RequestResolverInterface>
+     */
+    private PriorityQueue $requestResolvers;
 
     public function __construct()
     {
@@ -32,9 +36,6 @@ final class CompositeRequestResolver implements RequestResolverInterface
         $this->requestResolvers->insert($requestResolver, $priority);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findChannel(Request $request): ?ChannelInterface
     {
         foreach ($this->requestResolvers as $requestResolver) {

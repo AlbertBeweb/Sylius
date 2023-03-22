@@ -22,23 +22,11 @@ use Webmozart\Assert\Assert;
 
 final class CheckoutRedirectListener
 {
-    /** @var RequestStack */
-    private $requestStack;
-
-    /** @var CheckoutStateUrlGeneratorInterface */
-    private $checkoutStateUrlGenerator;
-
-    /** @var RequestMatcherInterface */
-    private $requestMatcher;
-
     public function __construct(
-        RequestStack $requestStack,
-        CheckoutStateUrlGeneratorInterface $checkoutStateUrlGenerator,
-        RequestMatcherInterface $requestMatcher
+        private RequestStack $requestStack,
+        private CheckoutStateUrlGeneratorInterface $checkoutStateUrlGenerator,
+        private RequestMatcherInterface $requestMatcher,
     ) {
-        $this->requestStack = $requestStack;
-        $this->checkoutStateUrlGenerator = $checkoutStateUrlGenerator;
-        $this->requestMatcher = $requestMatcher;
     }
 
     public function handleCheckoutRedirect(ResourceControllerEvent $resourceControllerEvent): void

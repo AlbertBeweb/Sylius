@@ -19,23 +19,16 @@ use Sylius\Component\Registry\ServiceRegistryInterface;
 
 final class PromotionApplicator implements PromotionApplicatorInterface
 {
-    /** @var ServiceRegistryInterface */
-    private $registry;
-
-    public function __construct(ServiceRegistryInterface $registry)
+    public function __construct(private ServiceRegistryInterface $registry)
     {
-        $this->registry = $registry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function apply(PromotionSubjectInterface $subject, PromotionInterface $promotion): void
     {
         $applyPromotion = false;
         foreach ($promotion->getActions() as $action) {
             $result = $this->getActionCommandByType($action->getType())->execute($subject, $action->getConfiguration(), $promotion);
-            $applyPromotion |= $result;
+            $applyPromotion = $applyPromotion || $result;
         }
 
         if ($applyPromotion) {
@@ -43,9 +36,6 @@ final class PromotionApplicator implements PromotionApplicatorInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function revert(PromotionSubjectInterface $subject, PromotionInterface $promotion): void
     {
         foreach ($promotion->getActions() as $action) {

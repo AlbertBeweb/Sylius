@@ -37,7 +37,8 @@
                 <cascade-persist />
             </cascade>
             <order-by>
-                <order-by-field name="position" direction="ASC" />
+                <order-by-field name="position" />
+                <order-by-field name="id" />
             </order-by>
         </one-to-many>
 
@@ -56,6 +57,8 @@
         </field>
 
         <gedmo:tree type="nested" />
+
+        <field name="enabled" column="enabled" type="boolean" />
     </mapped-superclass>
 
 </doctrine-mapping>

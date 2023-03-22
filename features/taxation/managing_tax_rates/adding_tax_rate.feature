@@ -9,10 +9,10 @@ Feature: Adding a new tax rate
         And the store has a tax category "Food and Beverage"
         And I am logged in as an administrator
 
-    @ui
+    @api @ui
     Scenario: Adding a new tax rate
-        Given I want to create a new tax rate
-        When I specify its code as "US_SALES_TAX"
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
         And I name it "United States Sales Tax"
         And I define it for the "United States" zone
         And I make it applicable for the "Food and Beverage" tax category
@@ -22,10 +22,65 @@ Feature: Adding a new tax rate
         Then I should be notified that it has been successfully created
         And the tax rate "United States Sales Tax" should appear in the registry
 
-    @ui @javascript
+    @api @ui
+    Scenario: Adding a zero tax rate
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
+        And I name it "United States Sales Tax"
+        And I define it for the "United States" zone
+        And I make it applicable for the "Food and Beverage" tax category
+        And I specify its amount as 0%
+        And I choose the default tax calculator
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the tax rate "United States Sales Tax" should appear in the registry
+
+    @api @ui
+    Scenario: Adding a new tax rate with start and end date
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
+        And I name it "United States Sales Tax"
+        And I define it for the "United States" zone
+        And I make it applicable for the "Food and Beverage" tax category
+        And I specify its amount as 20%
+        And I make it start at "01-01-2023" and end at "31-12-2023"
+        And I choose the default tax calculator
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the tax rate "United States Sales Tax" should appear in the registry
+
+    @api @ui
+    Scenario: Adding a new tax rate with start date only
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
+        And I name it "United States Sales Tax"
+        And I define it for the "United States" zone
+        And I make it applicable for the "Food and Beverage" tax category
+        And I specify its amount as 20%
+        And I set the start date to "01-01-2023"
+        And I choose the default tax calculator
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the tax rate "United States Sales Tax" should appear in the registry
+
+    @api @ui
+    Scenario: Adding a new tax rate with end date only
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
+        And I name it "United States Sales Tax"
+        And I define it for the "United States" zone
+        And I make it applicable for the "Food and Beverage" tax category
+        And I specify its amount as 20%
+        And I set the end date to "01-01-2023"
+        And I choose the default tax calculator
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the tax rate "United States Sales Tax" should appear in the registry
+
+    @api @ui @javascript
     Scenario: Adding a new tax rate which will be included in product price
-        Given I want to create a new tax rate
-        When I specify its code as "US_SALES_TAX"
+        When I want to create a new tax rate
+        And I specify its code as "US_SALES_TAX"
         And I name it "United States Sales Tax"
         And I define it for the "United States" zone
         And I make it applicable for the "Food and Beverage" tax category
@@ -35,3 +90,4 @@ Feature: Adding a new tax rate
         And I add it
         Then I should be notified that it has been successfully created
         And the tax rate "United States Sales Tax" should appear in the registry
+        And the tax rate "United States Sales Tax" should be included in price

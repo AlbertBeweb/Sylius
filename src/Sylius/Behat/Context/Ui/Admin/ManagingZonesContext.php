@@ -27,33 +27,13 @@ use Webmozart\Assert\Assert;
 
 final class ManagingZonesContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var NotificationCheckerInterface */
-    private $notificationChecker;
-
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver,
-        NotificationCheckerInterface $notificationChecker
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private NotificationCheckerInterface $notificationChecker,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->notificationChecker = $notificationChecker;
     }
 
     /**
@@ -82,7 +62,7 @@ final class ManagingZonesContext implements Context
     }
 
     /**
-     * @When /^I delete (zone named "([^"]*)")$/
+     * @When /^I(?:| try to) delete the (zone named "([^"]*)")$/
      */
     public function iDeleteZoneNamed(ZoneInterface $zone)
     {
@@ -91,11 +71,21 @@ final class ManagingZonesContext implements Context
     }
 
     /**
-     * @When /^I remove (the "([^"]*)" (?:country|province|zone) member)$/
+     * @When /^I(?:| also) remove (the "([^"]*)" (?:country|province|zone) member)$/
      */
     public function iRemoveTheMember(ZoneMemberInterface $zoneMember)
     {
         $this->updatePage->removeMember($zoneMember);
+    }
+
+    /**
+     * @When /^I(?:| also) remove the ("([^"]+)", "([^"]+)" and "([^"]+)" (?:country|province|zone) members)$/
+     */
+    public function iRemoveMembers(array $countries): void
+    {
+        foreach ($countries as $country) {
+            $this->updatePage->removeMember($country);
+        }
     }
 
     /**
@@ -231,9 +221,9 @@ final class ManagingZonesContext implements Context
     }
 
     /**
-     * @Then /^the code field should be disabled$/
+     * @Then I should not be able to edit its code
      */
-    public function theCodeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsCode(): void
     {
         Assert::true($this->updatePage->isCodeDisabled());
     }
@@ -289,9 +279,9 @@ final class ManagingZonesContext implements Context
     }
 
     /**
-     * @Then the type field should be disabled
+     * @Then I should not be able to edit its type
      */
-    public function theTypeFieldShouldBeDisabled()
+    public function iShouldNotBeAbleToEditItsType(): void
     {
         Assert::true($this->createPage->isTypeFieldDisabled());
     }
@@ -330,17 +320,17 @@ final class ManagingZonesContext implements Context
     }
 
     /**
-     * @Then I should see the zone :zoneName in the list
+     * @Then I should be notified that the zone is in use and cannot be deleted
      */
-    public function iShouldSeeTheZoneInTheList(string $zoneName): void
+    public function iShouldBeNotifiedThatTheZoneIsInUseAndCannotBeDeleted(): void
     {
-        Assert::true($this->indexPage->isSingleResourceOnPage(['name' => $zoneName]));
+        $this->notificationChecker->checkNotification('Error Cannot delete, the Zone is in use.', NotificationType::failure());
     }
 
     /**
      * @Then I should be notified that this zone cannot be deleted
      */
-    public function iShouldBeNotifiedThatThisZoneCannotBeDeleted()
+    public function iShouldBeNotifiedThatThisZoneCannotBeDeleted(): void
     {
         $this->notificationChecker->checkNotification('Error Cannot delete, the zone is in use.', NotificationType::failure());
     }
@@ -355,7 +345,7 @@ final class ManagingZonesContext implements Context
                 'code' => $zone->getCode(),
                 'name' => $zone->getName(),
             ]),
-            sprintf('Zone %s is not valid', $zone->getName())
+            sprintf('Zone %s is not valid', $zone->getName()),
         );
 
         Assert::true($this->updatePage->hasMember($zoneMember));
@@ -370,7 +360,7 @@ final class ManagingZonesContext implements Context
 
         try {
             $member = $this->createPage->chooseMember($name);
-        } catch (ElementNotFoundException $exception) {
+        } catch (ElementNotFoundException) {
         }
         Assert::isEmpty($member);
     }

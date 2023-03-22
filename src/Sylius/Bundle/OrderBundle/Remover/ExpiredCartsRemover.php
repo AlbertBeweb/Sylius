@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\OrderBundle\Remover;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Bundle\OrderBundle\SyliusExpiredCartsEvents;
 use Sylius\Component\Order\Remover\ExpiredCartsRemoverInterface;
 use Sylius\Component\Order\Repository\OrderRepositoryInterface;
@@ -22,42 +22,38 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 
 final class ExpiredCartsRemover implements ExpiredCartsRemoverInterface
 {
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var ObjectManager */
-    private $orderManager;
-
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-
-    /** @var string */
-    private $expirationPeriod;
-
     public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        ObjectManager $orderManager,
-        EventDispatcherInterface $eventDispatcher,
-        string $expirationPeriod
+        private OrderRepositoryInterface $orderRepository,
+        private ObjectManager $orderManager,
+        private EventDispatcherInterface $eventDispatcher,
+        private string $expirationPeriod,
+        private int $batchSize = 100,
     ) {
-        $this->orderRepository = $orderRepository;
-        $this->orderManager = $orderManager;
-        $this->eventDispatcher = $eventDispatcher;
-        $this->expirationPeriod = $expirationPeriod;
     }
 
     public function remove(): void
     {
-        $expiredCarts = $this->orderRepository->findCartsNotModifiedSince(new \DateTime('-' . $this->expirationPeriod));
+        while ([] !== $expiredCarts = $this->getBatch()) {
+            foreach ($expiredCarts as $expiredCart) {
+                $this->orderManager->remove($expiredCart);
+            }
 
-        $this->eventDispatcher->dispatch(SyliusExpiredCartsEvents::PRE_REMOVE, new GenericEvent($expiredCarts));
-
-        foreach ($expiredCarts as $expiredCart) {
-            $this->orderManager->remove($expiredCart);
+            $this->processDeletion($expiredCarts);
         }
+    }
 
+    private function getBatch(): array
+    {
+        $terminalDate = new \DateTime(sprintf('-%s', $this->expirationPeriod));
+
+        return $this->orderRepository->findCartsNotModifiedSince($terminalDate, $this->batchSize);
+    }
+
+    private function processDeletion(array $deletedCarts): void
+    {
+        $this->eventDispatcher->dispatch(new GenericEvent($deletedCarts), SyliusExpiredCartsEvents::PRE_REMOVE);
         $this->orderManager->flush();
-
-        $this->eventDispatcher->dispatch(SyliusExpiredCartsEvents::POST_REMOVE, new GenericEvent($expiredCarts));
+        $this->eventDispatcher->dispatch(new GenericEvent($deletedCarts), SyliusExpiredCartsEvents::POST_REMOVE);
+        $this->orderManager->clear();
     }
 }

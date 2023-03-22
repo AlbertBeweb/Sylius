@@ -25,6 +25,7 @@ $.fn.extend({
           search: 250,
         },
         forceSelection: false,
+        saveRemoteData: false,
         apiSettings: {
           dataType: 'JSON',
           cache: false,
@@ -35,12 +36,21 @@ $.fn.extend({
             return settings;
           },
           onResponse(response) {
+            let results = response.map(item => ({
+              name: item[choiceName],
+              value: item[choiceValue],
+            }));
+
+            if (!element.hasClass('multiple')) {
+              results.unshift({
+                name: '&nbsp;',
+                value: '',
+              });
+            }
+
             return {
               success: true,
-              results: response.map(item => ({
-                name: item[choiceName],
-                value: item[choiceValue],
-              })),
+              results: results,
             };
           },
         },
@@ -65,13 +75,12 @@ $.fn.extend({
                 $(`<div class="item" data-value="${item[choiceValue]}">${item[choiceName]}</div>`)
               ));
             });
+
+            element.dropdown('refresh');
+            element.dropdown('set selected', element.find('input.autocomplete').val().split(',').filter(String));
           },
         });
       }
-
-      window.setTimeout(() => {
-        element.dropdown('set selected', element.find('input.autocomplete').val().split(',').filter(String));
-      }, 5000);
     });
   },
 });

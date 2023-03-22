@@ -22,29 +22,20 @@ final class TextareaAttributeType implements AttributeTypeInterface
 {
     public const TYPE = 'textarea';
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStorageType(): string
     {
         return AttributeValueInterface::STORAGE_TEXT;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): string
     {
         return self::TYPE;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate(
         AttributeValueInterface $attributeValue,
         ExecutionContextInterface $context,
-        array $configuration
+        array $configuration,
     ): void {
         if (!isset($configuration['required'])) {
             return;
@@ -63,14 +54,15 @@ final class TextareaAttributeType implements AttributeTypeInterface
 
     private function getValidationErrors(
         ExecutionContextInterface $context,
-        ?string $value
+        ?string $value,
     ): ConstraintViolationListInterface {
         $validator = $context->getValidator();
 
         return $validator->validate(
-            $value, [
+            $value,
+            [
                 new NotBlank([]),
-            ]
+            ],
         );
     }
 }

@@ -19,9 +19,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 final class CompositePromotionEligibilityCheckerPass implements CompilerPassInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function process(ContainerBuilder $container): void
     {
         if (!$container->has('sylius.promotion_eligibility_checker')) {
@@ -30,10 +27,8 @@ final class CompositePromotionEligibilityCheckerPass implements CompilerPassInte
 
         $container->getDefinition('sylius.promotion_eligibility_checker')->setArguments([
             array_map(
-                function ($id) {
-                    return new Reference($id);
-                },
-                array_keys($container->findTaggedServiceIds('sylius.promotion_eligibility_checker'))
+                fn ($id) => new Reference($id),
+                array_keys($container->findTaggedServiceIds('sylius.promotion_eligibility_checker')),
             ),
         ]);
     }

@@ -6,7 +6,7 @@ Feature: Prevent deletion of purchased product
 
     Background:
         Given the store operates on a single channel in "United States"
-        And the store ships everywhere for free
+        And the store ships everywhere for Free
         And the store allows paying with "Cash on Delivery"
         And the store has a product "Toyota GT86 model"
         And there is a customer "john.doe@gmail.com" that placed an order "#00000027"
@@ -20,7 +20,7 @@ Feature: Prevent deletion of purchased product
         Then I should be notified that this product is in use and cannot be deleted
         And this product should still exist in the product catalog
 
-    @ui
+    @ui @api
     Scenario: Purchased product images should be kept
         Given the store has a product "Lamborghini Gallardo Model"
         And this product has an image "lamborghini.jpg" with "thumbnail" type

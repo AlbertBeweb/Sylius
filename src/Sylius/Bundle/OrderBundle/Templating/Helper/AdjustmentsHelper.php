@@ -19,12 +19,8 @@ use Symfony\Component\Templating\Helper\Helper;
 
 class AdjustmentsHelper extends Helper
 {
-    /** @var AdjustmentsAggregatorInterface */
-    private $adjustmentsAggregator;
-
-    public function __construct(AdjustmentsAggregatorInterface $adjustmentsAggregator)
+    public function __construct(private AdjustmentsAggregatorInterface $adjustmentsAggregator)
     {
-        $this->adjustmentsAggregator = $adjustmentsAggregator;
     }
 
     /**
@@ -35,9 +31,6 @@ class AdjustmentsHelper extends Helper
         return $this->adjustmentsAggregator->aggregate($adjustments);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'sylius_adjustments';

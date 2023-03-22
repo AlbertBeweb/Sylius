@@ -20,30 +20,20 @@ use Webmozart\Assert\Assert;
 
 final class PromotionCouponFactory implements PromotionCouponFactoryInterface
 {
-    /** @var FactoryInterface */
-    private $factory;
-
-    public function __construct(FactoryInterface $factory)
+    public function __construct(private FactoryInterface $factory)
     {
-        $this->factory = $factory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createNew(): PromotionCouponInterface
     {
         return $this->factory->createNew();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createForPromotion(PromotionInterface $promotion): PromotionCouponInterface
     {
         Assert::true(
             $promotion->isCouponBased(),
-            sprintf('Promotion with name %s is not coupon based.', $promotion->getName())
+            sprintf('Promotion with name %s is not coupon based.', $promotion->getName()),
         );
 
         /** @var PromotionCouponInterface $coupon */

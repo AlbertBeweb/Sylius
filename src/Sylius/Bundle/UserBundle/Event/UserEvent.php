@@ -14,16 +14,12 @@ declare(strict_types=1);
 namespace Sylius\Bundle\UserBundle\Event;
 
 use Sylius\Component\User\Model\UserInterface;
-use Symfony\Component\EventDispatcher\Event;
+use SyliusLabs\Polyfill\Symfony\EventDispatcher\Event;
 
 class UserEvent extends Event
 {
-    /** @var UserInterface */
-    private $user;
-
-    public function __construct(UserInterface $user)
+    public function __construct(private UserInterface $user)
     {
-        $this->user = $user;
     }
 
     public function getUser(): UserInterface

@@ -25,31 +25,15 @@ final class UnitPercentageDiscountPromotionActionCommand extends UnitDiscountPro
 {
     public const TYPE = 'unit_percentage_discount';
 
-    /** @var FilterInterface */
-    private $priceRangeFilter;
-
-    /** @var FilterInterface */
-    private $taxonFilter;
-
-    /** @var FilterInterface */
-    private $productFilter;
-
     public function __construct(
         FactoryInterface $adjustmentFactory,
-        FilterInterface $priceRangeFilter,
-        FilterInterface $taxonFilter,
-        FilterInterface $productFilter
+        private FilterInterface $priceRangeFilter,
+        private FilterInterface $taxonFilter,
+        private FilterInterface $productFilter,
     ) {
         parent::__construct($adjustmentFactory);
-
-        $this->priceRangeFilter = $priceRangeFilter;
-        $this->taxonFilter = $taxonFilter;
-        $this->productFilter = $productFilter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(PromotionSubjectInterface $subject, array $configuration, PromotionInterface $promotion): bool
     {
         if (!$subject instanceof OrderInterface) {
@@ -63,7 +47,7 @@ final class UnitPercentageDiscountPromotionActionCommand extends UnitDiscountPro
 
         $filteredItems = $this->priceRangeFilter->filter(
             $subject->getItems()->toArray(),
-            array_merge(['channel' => $subject->getChannel()], $configuration[$channelCode])
+            array_merge(['channel' => $subject->getChannel()], $configuration[$channelCode]),
         );
         $filteredItems = $this->taxonFilter->filter($filteredItems, $configuration[$channelCode]);
         $filteredItems = $this->productFilter->filter($filteredItems, $configuration[$channelCode]);
@@ -83,7 +67,7 @@ final class UnitPercentageDiscountPromotionActionCommand extends UnitDiscountPro
     private function setUnitsAdjustments(
         OrderItemInterface $item,
         int $promotionAmount,
-        PromotionInterface $promotion
+        PromotionInterface $promotion,
     ): void {
         foreach ($item->getUnits() as $unit) {
             $this->addAdjustmentToUnit($unit, $promotionAmount, $promotion);

@@ -23,38 +23,15 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class SequentialOrderNumberGenerator implements OrderNumberGeneratorInterface
 {
-    /** @var RepositoryInterface */
-    private $sequenceRepository;
-
-    /** @var FactoryInterface */
-    private $sequenceFactory;
-
-    /** @var EntityManagerInterface */
-    private $sequenceManager;
-
-    /** @var int */
-    private $startNumber;
-
-    /** @var int */
-    private $numberLength;
-
     public function __construct(
-        RepositoryInterface $sequenceRepository,
-        FactoryInterface $sequenceFactory,
-        EntityManagerInterface $sequenceManager,
-        int $startNumber = 1,
-        int $numberLength = 9
+        private RepositoryInterface $sequenceRepository,
+        private FactoryInterface $sequenceFactory,
+        private EntityManagerInterface $sequenceManager,
+        private int $startNumber = 1,
+        private int $numberLength = 9,
     ) {
-        $this->sequenceRepository = $sequenceRepository;
-        $this->sequenceFactory = $sequenceFactory;
-        $this->sequenceManager = $sequenceManager;
-        $this->startNumber = $startNumber;
-        $this->numberLength = $numberLength;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function generate(OrderInterface $order): string
     {
         $sequence = $this->getSequence();
@@ -76,7 +53,7 @@ final class SequentialOrderNumberGenerator implements OrderNumberGeneratorInterf
 
     private function getSequence(): OrderSequenceInterface
     {
-        /** @var OrderSequenceInterface $sequence */
+        /** @var OrderSequenceInterface|null $sequence */
         $sequence = $this->sequenceRepository->findOneBy([]);
 
         if (null !== $sequence) {

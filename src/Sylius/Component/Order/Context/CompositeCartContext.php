@@ -13,13 +13,17 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Order\Context;
 
+use Laminas\Stdlib\PriorityQueue;
 use Sylius\Component\Order\Model\OrderInterface;
-use Zend\Stdlib\PriorityQueue;
 
 final class CompositeCartContext implements CartContextInterface
 {
-    /** @var PriorityQueue|CartContextInterface[] */
-    private $cartContexts;
+    /**
+     * @var PriorityQueue|CartContextInterface[]
+     *
+     * @psalm-var PriorityQueue<CartContextInterface>
+     */
+    private PriorityQueue $cartContexts;
 
     public function __construct()
     {
@@ -31,15 +35,12 @@ final class CompositeCartContext implements CartContextInterface
         $this->cartContexts->insert($cartContext, $priority);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCart(): OrderInterface
     {
         foreach ($this->cartContexts as $cartContext) {
             try {
                 return $cartContext->getCart();
-            } catch (CartNotFoundException $exception) {
+            } catch (CartNotFoundException) {
                 continue;
             }
         }

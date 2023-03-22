@@ -18,21 +18,10 @@ use Webmozart\Assert\Assert;
 
 final class PercentageGenerationPolicy implements GenerationPolicyInterface
 {
-    /** @var PromotionCouponRepositoryInterface */
-    private $couponRepository;
-
-    /** @var float */
-    private $ratio;
-
-    public function __construct(PromotionCouponRepositoryInterface $couponRepository, float $ratio = 0.5)
+    public function __construct(private PromotionCouponRepositoryInterface $couponRepository, private float $ratio = 0.5)
     {
-        $this->couponRepository = $couponRepository;
-        $this->ratio = $ratio;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isGenerationPossible(PromotionCouponGeneratorInstructionInterface $instruction): bool
     {
         $expectedGenerationAmount = $instruction->getAmount();
@@ -41,9 +30,6 @@ final class PercentageGenerationPolicy implements GenerationPolicyInterface
         return $possibleGenerationAmount >= $expectedGenerationAmount;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPossibleGenerationAmount(PromotionCouponGeneratorInstructionInterface $instruction): int
     {
         return $this->calculatePossibleGenerationAmount($instruction);
@@ -59,11 +45,20 @@ final class PercentageGenerationPolicy implements GenerationPolicyInterface
 
         Assert::allNotNull(
             [$expectedAmount, $expectedCodeLength],
-            'Code length or amount cannot be null.'
+            'Code length or amount cannot be null.',
         );
 
-        $generatedAmount = $this->couponRepository->countByCodeLength($expectedCodeLength);
+        $generatedAmount = $this->couponRepository->countByCodeLength(
+            $expectedCodeLength,
+            $instruction->getPrefix(),
+            $instruction->getSuffix(),
+        );
 
-        return (int) floor((16 ** $expectedCodeLength) * $this->ratio - $generatedAmount);
+        $codeCombination = 16 ** $expectedCodeLength * $this->ratio;
+        if ($codeCombination >= \PHP_INT_MAX) {
+            return \PHP_INT_MAX - $generatedAmount;
+        }
+
+        return (int) $codeCombination - $generatedAmount;
     }
 }

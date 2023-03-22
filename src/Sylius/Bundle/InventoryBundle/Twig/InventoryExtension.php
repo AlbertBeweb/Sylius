@@ -14,25 +14,20 @@ declare(strict_types=1);
 namespace Sylius\Bundle\InventoryBundle\Twig;
 
 use Sylius\Bundle\InventoryBundle\Templating\Helper\InventoryHelper;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
-final class InventoryExtension extends \Twig_Extension
+final class InventoryExtension extends AbstractExtension
 {
-    /** @var InventoryHelper */
-    private $helper;
-
-    public function __construct(InventoryHelper $helper)
+    public function __construct(private InventoryHelper $helper)
     {
-        $this->helper = $helper;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFunctions(): array
     {
         return [
-             new \Twig_Function('sylius_inventory_is_available', [$this->helper, 'isStockAvailable']),
-             new \Twig_Function('sylius_inventory_is_sufficient', [$this->helper, 'isStockSufficient']),
+             new TwigFunction('sylius_inventory_is_available', [$this->helper, 'isStockAvailable']),
+             new TwigFunction('sylius_inventory_is_sufficient', [$this->helper, 'isStockSufficient']),
         ];
     }
 }

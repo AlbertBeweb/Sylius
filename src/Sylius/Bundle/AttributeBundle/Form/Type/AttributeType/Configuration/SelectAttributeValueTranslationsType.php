@@ -21,10 +21,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class SelectAttributeValueTranslationsType extends AbstractType
 {
     /** @var string[] */
-    private $definedLocalesCodes;
+    private array $definedLocalesCodes;
 
-    /** @var string */
-    private $defaultLocaleCode;
+    private string $defaultLocaleCode;
 
     public function __construct(TranslationLocaleProviderInterface $localeProvider)
     {
@@ -32,35 +31,22 @@ final class SelectAttributeValueTranslationsType extends AbstractType
         $this->defaultLocaleCode = $localeProvider->getDefaultLocaleCode();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'entries' => $this->definedLocalesCodes,
-            'entry_name' => function (string $localeCode): string {
-                return $localeCode;
-            },
-            'entry_options' => function (string $localeCode): array {
-                return [
-                    'required' => $localeCode === $this->defaultLocaleCode,
-                ];
-            },
+            'entry_name' => fn (string $localeCode): string => $localeCode,
+            'entry_options' => fn (string $localeCode): array => [
+                'required' => $localeCode === $this->defaultLocaleCode,
+            ],
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return FixedCollectionType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_select_attribute_value_translations';

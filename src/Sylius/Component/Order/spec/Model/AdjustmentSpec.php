@@ -52,31 +52,37 @@ final class AdjustmentSpec extends ObjectBehavior
     function it_allows_detaching_itself_from_an_adjustable(
         OrderInterface $order,
         OrderItemInterface $orderItem,
-        OrderItemUnitInterface $orderItemUnit
+        OrderItemUnitInterface $orderItemUnit,
     ): void {
         $order->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($order);
         $this->getAdjustable()->shouldReturn($order);
+        $this->getOrder()->shouldReturn($order);
 
         $order->removeAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable(null);
         $this->getAdjustable()->shouldReturn(null);
+        $this->getOrder()->shouldReturn(null);
 
         $orderItem->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($orderItem);
         $this->getAdjustable()->shouldReturn($orderItem);
+        $this->getOrderItem()->shouldReturn($orderItem);
 
         $orderItem->removeAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable(null);
         $this->getAdjustable()->shouldReturn(null);
+        $this->getOrderItem()->shouldReturn(null);
 
         $orderItemUnit->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($orderItemUnit);
         $this->getAdjustable()->shouldReturn($orderItemUnit);
+        $this->getOrderItemUnit()->shouldReturn($orderItemUnit);
 
         $orderItemUnit->removeAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable(null);
         $this->getAdjustable()->shouldReturn(null);
+        $this->getOrderItemUnit()->shouldReturn(null);
     }
 
     function it_throws_an_exception_during_not_supported_adjustable_class_set(AdjustableInterface $adjustable): void
@@ -86,7 +92,7 @@ final class AdjustmentSpec extends ObjectBehavior
 
     function it_throws_an_exception_during_adjustable_change_on_locked_adjustment(
         OrderItemInterface $orderItem,
-        OrderItemInterface $otherOrderItem
+        OrderItemInterface $otherOrderItem,
     ): void {
         $this->setAdjustable($orderItem);
         $this->lock();
@@ -130,7 +136,7 @@ final class AdjustmentSpec extends ObjectBehavior
     function it_recalculates_adjustments_on_adjustable_entity_on_amount_change(
         OrderInterface $order,
         OrderItemInterface $orderItem,
-        OrderItemUnitInterface $orderItemUnit
+        OrderItemUnitInterface $orderItemUnit,
     ): void {
         $order->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($order);
@@ -151,7 +157,7 @@ final class AdjustmentSpec extends ObjectBehavior
     }
 
     function it_does_not_recalculate_adjustments_on_adjustable_entity_on_amount_change_when_adjustment_is_neutral(
-        OrderItemUnitInterface $orderItemUnit
+        OrderItemUnitInterface $orderItemUnit,
     ): void {
         $orderItemUnit->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($orderItemUnit);
@@ -187,7 +193,7 @@ final class AdjustmentSpec extends ObjectBehavior
     }
 
     function it_does_not_recalculate_adjustments_on_adjustable_entity_when_neutral_set_to_current_value(
-        OrderInterface $order
+        OrderInterface $order,
     ): void {
         $order->addAdjustment($this->getWrappedObject())->shouldBeCalled();
         $this->setAdjustable($order);
@@ -227,5 +233,20 @@ final class AdjustmentSpec extends ObjectBehavior
     function it_has_no_last_update_date_by_default(): void
     {
         $this->getUpdatedAt()->shouldReturn(null);
+    }
+
+    function its_details_are_mutable(): void
+    {
+        $this->setDetails(['taxRateAmount' => 0.1]);
+        $this->getDetails()->shouldReturn(['taxRateAmount' => 0.1]);
+    }
+
+    function it_resets_internal_information_while_cloning(): void
+    {
+        $this->setUpdatedAt(new \DateTime());
+        $new = clone $this->getWrappedObject();
+
+        $this->getCreatedAt()->shouldNotBe($new->getCreatedAt());
+        $this->getUpdatedAt()->shouldNotBe($new->getUpdatedAt());
     }
 }

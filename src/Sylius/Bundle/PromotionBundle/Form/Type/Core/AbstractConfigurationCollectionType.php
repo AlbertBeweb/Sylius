@@ -23,17 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractConfigurationCollectionType extends AbstractType
 {
-    /** @var ServiceRegistryInterface */
-    protected $registry;
-
-    public function __construct(ServiceRegistryInterface $registry)
+    public function __construct(protected ServiceRegistryInterface $registry)
     {
-        $this->registry = $registry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $prototypes = [];
@@ -43,8 +36,8 @@ abstract class AbstractConfigurationCollectionType extends AbstractType
                 $options['entry_type'],
                 array_replace(
                     $options['entry_options'],
-                    ['configuration_type' => $type]
-                )
+                    ['configuration_type' => $type],
+                ),
             );
 
             $prototypes[$type] = $formBuilder->getForm();
@@ -54,7 +47,7 @@ abstract class AbstractConfigurationCollectionType extends AbstractType
     }
 
     /**
-     * {@inheritdoc}
+     * @psalm-suppress MissingPropertyType
      */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
@@ -66,9 +59,6 @@ abstract class AbstractConfigurationCollectionType extends AbstractType
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -79,9 +69,6 @@ abstract class AbstractConfigurationCollectionType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return CollectionType::class;

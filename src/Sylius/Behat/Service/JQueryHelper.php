@@ -20,14 +20,12 @@ abstract class JQueryHelper
 {
     public static function waitForAsynchronousActionsToFinish(Session $session): void
     {
-        $session->wait(5000, '0 === jQuery.active');
+        $session->wait(1000, 'typeof jQuery !== "undefined" && 0 === jQuery.active');
     }
 
     public static function waitForFormToStopLoading(DocumentElement $document, int $timeout = 10): void
     {
         $form = $document->find('css', 'form');
-        $document->waitFor($timeout, function () use ($form) {
-            return !$form->hasClass('loading');
-        });
+        $document->waitFor($timeout, fn () => !$form->hasClass('loading'));
     }
 }

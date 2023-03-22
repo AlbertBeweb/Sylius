@@ -15,6 +15,7 @@ namespace Sylius\Bundle\AdminBundle\Controller;
 
 use Sylius\Bundle\CoreBundle\Security\UserImpersonatorInterface;
 use Sylius\Bundle\UserBundle\Provider\UserProviderInterface;
+use Sylius\Component\User\Model\UserInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,37 +26,19 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 final class ImpersonateUserController
 {
-    /** @var UserImpersonatorInterface */
-    private $impersonator;
-
-    /** @var AuthorizationCheckerInterface */
-    private $authorizationChecker;
-
-    /** @var UserProviderInterface */
-    private $userProvider;
-
-    /** @var RouterInterface|null */
-    private $router;
-
-    /** @var string */
-    private $authorizationRole;
+    private ?RouterInterface $router;
 
     public function __construct(
-        UserImpersonatorInterface $impersonator,
-        AuthorizationCheckerInterface $authorizationChecker,
-        UserProviderInterface $userProvider,
+        private UserImpersonatorInterface $impersonator,
+        private AuthorizationCheckerInterface $authorizationChecker,
+        private UserProviderInterface $userProvider,
         ?RouterInterface $router,
-        string $authorizationRole
+        private string $authorizationRole,
     ) {
         if (null !== $router) {
             @trigger_error('Passing RouterInterface as the fourth argument is deprecated since 1.4 and will be prohibited in 2.0', \E_USER_DEPRECATED);
         }
-
-        $this->impersonator = $impersonator;
-        $this->authorizationChecker = $authorizationChecker;
-        $this->userProvider = $userProvider;
         $this->router = $router;
-        $this->authorizationRole = $authorizationRole;
     }
 
     public function impersonateAction(Request $request, string $username): Response
@@ -64,16 +47,19 @@ final class ImpersonateUserController
             throw new HttpException(Response::HTTP_UNAUTHORIZED);
         }
 
+        /** @var UserInterface $user */
         $user = $this->userProvider->loadUserByUsername($username);
-        if (null === $user) {
-            throw new HttpException(Response::HTTP_NOT_FOUND);
-        }
 
         $this->impersonator->impersonate($user);
 
         $this->addFlash($request, $username);
 
-        return new RedirectResponse($request->headers->get('referer'));
+        $redirectUrl = $request->headers->get(
+            'referer',
+            $this->router->generate('sylius_admin_customer_show', ['id' => $user->getId()]),
+        );
+
+        return new RedirectResponse($redirectUrl);
     }
 
     private function addFlash(Request $request, string $username): void

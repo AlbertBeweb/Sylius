@@ -52,6 +52,8 @@ interface ProductVariantInterface extends
 
     /**
      * @return Collection|ChannelPricingInterface[]
+     *
+     * @psalm-return Collection<array-key, ChannelPricingInterface>
      */
     public function getChannelPricings(): Collection;
 
@@ -68,4 +70,6 @@ interface ProductVariantInterface extends
     public function isShippingRequired(): bool;
 
     public function setShippingRequired(bool $shippingRequired): void;
+
+    public function getAppliedPromotionsForChannel(ChannelInterface $channel): Collection;
 }

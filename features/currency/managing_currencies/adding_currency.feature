@@ -7,10 +7,10 @@ Feature: Adding a new currency
     Background:
         Given I am logged in as an administrator
 
-    @ui
+    @ui @api
     Scenario: Adding a new currency
-        Given I want to add a new currency
-        When I choose "Euro"
+        When I want to add a new currency
+        And I choose "Euro"
         And I add it
         Then I should be notified that it has been successfully created
         And the currency "Euro" should appear in the store

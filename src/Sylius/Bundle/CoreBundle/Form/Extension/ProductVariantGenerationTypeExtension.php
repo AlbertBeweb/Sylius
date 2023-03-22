@@ -24,9 +24,6 @@ use Symfony\Component\Form\FormEvents;
 
 final class ProductVariantGenerationTypeExtension extends AbstractTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
@@ -34,22 +31,22 @@ final class ProductVariantGenerationTypeExtension extends AbstractTypeExtension
 
             $event->getForm()->add('channelPricings', ChannelCollectionType::class, [
                 'entry_type' => ChannelPricingType::class,
-                'entry_options' => function (ChannelInterface $channel) use ($productVariant) {
-                    return [
-                        'channel' => $channel,
-                        'product_variant' => $productVariant,
-                    ];
-                },
+                'entry_options' => fn (ChannelInterface $channel) => [
+                    'channel' => $channel,
+                    'product_variant' => $productVariant,
+                ],
                 'label' => 'sylius.form.variant.price',
             ]);
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getExtendedType(): string
     {
         return ProductVariantGenerationType::class;
+    }
+
+    public static function getExtendedTypes(): iterable
+    {
+        return [ProductVariantGenerationType::class];
     }
 }

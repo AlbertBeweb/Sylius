@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class ChannelContext implements Context
 {
-    /** @var ChannelRepositoryInterface */
-    private $channelRepository;
-
-    public function __construct(ChannelRepositoryInterface $channelRepository)
+    public function __construct(private ChannelRepositoryInterface $channelRepository)
     {
-        $this->channelRepository = $channelRepository;
     }
 
     /**
@@ -40,7 +36,7 @@ final class ChannelContext implements Context
         Assert::eq(
             count($channels),
             1,
-            sprintf('%d channels has been found with name "%s".', count($channels), $channelName)
+            sprintf('%d channels has been found with name "%s".', count($channels), $channelName),
         );
 
         return $channels[0];

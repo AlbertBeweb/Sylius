@@ -23,10 +23,10 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\OrderItemUnitInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Sylius\Component\Core\Model\TaxRateInterface;
 use Sylius\Component\Core\Taxation\Applicator\OrderTaxesApplicatorInterface;
 use Sylius\Component\Order\Factory\AdjustmentFactoryInterface;
 use Sylius\Component\Taxation\Calculator\CalculatorInterface;
-use Sylius\Component\Taxation\Model\TaxRateInterface;
 use Sylius\Component\Taxation\Resolver\TaxRateResolverInterface;
 
 final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
@@ -35,7 +35,7 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         CalculatorInterface $calculator,
         AdjustmentFactoryInterface $adjustmentsFactory,
         IntegerDistributorInterface $distributor,
-        TaxRateResolverInterface $taxRateResolver
+        TaxRateResolverInterface $taxRateResolver,
     ): void {
         $this->beConstructedWith($calculator, $adjustmentsFactory, $distributor, $taxRateResolver);
     }
@@ -60,7 +60,7 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         OrderItemUnitInterface $unit2,
         ProductVariantInterface $productVariant,
         TaxRateInterface $taxRate,
-        ZoneInterface $zone
+        ZoneInterface $zone,
     ): void {
         $order->getItems()->willReturn($items);
 
@@ -76,6 +76,9 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         $calculator->calculate(1000, $taxRate)->willReturn(100);
 
         $taxRate->getLabel()->willReturn('Simple tax (10%)');
+        $taxRate->getCode()->willReturn('simple_tax');
+        $taxRate->getName()->willReturn('Simple tax');
+        $taxRate->getAmount()->willReturn(0.1);
         $taxRate->isIncludedInPrice()->willReturn(false);
 
         $orderItem->getUnits()->willReturn($units);
@@ -84,7 +87,17 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         $distributor->distribute(100, 2)->willReturn([50, 50]);
 
         $adjustmentsFactory
-            ->createWithData(AdjustmentInterface::TAX_ADJUSTMENT, 'Simple tax (10%)', 50, false)
+            ->createWithData(
+                AdjustmentInterface::TAX_ADJUSTMENT,
+                'Simple tax (10%)',
+                50,
+                false,
+                [
+                    'taxRateCode' => 'simple_tax',
+                    'taxRateName' => 'Simple tax',
+                    'taxRateAmount' => 0.1,
+                ],
+            )
             ->willReturn($taxAdjustment1, $taxAdjustment2)
         ;
 
@@ -97,7 +110,7 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
     function it_throws_an_invalid_argument_exception_if_order_item_has_0_quantity(
         OrderInterface $order,
         OrderItemInterface $orderItem,
-        ZoneInterface $zone
+        ZoneInterface $zone,
     ): void {
         $items = new ArrayCollection([$orderItem->getWrappedObject()]);
         $order->getItems()->willReturn($items);
@@ -114,7 +127,7 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         OrderInterface $order,
         OrderItemInterface $orderItem,
         ProductVariantInterface $productVariant,
-        ZoneInterface $zone
+        ZoneInterface $zone,
     ): void {
         $order->getItems()->willReturn($items);
 
@@ -148,7 +161,7 @@ final class OrderItemsTaxesApplicatorSpec extends ObjectBehavior
         OrderItemUnitInterface $unit2,
         ProductVariantInterface $productVariant,
         TaxRateInterface $taxRate,
-        ZoneInterface $zone
+        ZoneInterface $zone,
     ): void {
         $order->getItems()->willReturn($items);
 

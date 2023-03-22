@@ -21,51 +21,34 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 class PaypalExpressCheckoutPage extends Page implements PaypalExpressCheckoutPageInterface
 {
-    /** @var RepositoryInterface */
-    private $securityTokenRepository;
-
-    public function __construct(Session $session, $minkParameters, RepositoryInterface $securityTokenRepository)
-    {
+    public function __construct(
+        Session $session,
+        $minkParameters,
+        private RepositoryInterface $securityTokenRepository,
+    ) {
         parent::__construct($session, $minkParameters);
-
-        $this->securityTokenRepository = $securityTokenRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function authorize()
     {
         $this->getDriver()->visit($this->findAuthorizeToken()->getTargetUrl() . '?token=EC-2d9EV13959UR209410U&PayerID=UX8WBNYWGBVMG');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function pay()
     {
         $this->getDriver()->visit($this->findCaptureToken()->getTargetUrl() . '?token=EC-2d9EV13959UR209410U&PayerID=UX8WBNYWGBVMG');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cancel()
     {
         $this->getDriver()->visit($this->findCaptureToken()->getTargetUrl() . '?token=EC-2d9EV13959UR209410U&cancelled=1');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getUrl(array $urlParameters = []): string
     {
         return 'https://www.sandbox.paypal.com';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function verifyUrl(array $urlParameters = []): void
     {
         $position = strpos($this->getSession()->getCurrentUrl(), $this->getUrl($urlParameters));

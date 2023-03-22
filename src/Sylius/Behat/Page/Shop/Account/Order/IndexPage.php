@@ -21,79 +21,60 @@ use Symfony\Component\Routing\RouterInterface;
 
 class IndexPage extends SymfonyPage implements IndexPageInterface
 {
-    /** @var TableAccessorInterface */
-    private $tableAccessor;
-
     public function __construct(
         Session $session,
         $minkParameters,
         RouterInterface $router,
-        TableAccessorInterface $tableAccessor
+        private TableAccessorInterface $tableAccessor,
     ) {
         parent::__construct($session, $minkParameters, $router);
-
-        $this->tableAccessor = $tableAccessor;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRouteName(): string
     {
         return 'sylius_shop_account_order_index';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function countOrders()
+    public function countOrders(): int
     {
         return $this->tableAccessor->countTableBodyRows($this->getElement('customer_orders'));
     }
 
-    public function openLastOrderPage()
+    public function changePaymentMethod(OrderInterface $order): void
     {
-        $this->getElement('last_order')->click();
+        $row = $this->tableAccessor->getRowWithFields(
+            $this->getElement('customer_orders'),
+            ['number' => $order->getNumber()],
+        );
+
+        $link = $row->find('css', '[data-test-button="sylius.ui.pay"]');
+        $link->click();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function isOrderWithNumberInTheList($number)
+    public function isOrderWithNumberInTheList($number): bool
     {
         try {
             $rows = $this->tableAccessor->getRowsWithFields(
                 $this->getElement('customer_orders'),
-                ['number' => $number]
+                ['number' => $number],
             );
 
             return 1 === count($rows);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException) {
             return false;
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function isItPossibleToChangePaymentMethodForOrder(OrderInterface $order)
+    public function openLastOrderPage(): void
     {
-        $row = $this->tableAccessor->getRowWithFields(
-            $this->getElement('customer_orders'),
-            ['number' => $order->getNumber()]
-        );
-
-        return $row->hasLink('Pay');
+        $this->getElement('last_order')->find('css', '[data-test-button="sylius.ui.show"]')->click();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
-            'customer_orders' => 'table',
-            'last_order' => 'table tbody tr:last-child a:contains("Show")',
+            'customer_orders' => '[data-test-grid-table]',
+            'last_order' => '[data-test-grid-table-body] [data-test-row]:last-child [data-test-actions]',
         ]);
     }
 }

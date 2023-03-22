@@ -13,12 +13,10 @@ framework:
         resource: "%kernel.project_dir%/app/config/routing.yml"
     form: ~
     csrf_protection: true
-    templating:
-        engines: ['twig']
     default_locale: "%locale%"
     session:
         handler_id: ~
-        storage_id: session.storage.mock_file
+        storage_factory_id: session.storage.factory.mock_file
     http_method_override: true
     test: ~
 
@@ -29,12 +27,7 @@ twig:
 doctrine:
     dbal:
         driver: "%database_driver%"
-        host: "%database_host%"
-        port: "%database_port%"
-        dbname: "%database_name%"
-        user: "%database_user%"
-        password: "%database_password%"
-        server_version: "%database_version%"
+        path: "%database_path%"
         charset: UTF8
     orm:
         entity_managers:
@@ -51,6 +44,8 @@ fos_rest:
             - { path: '^/', priorities: ['json'], fallback_format: json, prefer_extension: true }
 
 security:
+    enable_authenticator_manager: true
+
     providers:
         sylius_admin_user_provider:
             memory:
@@ -58,8 +53,9 @@ security:
                     foo:
                         password: foo
                         roles: ROLE_USER
-    encoders:
-        Sylius\Component\User\Model\UserInterface: sha512
+    password_hashers:
+        plaintext: plaintext
+        Sylius\Component\User\Model\UserInterface: plaintext
     firewalls:
         admin:
             switch_user: true
@@ -76,7 +72,6 @@ security:
             logout:
                 path: sylius_admin_logout
                 target: sylius_admin_login
-            anonymous: true
 
         oauth_token:
             pattern: ^/api/oauth/v2/token

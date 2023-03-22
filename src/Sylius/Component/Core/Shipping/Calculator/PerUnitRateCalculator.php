@@ -22,8 +22,6 @@ use Webmozart\Assert\Assert;
 final class PerUnitRateCalculator implements CalculatorInterface
 {
     /**
-     * {@inheritdoc}
-     *
      * @throws MissingChannelConfigurationException
      */
     public function calculate(BaseShipmentInterface $subject, array $configuration): int
@@ -37,16 +35,13 @@ final class PerUnitRateCalculator implements CalculatorInterface
             throw new MissingChannelConfigurationException(sprintf(
                 'Channel %s has no amount defined for shipping method %s',
                 $subject->getOrder()->getChannel()->getName(),
-                $subject->getMethod()->getName()
+                $subject->getMethod()->getName(),
             ));
         }
 
         return (int) ($configuration[$channelCode]['amount'] * $subject->getShippingUnitCount());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): string
     {
         return 'per_unit_rate';

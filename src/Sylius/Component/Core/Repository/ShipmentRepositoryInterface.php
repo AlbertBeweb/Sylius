@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Sylius\Component\Core\Repository;
 
 use Doctrine\ORM\QueryBuilder;
+use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 
@@ -22,6 +24,10 @@ interface ShipmentRepositoryInterface extends RepositoryInterface
     public function createListQueryBuilder(): QueryBuilder;
 
     public function findOneByOrderId($shipmentId, $orderId): ?ShipmentInterface;
+
+    public function findOneByOrderTokenAndChannel($shipmentId, string $tokenValue, ChannelInterface $channel): ?ShipmentInterface;
+
+    public function findOneByCustomer($id, CustomerInterface $customer): ?ShipmentInterface;
 
     /**
      * @return array|ShipmentInterface[]

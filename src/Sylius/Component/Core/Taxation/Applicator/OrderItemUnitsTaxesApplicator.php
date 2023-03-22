@@ -17,37 +17,24 @@ use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemUnitInterface;
+use Sylius\Component\Core\Model\TaxRateInterface;
 use Sylius\Component\Order\Factory\AdjustmentFactoryInterface;
 use Sylius\Component\Taxation\Calculator\CalculatorInterface;
 use Sylius\Component\Taxation\Resolver\TaxRateResolverInterface;
 
 class OrderItemUnitsTaxesApplicator implements OrderTaxesApplicatorInterface
 {
-    /** @var CalculatorInterface */
-    private $calculator;
-
-    /** @var AdjustmentFactoryInterface */
-    private $adjustmentFactory;
-
-    /** @var TaxRateResolverInterface */
-    private $taxRateResolver;
-
     public function __construct(
-        CalculatorInterface $calculator,
-        AdjustmentFactoryInterface $adjustmentFactory,
-        TaxRateResolverInterface $taxRateResolver
+        private CalculatorInterface $calculator,
+        private AdjustmentFactoryInterface $adjustmentFactory,
+        private TaxRateResolverInterface $taxRateResolver,
     ) {
-        $this->calculator = $calculator;
-        $this->adjustmentFactory = $adjustmentFactory;
-        $this->taxRateResolver = $taxRateResolver;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function apply(OrderInterface $order, ZoneInterface $zone): void
     {
         foreach ($order->getItems() as $item) {
+            /** @var TaxRateInterface|null $taxRate */
             $taxRate = $this->taxRateResolver->resolve($item->getVariant(), ['zone' => $zone]);
             if (null === $taxRate) {
                 continue;
@@ -59,16 +46,24 @@ class OrderItemUnitsTaxesApplicator implements OrderTaxesApplicatorInterface
                     continue;
                 }
 
-                $this->addTaxAdjustment($unit, (int) $taxAmount, $taxRate->getLabel(), $taxRate->isIncludedInPrice());
+                $this->addAdjustment($unit, (int) $taxAmount, $taxRate);
             }
         }
     }
 
-    private function addTaxAdjustment(OrderItemUnitInterface $unit, int $taxAmount, string $label, bool $included): void
+    private function addAdjustment(OrderItemUnitInterface $unit, int $taxAmount, TaxRateInterface $taxRate): void
     {
-        $unitTaxAdjustment = $this->adjustmentFactory
-            ->createWithData(AdjustmentInterface::TAX_ADJUSTMENT, $label, $taxAmount, $included)
-        ;
+        $unitTaxAdjustment = $this->adjustmentFactory->createWithData(
+            AdjustmentInterface::TAX_ADJUSTMENT,
+            $taxRate->getLabel(),
+            $taxAmount,
+            $taxRate->isIncludedInPrice(),
+            [
+                'taxRateCode' => $taxRate->getCode(),
+                'taxRateName' => $taxRate->getName(),
+                'taxRateAmount' => $taxRate->getAmount(),
+            ],
+        );
         $unit->addAdjustment($unitTaxAdjustment);
     }
 }

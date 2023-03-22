@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Tests\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\Fixture\AddressFixture;
@@ -131,14 +131,11 @@ final class AddressFixtureTest extends TestCase
         $this->assertPartialConfigurationIsInvalid([['custom' => [['customer' => '']]]], 'custom.*.customer');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): AddressFixture
     {
         return new AddressFixture(
             $this->getMockBuilder(ObjectManager::class)->getMock(),
-            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock()
+            $this->getMockBuilder(ExampleFactoryInterface::class)->getMock(),
         );
     }
 }

@@ -14,13 +14,14 @@ declare(strict_types=1);
 namespace spec\Sylius\Bundle\ShopBundle\EventListener;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
+use Sylius\Bundle\CoreBundle\Order\Checker\OrderPromotionsIntegrityCheckerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
+use Sylius\Bundle\ShopBundle\EventListener\OrderIntegrityCheckerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PromotionInterface;
-use Sylius\Component\Order\Processor\OrderProcessorInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -28,24 +29,29 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
 {
     function let(
         RouterInterface $router,
-        OrderProcessorInterface $orderProcessor,
-        ObjectManager $orderManager
+        ObjectManager $orderManager,
+        OrderPromotionsIntegrityCheckerInterface $orderPromotionsIntegrityChecker,
     ): void {
-        $this->beConstructedWith($router, $orderProcessor, $orderManager);
+        $this->beConstructedWith($router, $orderManager, $orderPromotionsIntegrityChecker);
+    }
+
+    function it_implements_order_integrity_checker_interface(): void
+    {
+        $this->shouldImplement(OrderIntegrityCheckerInterface::class);
     }
 
     function it_does_nothing_if_given_order_has_valid_promotion_applied(
-        OrderProcessorInterface $orderProcessor,
+        OrderPromotionsIntegrityCheckerInterface $orderPromotionsIntegrityChecker,
         OrderInterface $order,
         PromotionInterface $promotion,
-        ResourceControllerEvent $event
+        ResourceControllerEvent $event,
     ): void {
         $event->getSubject()->willReturn($order);
 
         $order->getPromotions()->willReturn(new ArrayCollection([$promotion->getWrappedObject()]));
         $order->getTotal()->willReturn(1000);
 
-        $orderProcessor->process($order)->shouldBeCalled();
+        $orderPromotionsIntegrityChecker->check($order)->willReturn(null);
 
         $event->stop(Argument::any())->shouldNotBeCalled();
         $event->setResponse(Argument::any())->shouldNotBeCalled();
@@ -54,19 +60,19 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
     }
 
     function it_stops_future_action_if_given_order_has_different_promotion_applied(
-        OrderProcessorInterface $orderProcessor,
+        OrderPromotionsIntegrityCheckerInterface $orderPromotionsIntegrityChecker,
         RouterInterface $router,
         OrderInterface $order,
         PromotionInterface $oldPromotion,
         PromotionInterface $newPromotion,
         ResourceControllerEvent $event,
-        ObjectManager $orderManager
+        ObjectManager $orderManager,
     ): void {
         $event->getSubject()->willReturn($order);
 
         $order->getPromotions()->willReturn(
             new ArrayCollection([$oldPromotion->getWrappedObject()]),
-            new ArrayCollection([$newPromotion->getWrappedObject()])
+            new ArrayCollection([$newPromotion->getWrappedObject()]),
         );
         $order->getTotal()->willReturn(1000);
 
@@ -74,12 +80,12 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
 
         $router->generate('sylius_shop_checkout_complete')->willReturn('checkout.com');
 
-        $orderProcessor->process($order)->shouldBeCalled();
+        $orderPromotionsIntegrityChecker->check($order)->willReturn($oldPromotion);
 
         $event->stop(
             'sylius.order.promotion_integrity',
             ResourceControllerEvent::TYPE_ERROR,
-            ['%promotionName%' => 'Christmas']
+            ['%promotionName%' => 'Christmas'],
         )->shouldBeCalled();
         $event->setResponse(new RedirectResponse('checkout.com'))->shouldBeCalled();
 
@@ -90,12 +96,12 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
     }
 
     function it_stops_future_action_if_given_order_has_different_total_value(
-        OrderProcessorInterface $orderProcessor,
+        OrderPromotionsIntegrityCheckerInterface $orderPromotionsIntegrityChecker,
         RouterInterface $router,
         OrderInterface $order,
         PromotionInterface $promotion,
         ResourceControllerEvent $event,
-        ObjectManager $orderManager
+        ObjectManager $orderManager,
     ): void {
         $event->getSubject()->willReturn($order);
 
@@ -104,7 +110,7 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
 
         $router->generate('sylius_shop_checkout_complete')->willReturn('checkout.com');
 
-        $orderProcessor->process($order)->shouldBeCalled();
+        $orderPromotionsIntegrityChecker->check($order)->willReturn(null);
 
         $event->stop('sylius.order.total_integrity', ResourceControllerEvent::TYPE_ERROR)->shouldBeCalled();
         $event->setResponse(new RedirectResponse('checkout.com'))->shouldBeCalled();
@@ -116,32 +122,32 @@ final class OrderIntegrityCheckerSpec extends ObjectBehavior
     }
 
     function it_stops_future_action_if_given_order_has_no_promotion_applied(
-        OrderProcessorInterface $orderProcessor,
+        OrderPromotionsIntegrityCheckerInterface $orderPromotionsIntegrityChecker,
         RouterInterface $router,
         OrderInterface $order,
         PromotionInterface $promotion,
         ResourceControllerEvent $event,
-        ObjectManager $orderManager
+        ObjectManager $orderManager,
     ): void {
         $event->getSubject()->willReturn($order);
 
         $order->getPromotions()->willReturn(
             new ArrayCollection([$promotion->getWrappedObject()]),
-            new ArrayCollection([])
+            new ArrayCollection([]),
         );
         $order->getTotal()->willReturn(1000);
 
         $promotion->getName()->willReturn('Christmas');
         $promotion->getCode()->willReturn('CHRISTMAS_PROMO_CODE');
 
-        $orderProcessor->process($order)->shouldBeCalled();
+        $orderPromotionsIntegrityChecker->check($order)->willReturn($promotion);
 
         $router->generate('sylius_shop_checkout_complete')->willReturn('checkout.com');
 
         $event->stop(
             'sylius.order.promotion_integrity',
             ResourceControllerEvent::TYPE_ERROR,
-            ['%promotionName%' => 'Christmas']
+            ['%promotionName%' => 'Christmas'],
         )->shouldBeCalled();
         $event->setResponse(new RedirectResponse('checkout.com'))->shouldBeCalled();
 

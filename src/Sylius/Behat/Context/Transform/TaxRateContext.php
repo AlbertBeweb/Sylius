@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class TaxRateContext implements Context
 {
-    /** @var RepositoryInterface */
-    private $taxRateRepository;
-
-    public function __construct(RepositoryInterface $taxRateRepository)
+    public function __construct(private RepositoryInterface $taxRateRepository)
     {
-        $this->taxRateRepository = $taxRateRepository;
     }
 
     /**
@@ -37,7 +33,7 @@ final class TaxRateContext implements Context
 
         Assert::notNull(
             $taxRate,
-            sprintf('Tax rate with name "%s" does not exist', $taxRateName)
+            sprintf('Tax rate with name "%s" does not exist', $taxRateName),
         );
 
         return $taxRate;

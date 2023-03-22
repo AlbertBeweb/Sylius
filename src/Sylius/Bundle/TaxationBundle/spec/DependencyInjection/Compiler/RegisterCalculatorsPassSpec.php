@@ -41,12 +41,12 @@ final class RegisterCalculatorsPassSpec extends ObjectBehavior
 
         $calculator->addMethodCall(
             'register',
-            Argument::type('array')
-        )->shouldBeCalled();
+            Argument::type('array'),
+        )->willReturn($calculator)->shouldBeCalled();
 
         $container->setParameter(
             'sylius.tax_calculators',
-            ['calculator_name' => 'calculator_name']
+            ['calculator_name' => 'calculator_name'],
         )->shouldBeCalled();
 
         $this->process($container);

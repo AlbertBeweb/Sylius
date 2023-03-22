@@ -24,17 +24,10 @@ use Webmozart\Assert\Assert;
 
 final class UniqueSimpleProductCodeValidator extends ConstraintValidator
 {
-    /** @var ProductVariantRepositoryInterface */
-    private $productVariantRepository;
-
-    public function __construct(ProductVariantRepositoryInterface $productVariantRepository)
+    public function __construct(private ProductVariantRepositoryInterface $productVariantRepository)
     {
-        $this->productVariantRepository = $productVariantRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validate($value, Constraint $constraint): void
     {
         /** @var UniqueSimpleProductCode $constraint */
@@ -48,7 +41,7 @@ final class UniqueSimpleProductCodeValidator extends ConstraintValidator
             return;
         }
 
-        /** @var ProductVariantInterface $existingProductVariant */
+        /** @var ProductVariantInterface|null $existingProductVariant */
         $existingProductVariant = $this->productVariantRepository->findOneBy(['code' => $value->getCode()]);
 
         if (null !== $existingProductVariant && $existingProductVariant->getProduct()->getId() !== $value->getId()) {

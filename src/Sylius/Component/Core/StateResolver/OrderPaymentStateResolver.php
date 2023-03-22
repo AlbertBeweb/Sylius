@@ -25,17 +25,10 @@ use Webmozart\Assert\Assert;
 
 final class OrderPaymentStateResolver implements StateResolverInterface
 {
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    public function __construct(FactoryInterface $stateMachineFactory)
+    public function __construct(private FactoryInterface $stateMachineFactory)
     {
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function resolve(BaseOrderInterface $order): void
     {
         /** @var OrderInterface $order */
@@ -91,6 +84,7 @@ final class OrderPaymentStateResolver implements StateResolverInterface
             return OrderPaymentTransitions::TRANSITION_PARTIALLY_PAY;
         }
 
+        // Authorized payments
         $authorizedPaymentTotal = 0;
         $authorizedPayments = $this->getPaymentsWithState($order, PaymentInterface::STATE_AUTHORIZED);
 
@@ -106,16 +100,34 @@ final class OrderPaymentStateResolver implements StateResolverInterface
             return OrderPaymentTransitions::TRANSITION_PARTIALLY_AUTHORIZE;
         }
 
+        // Processing payments
+        $processingPaymentTotal = 0;
+        $processingPayments = $this->getPaymentsWithState($order, PaymentInterface::STATE_PROCESSING);
+
+        foreach ($processingPayments as $payment) {
+            $processingPaymentTotal += $payment->getAmount();
+        }
+
+        if (0 < $processingPayments->count() && $processingPaymentTotal >= $order->getTotal()) {
+            return OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT;
+        }
+
         return null;
     }
 
     /**
      * @return Collection|PaymentInterface[]
+     *
+     * @psalm-return Collection<array-key, PaymentInterface>
      */
     private function getPaymentsWithState(OrderInterface $order, string $state): Collection
     {
-        return $order->getPayments()->filter(function (PaymentInterface $payment) use ($state) {
+        /** @var Collection<array-key, PaymentInterface> $payments */
+        $payments = $order->getPayments()->filter(function (PaymentInterface $payment) use ($state) {
             return $state === $payment->getState();
         });
+        Assert::allIsInstanceOf($payments, PaymentInterface::class);
+
+        return $payments;
     }
 }

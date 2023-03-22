@@ -22,21 +22,10 @@ use Symfony\Component\Form\FormFactoryInterface;
 
 final class BuildProductVariantFormSubscriber implements EventSubscriberInterface
 {
-    /** @var FormFactoryInterface */
-    private $factory;
-
-    /** @var bool */
-    private $disabled;
-
-    public function __construct(FormFactoryInterface $factory, bool $disabled = false)
+    public function __construct(private FormFactoryInterface $factory, private bool $disabled = false)
     {
-        $this->factory = $factory;
-        $this->disabled = $disabled;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -46,7 +35,7 @@ final class BuildProductVariantFormSubscriber implements EventSubscriberInterfac
 
     public function preSetData(FormEvent $event): void
     {
-        /** @var ProductVariantInterface $productVariant */
+        /** @var ProductVariantInterface|null $productVariant */
         $productVariant = $event->getData();
         $form = $event->getForm();
 
@@ -68,7 +57,7 @@ final class BuildProductVariantFormSubscriber implements EventSubscriberInterfac
                 'disabled' => $this->disabled,
                 'options' => $product->getOptions(),
                 'auto_initialize' => false,
-            ]
+            ],
         ));
     }
 }

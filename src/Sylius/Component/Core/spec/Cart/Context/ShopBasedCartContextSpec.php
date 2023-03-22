@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace spec\Sylius\Component\Core\Cart\Context;
 
 use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
 use Sylius\Component\Channel\Context\ChannelNotFoundException;
+use Sylius\Component\Core\Cart\Resolver\CreatedByGuestFlagResolverInterface;
 use Sylius\Component\Core\Context\ShopperContextInterface;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -43,7 +45,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         OrderInterface $cart,
         ChannelInterface $channel,
         CurrencyInterface $currency,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
         $cartContext->getCart()->willReturn($cart);
 
@@ -70,7 +72,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         OrderInterface $cart,
         ChannelInterface $channel,
         CurrencyInterface $currency,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
         $cartContext->getCart()->willReturn($cart);
 
@@ -86,7 +88,9 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         $cart->setCurrencyCode('PLN')->shouldBeCalled();
         $cart->setLocaleCode('pl')->shouldBeCalled();
         $cart->setCustomer($customer)->shouldBeCalled();
-        $cart->setShippingAddress($defaultAddress)->shouldBeCalled();
+        $cart->setBillingAddress(Argument::that(static function (AddressInterface $address): bool {
+            return $address->getCustomer() === null;
+        }))->shouldBeCalled();
 
         $this->getCart()->shouldReturn($cart);
     }
@@ -94,7 +98,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
     function it_throws_a_cart_not_found_exception_if_channel_is_undefined(
         CartContextInterface $cartContext,
         ShopperContextInterface $shopperContext,
-        OrderInterface $cart
+        OrderInterface $cart,
     ): void {
         $cartContext->getCart()->willReturn($cart);
         $shopperContext->getChannel()->willThrow(ChannelNotFoundException::class);
@@ -110,7 +114,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         ShopperContextInterface $shopperContext,
         ChannelInterface $channel,
         CurrencyInterface $currency,
-        OrderInterface $cart
+        OrderInterface $cart,
     ): void {
         $cartContext->getCart()->willReturn($cart);
         $shopperContext->getChannel()->willReturn($channel);
@@ -130,7 +134,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         OrderInterface $cart,
         ChannelInterface $channel,
         CurrencyInterface $currency,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
         $cartContext->getCart()->shouldBeCalledTimes(1)->willReturn($cart);
 
@@ -158,7 +162,7 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         OrderInterface $secondCart,
         ChannelInterface $channel,
         CurrencyInterface $currency,
-        CustomerInterface $customer
+        CustomerInterface $customer,
     ): void {
         $cartContext->getCart()->shouldBeCalledTimes(2)->willReturn($firstCart, $secondCart);
 
@@ -183,5 +187,36 @@ final class ShopBasedCartContextSpec extends ObjectBehavior
         $this->getCart()->shouldReturn($firstCart);
         $this->reset();
         $this->getCart()->shouldReturn($secondCart);
+    }
+
+    function it_creates_order_for_authorized_user(
+        CartContextInterface $cartContext,
+        ShopperContextInterface $shopperContext,
+        CreatedByGuestFlagResolverInterface $createdByGuestFlagResolver,
+        OrderInterface $cart,
+        ChannelInterface $channel,
+        CurrencyInterface $currency,
+        CustomerInterface $customer,
+    ): void {
+        $this->beConstructedWith($cartContext, $shopperContext, $createdByGuestFlagResolver);
+
+        $createdByGuestFlagResolver->resolveFlag()->willReturn(false);
+
+        $cartContext->getCart()->shouldBeCalledTimes(1)->willReturn($cart);
+
+        $shopperContext->getChannel()->willReturn($channel);
+        $shopperContext->getLocaleCode()->willReturn('pl');
+        $shopperContext->getCustomer()->willReturn($customer);
+        $customer->getDefaultAddress()->willReturn(null);
+
+        $channel->getBaseCurrency()->willReturn($currency);
+        $currency->getCode()->willReturn('PLN');
+
+        $cart->setChannel($channel)->shouldBeCalled();
+        $cart->setCurrencyCode('PLN')->shouldBeCalled();
+        $cart->setLocaleCode('pl')->shouldBeCalled();
+        $cart->setCustomerWithAuthorization($customer)->shouldBeCalled();
+
+        $this->getCart()->shouldReturn($cart);
     }
 }

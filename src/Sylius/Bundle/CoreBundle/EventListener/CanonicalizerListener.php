@@ -13,28 +13,24 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\EventListener;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Sylius\Component\User\Model\UserInterface;
 
 final class CanonicalizerListener
 {
-    /** @var CanonicalizerInterface */
-    private $canonicalizer;
-
-    public function __construct(CanonicalizerInterface $canonicalizer)
+    public function __construct(private CanonicalizerInterface $canonicalizer)
     {
-        $this->canonicalizer = $canonicalizer;
     }
 
     public function canonicalize(LifecycleEventArgs $event): void
     {
-        $item = $event->getEntity();
+        $item = $event->getObject();
 
         if ($item instanceof CustomerInterface) {
             $item->setEmailCanonical($this->canonicalizer->canonicalize($item->getEmail()));
-        } elseif ($item instanceof UserInterface) {
+        } elseif ($item instanceof UserInterface && method_exists($item, 'getUsername')) {
             $item->setUsernameCanonical($this->canonicalizer->canonicalize($item->getUsername()));
             $item->setEmailCanonical($this->canonicalizer->canonicalize($item->getEmail()));
         }

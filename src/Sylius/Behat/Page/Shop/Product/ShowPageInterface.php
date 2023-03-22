@@ -23,123 +23,78 @@ interface ShowPageInterface extends PageInterface
     /**
      * @throws ElementNotFoundException
      */
-    public function addToCart();
+    public function addToCart(): void;
 
     /**
-     * @param string $quantity
-     *
      * @throws ElementNotFoundException
      */
-    public function addToCartWithQuantity($quantity);
+    public function addToCartWithQuantity(string $quantity): void;
 
     /**
-     * @param string $variant
-     *
      * @throws ElementNotFoundException
      */
-    public function addToCartWithVariant($variant);
+    public function addToCartWithVariant(string $variant): void;
 
     /**
-     * @param string $optionValue
-     *
      * @throws ElementNotFoundException
      */
-    public function addToCartWithOption(ProductOptionInterface $option, $optionValue);
-
-    /**
-     * @return string
-     */
-    public function getName();
-
-    /**
-     * @return string
-     */
-    public function getCurrentVariantName();
-
-    /**
-     * @param string $url
-     */
-    public function visit($url);
+    public function addToCartWithOption(ProductOptionInterface $option, string $optionValue): void;
 
     public function getAttributeByName(string $name): ?string;
 
-    /**
-     * @return array
-     */
-    public function getAttributes();
+    public function getAttributeListByName(string $name): array;
 
-    /**
-     * @return bool
-     */
-    public function hasProductOutOfStockValidationMessage(ProductInterface $product);
+    public function getAttributes(): array;
 
-    /**
-     * @param int $timeout
-     */
-    public function waitForValidationErrors($timeout);
+    public function getAverageRating(): float;
 
-    /**
-     * @return bool
-     */
-    public function isOutOfStock();
+    public function getCatalogPromotionName(): string;
 
-    /**
-     * @return bool
-     */
-    public function hasAddToCartButton();
+    public function hasCatalogPromotionApplied(string $name): bool;
 
-    /**
-     * @return string
-     */
-    public function getPrice();
+    public function getCatalogPromotionNames(): array;
 
-    /**
-     * @return int
-     */
-    public function countReviews();
-
-    /**
-     * @return bool
-     */
-    public function isMainImageDisplayed();
-
-    /**
-     * @param string $title
-     *
-     * @return bool
-     */
-    public function hasReviewTitled($title);
-
-    /**
-     * @return float
-     */
-    public function getAverageRating();
+    public function getCatalogPromotions(): array;
 
     public function getCurrentUrl(): string;
 
-    /**
-     * @param string $optionName
-     * @param string $optionValue
-     */
-    public function selectOption($optionName, $optionValue);
+    public function getCurrentVariantName(): string;
 
-    /**
-     * @param string $variantName
-     */
-    public function selectVariant($variantName);
+    public function getName(): string;
 
-    /**
-     * @param string $productAssociationName
-     *
-     * @return bool
-     */
-    public function hasAssociation($productAssociationName);
+    public function getPrice(): string;
 
-    /**
-     * @param string $productName
-     * @param string $productAssociationName
-     *
-     * @return bool
-     */
-    public function hasProductInAssociation($productName, $productAssociationName);
+    public function getOriginalPrice(): ?string;
+
+    public function isOriginalPriceVisible(): bool;
+
+    public function hasAddToCartButton(): bool;
+
+    public function hasAssociation(string $productAssociationName): bool;
+
+    public function hasProductInAssociation(string $productName, string $productAssociationName): bool;
+
+    public function hasProductOutOfStockValidationMessage(ProductInterface $product): bool;
+
+    public function hasReviewTitled(string $title): bool;
+
+    public function isOutOfStock(): bool;
+
+    public function isMainImageDisplayed(): bool;
+
+    public function countReviews(): int;
+
+    public function selectOption(string $optionCode, string $optionValue): void;
+
+    public function selectVariant(string $variantName): void;
+
+    public function visit(string $url): void;
+
+    public function getVariantsNames(): array;
+
+    public function getOptionValues(string $optionName): array;
+
+    public function getDescription(): string;
+
+    public function hasBreadcrumbLink(string $taxonName): bool;
 }

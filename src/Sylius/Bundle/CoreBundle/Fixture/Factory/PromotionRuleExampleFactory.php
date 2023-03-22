@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture\Factory;
 
+use Faker\Factory;
+use Faker\Generator;
 use Sylius\Component\Core\Factory\PromotionRuleFactoryInterface;
 use Sylius\Component\Promotion\Checker\Rule\CartQuantityRuleChecker;
 use Sylius\Component\Promotion\Model\PromotionRuleInterface;
@@ -21,28 +23,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PromotionRuleExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** @var PromotionRuleFactoryInterface */
-    private $promotionRuleFactory;
+    private Generator $faker;
 
-    /** @var \Faker\Generator */
-    private $faker;
+    private OptionsResolver $optionsResolver;
 
-    /** @var OptionsResolver */
-    private $optionsResolver;
-
-    public function __construct(PromotionRuleFactoryInterface $promotionRuleFactory)
+    public function __construct(private PromotionRuleFactoryInterface $promotionRuleFactory)
     {
-        $this->promotionRuleFactory = $promotionRuleFactory;
-
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver = new OptionsResolver();
 
         $this->configureOptions($this->optionsResolver);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(array $options = []): PromotionRuleInterface
     {
         $options = $this->optionsResolver->resolve($options);
@@ -55,9 +47,6 @@ class PromotionRuleExampleFactory extends AbstractExampleFactory implements Exam
         return $promotionRule;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -66,7 +55,7 @@ class PromotionRuleExampleFactory extends AbstractExampleFactory implements Exam
             ->setDefault('configuration', [
                 'count' => $this->faker->randomNumber(1),
             ])
-            ->setNormalizer('configuration', function (Options $options, $configuration): array {
+            ->setNormalizer('configuration', function (Options $options, array $configuration): array {
                 foreach ($configuration as $channelCode => $channelConfiguration) {
                     if (isset($channelConfiguration['amount'])) {
                         $configuration[$channelCode]['amount'] = (int) ($configuration[$channelCode]['amount'] * 100);

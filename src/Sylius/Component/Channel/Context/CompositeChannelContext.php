@@ -13,13 +13,17 @@ declare(strict_types=1);
 
 namespace Sylius\Component\Channel\Context;
 
+use Laminas\Stdlib\PriorityQueue;
 use Sylius\Component\Channel\Model\ChannelInterface;
-use Zend\Stdlib\PriorityQueue;
 
 final class CompositeChannelContext implements ChannelContextInterface
 {
-    /** @var PriorityQueue|ChannelContextInterface[] */
-    private $channelContexts;
+    /**
+     * @var PriorityQueue|ChannelContextInterface[]
+     *
+     * @psalm-var PriorityQueue<ChannelContextInterface>
+     */
+    private PriorityQueue $channelContexts;
 
     public function __construct()
     {
@@ -31,15 +35,12 @@ final class CompositeChannelContext implements ChannelContextInterface
         $this->channelContexts->insert($channelContext, $priority);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannel(): ChannelInterface
     {
         foreach ($this->channelContexts as $channelContext) {
             try {
                 return $channelContext->getChannel();
-            } catch (ChannelNotFoundException $exception) {
+            } catch (ChannelNotFoundException) {
                 continue;
             }
         }

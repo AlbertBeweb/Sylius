@@ -30,7 +30,8 @@ final class VariantsElement extends Element implements VariantsElementInterface
         string $name,
         string $code,
         string $price,
-        string $currentStock
+        string $currentStock,
+        string $channel,
     ): bool {
         /** @var NodeElement $variantRow */
         $variantRows = $this->getDocument()->findAll('css', '#variants .variants-accordion__title');
@@ -38,7 +39,14 @@ final class VariantsElement extends Element implements VariantsElementInterface
         /** @var NodeElement $variant */
         foreach ($variantRows as $variant) {
             if (
-                $this->hasProductWithGivenNameCodePriceAndCurrentStock($variant, $name, $code, $price, $currentStock)
+                $this->hasProductWithGivenNameCodePriceAndCurrentStock(
+                    $variant,
+                    $name,
+                    $code,
+                    $price,
+                    $currentStock,
+                    $channel,
+                )
             ) {
                 return true;
             }
@@ -52,17 +60,21 @@ final class VariantsElement extends Element implements VariantsElementInterface
         string $name,
         string $code,
         string $price,
-        string $currentStock
+        string $currentStock,
+        string $channel,
     ): bool {
-        $variantContent = $variant->getParent()->find('css', sprintf(
-            '.variants-accordion__content.%s',
-            explode(' ', $variant->getAttribute('class'))[1])
+        $variantContent = $variant->getParent()->find(
+            'css',
+            sprintf(
+                '.variants-accordion__content.%s',
+                explode(' ', $variant->getAttribute('class'))[1],
+            ),
         );
 
         if (
             $variant->find('css', '.content .variant-name')->getText() === $name &&
             $variant->find('css', '.content .variant-code')->getText() === $code &&
-            $variantContent->find('css', 'tr.pricing:contains("WEB-US") td:nth-child(2)')->getText() === $price &&
+            $variantContent->find('css', sprintf('tr.pricing:contains("%s") td:nth-child(2)', $channel))->getText() === $price &&
             $variant->find('css', '.current-stock')->getText() === $currentStock
         ) {
             return true;

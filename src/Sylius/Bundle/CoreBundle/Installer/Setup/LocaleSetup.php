@@ -20,29 +20,18 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
-use Symfony\Component\Intl\Intl;
+use Symfony\Component\Intl\Exception\MissingResourceException;
+use Symfony\Component\Intl\Languages;
 
 final class LocaleSetup implements LocaleSetupInterface
 {
-    /** @var RepositoryInterface */
-    private $localeRepository;
+    private string $locale;
 
-    /** @var FactoryInterface */
-    private $localeFactory;
-
-    /** @var string */
-    private $locale;
-
-    public function __construct(RepositoryInterface $localeRepository, FactoryInterface $localeFactory, string $locale)
+    public function __construct(private RepositoryInterface $localeRepository, private FactoryInterface $localeFactory, string $locale)
     {
-        $this->localeRepository = $localeRepository;
-        $this->localeFactory = $localeFactory;
         $this->locale = trim($locale);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setup(InputInterface $input, OutputInterface $output, QuestionHelper $questionHelper): LocaleInterface
     {
         $code = $this->getLanguageCodeFromUser($input, $output, $questionHelper);
@@ -53,7 +42,7 @@ final class LocaleSetup implements LocaleSetupInterface
             $output->writeln('<info>You may also need to add this locale into config/services.yaml configuration.</info>');
         }
 
-        /** @var LocaleInterface $existingLocale */
+        /** @var LocaleInterface|null $existingLocale */
         $existingLocale = $this->localeRepository->findOneBy(['code' => $code]);
         if (null !== $existingLocale) {
             return $existingLocale;
@@ -75,7 +64,7 @@ final class LocaleSetup implements LocaleSetupInterface
 
         while (null === $name) {
             $output->writeln(
-                sprintf('<comment>Language with code <info>%s</info> could not be resolved.</comment>', $code)
+                sprintf('<comment>Language with code <info>%s</info> could not be resolved.</comment>', $code),
             );
 
             $code = $this->getNewLanguageCode($input, $output, $questionHelper);
@@ -103,6 +92,10 @@ final class LocaleSetup implements LocaleSetupInterface
             [$language, $region] = explode('_', $code, 2);
         }
 
-        return Intl::getLanguageBundle()->getLanguageName($language, $region);
+        try {
+            return Languages::getName($language, $region);
+        } catch (MissingResourceException) {
+            return null;
+        }
     }
 }

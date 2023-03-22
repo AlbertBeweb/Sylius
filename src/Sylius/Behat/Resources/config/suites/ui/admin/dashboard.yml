@@ -6,6 +6,7 @@ default:
         ui_dashboard:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.setup.channel
                 - sylius.behat.context.setup.currency
@@ -26,7 +27,9 @@ default:
                 - sylius.behat.context.transform.shared_storage
 
                 - sylius.behat.context.ui.admin.dashboard
+                - sylius.behat.context.ui.admin.login
                 - sylius.behat.context.ui.admin.notification
+                - sylius.behat.context.ui.browser
 
             filters:
-                tags: "@admin_dashboard && @ui"
+                tags: "@admin_dashboard&&@ui"

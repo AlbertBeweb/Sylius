@@ -17,6 +17,7 @@ use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\User\Model\UserInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -25,9 +26,10 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 final class UserDeleteListenerSpec extends ObjectBehavior
 {
-    function let(TokenStorageInterface $tokenStorage, SessionInterface $session, FlashBagInterface $flashBag): void
+    function let(TokenStorageInterface $tokenStorage, RequestStack $requestStack, SessionInterface $session, FlashBagInterface $flashBag): void
     {
-        $this->beConstructedWith($tokenStorage, $session);
+        $this->beConstructedWith($tokenStorage, $requestStack);
+        $requestStack->getSession()->willReturn($session);
         $session->getBag('flashes')->willReturn($flashBag);
     }
 
@@ -37,7 +39,7 @@ final class UserDeleteListenerSpec extends ObjectBehavior
         ResourceControllerEvent $event,
         UserInterface $userToBeDeleted,
         UserInterface $currentlyLoggedUser,
-        TokenInterface $tokenInterface
+        TokenInterface $tokenInterface,
     ): void {
         $event->getSubject()->willReturn($userToBeDeleted);
         $userToBeDeleted->getId()->willReturn(11);
@@ -59,7 +61,7 @@ final class UserDeleteListenerSpec extends ObjectBehavior
         FlashBagInterface $flashBag,
         ResourceControllerEvent $event,
         UserInterface $userToBeDeleted,
-        TokenInterface $tokenInterface
+        TokenInterface $tokenInterface,
     ): void {
         $event->getSubject()->willReturn($userToBeDeleted);
         $userToBeDeleted->getId()->willReturn(11);
@@ -80,7 +82,7 @@ final class UserDeleteListenerSpec extends ObjectBehavior
         TokenStorageInterface $tokenStorage,
         FlashBagInterface $flashBag,
         ResourceControllerEvent $event,
-        UserInterface $userToBeDeleted
+        UserInterface $userToBeDeleted,
     ): void {
         $event->getSubject()->willReturn($userToBeDeleted);
         $userToBeDeleted->getId()->willReturn(11);
@@ -100,8 +102,9 @@ final class UserDeleteListenerSpec extends ObjectBehavior
         ResourceControllerEvent $event,
         UserInterface $userToBeDeleted,
         UserInterface $currentlyLoggedInUser,
-        $tokenStorage, $flashBag,
-        TokenInterface $token
+        $tokenStorage,
+        $flashBag,
+        TokenInterface $token,
     ): void {
         $event->getSubject()->willReturn($userToBeDeleted);
         $userToBeDeleted->getId()->willReturn(1);
@@ -124,8 +127,9 @@ final class UserDeleteListenerSpec extends ObjectBehavior
         ResourceControllerEvent $event,
         UserInterface $userToBeDeleted,
         UserInterface $currentlyLoggedInUser,
-        $tokenStorage, $flashBag,
-        TokenInterface $token
+        $tokenStorage,
+        $flashBag,
+        TokenInterface $token,
     ): void {
         $event->getSubject()->willReturn($userToBeDeleted);
         $userToBeDeleted->getId()->willReturn(1);

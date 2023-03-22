@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture;
 
+use Faker\Factory;
+use Faker\Generator;
+
 @trigger_error('The "TshirtProductFixture" class is deprecated since Sylius 1.5 Use new product fixtures class located at "src/Sylius/Bundle/CoreBundle/Fixture/" instead.', \E_USER_DEPRECATED);
 
 use Sylius\Bundle\FixturesBundle\Fixture\AbstractFixture;
@@ -22,36 +25,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class TshirtProductFixture extends AbstractFixture
 {
-    /** @var AbstractResourceFixture */
-    private $taxonFixture;
+    private Generator $faker;
 
-    /** @var AbstractResourceFixture */
-    private $productAttributeFixture;
-
-    /** @var AbstractResourceFixture */
-    private $productOptionFixture;
-
-    /** @var AbstractResourceFixture */
-    private $productFixture;
-
-    /** @var \Faker\Generator */
-    private $faker;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
 
     public function __construct(
-        AbstractResourceFixture $taxonFixture,
-        AbstractResourceFixture $productAttributeFixture,
-        AbstractResourceFixture $productOptionFixture,
-        AbstractResourceFixture $productFixture
+        private AbstractResourceFixture $taxonFixture,
+        private AbstractResourceFixture $productAttributeFixture,
+        private AbstractResourceFixture $productOptionFixture,
+        private AbstractResourceFixture $productFixture,
     ) {
-        $this->taxonFixture = $taxonFixture;
-        $this->productAttributeFixture = $productAttributeFixture;
-        $this->productOptionFixture = $productOptionFixture;
-        $this->productFixture = $productFixture;
-
-        $this->faker = \Faker\Factory::create();
+        $this->faker = Factory::create();
         $this->optionsResolver =
             (new OptionsResolver())
                 ->setRequired('amount')
@@ -59,17 +43,11 @@ class TshirtProductFixture extends AbstractFixture
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'tshirt_product';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function load(array $options): void
     {
         $options = $this->optionsResolver->resolve($options);
@@ -175,9 +153,6 @@ class TshirtProductFixture extends AbstractFixture
         $this->productFixture->load(['custom' => $products]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configureOptionsNode(ArrayNodeDefinition $optionsNode): void
     {
         $optionsNode

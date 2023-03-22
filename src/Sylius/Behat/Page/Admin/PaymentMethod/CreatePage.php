@@ -28,8 +28,14 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
     public function nameIt(string $name, string $languageCode): void
     {
         $this->getDocument()->fillField(
-            sprintf('sylius_payment_method_translations_%s_name', $languageCode), $name
+            sprintf('sylius_payment_method_translations_%s_name', $languageCode),
+            $name,
         );
+    }
+
+    public function cancelChanges(): void
+    {
+        $this->getElement('cancel_button')->click();
     }
 
     public function checkChannel(string $channelName): void
@@ -40,14 +46,16 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
     public function describeIt(string $description, string $languageCode): void
     {
         $this->getDocument()->fillField(
-            sprintf('sylius_payment_method_translations_%s_description', $languageCode), $description
+            sprintf('sylius_payment_method_translations_%s_description', $languageCode),
+            $description,
         );
     }
 
     public function setInstructions(string $instructions, string $languageCode): void
     {
         $this->getDocument()->fillField(
-            sprintf('sylius_payment_method_translations_%s_instructions', $languageCode), $instructions
+            sprintf('sylius_payment_method_translations_%s_instructions', $languageCode),
+            $instructions,
         );
     }
 
@@ -94,6 +102,7 @@ class CreatePage extends BaseCreatePage implements CreatePageInterface
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'cancel_button' => '[data-test-cancel-changes-button]',
             'code' => '#sylius_payment_method_code',
             'enabled' => '#sylius_payment_method_enabled',
             'gateway_name' => '#sylius_payment_method_gatewayConfig_gatewayName',

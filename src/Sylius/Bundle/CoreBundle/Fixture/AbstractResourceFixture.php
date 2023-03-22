@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Bundle\FixturesBundle\Fixture\FixtureInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -23,20 +23,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class AbstractResourceFixture implements FixtureInterface
 {
-    /** @var ObjectManager */
-    private $objectManager;
+    private OptionsResolver $optionsResolver;
 
-    /** @var ExampleFactoryInterface */
-    private $exampleFactory;
-
-    /** @var OptionsResolver */
-    private $optionsResolver;
-
-    public function __construct(ObjectManager $objectManager, ExampleFactoryInterface $exampleFactory)
+    public function __construct(private ObjectManager $objectManager, private ExampleFactoryInterface $exampleFactory)
     {
-        $this->objectManager = $objectManager;
-        $this->exampleFactory = $exampleFactory;
-
         $this->optionsResolver =
             (new OptionsResolver())
                 ->setDefault('random', 0)
@@ -77,21 +67,12 @@ abstract class AbstractResourceFixture implements FixtureInterface
         $this->objectManager->clear();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     final public function getConfigTreeBuilder(): TreeBuilder
     {
-        if (method_exists(TreeBuilder::class, 'getRootNode')) {
-            $treeBuilder = new TreeBuilder($this->getName());
-            /** @var ArrayNodeDefinition $optionsNode */
-            $optionsNode = $treeBuilder->getRootNode();
-        } else {
-            // BC layer for symfony/config 4.1 and older
-            $treeBuilder = new TreeBuilder();
-            /** @var ArrayNodeDefinition $optionsNode */
-            $optionsNode = $treeBuilder->root($this->getName());
-        }
+        $treeBuilder = new TreeBuilder($this->getName());
+
+        /** @var ArrayNodeDefinition $optionsNode */
+        $optionsNode = $treeBuilder->getRootNode();
 
         $optionsNode->children()
             ->integerNode('random')->min(0)->defaultValue(0)->end()

@@ -2,6 +2,13 @@
 # (c) Paweł Jędrzejewski
 
 sylius:
+    email:
+        shipment_confirmation:
+            has_been_sent_using: 'wurde gesendet mit'
+            subject: 'Versandbestätigung'
+            thank_you_for_transaction: 'Vielen Dank für eine erfolgreiche Transaktion.'
+            you_can_check_its_location_with_the_tracking_code: 'Sie können den Standort mit dem Tracking-Code %tracking_code% überprüfen.'
+            your_order_with_number: 'Ihre Bestellung mit Nummer'
     menu:
         admin:
             main:
@@ -28,6 +35,8 @@ sylius:
                     tax_rates: Steuersätze
                     zones: Gebiete
                 marketing:
+                    cart_promotions: Warenkorb Aktionen
+                    catalog_promotions: Katalog Aktionen
                     header: Marketing
                     product_reviews: Produkt-Bewertung
                     promotions: Aktionen
@@ -38,3 +47,24 @@ sylius:
                 sales:
                     header: Verkäufe
                     orders: Bestellungen
+    ui:
+        catalog_promotion:
+            dates_details: Dieser Vorgang ist zeitintensiv! Bitte berücksichtigen Sie eine Verzögerung von 2-10 Minuten ab Start des angegebenen Datums. Die Verzögerung hängt von der Größe des Katalogs ab.
+        channel_pricings: Ausgabekanäle Bepreisung
+        product:
+            product_not_active_in_channel: Das Produkt ist in diesem Kanal noch nicht aktiviert.
+        original_price_details: Originalpreis - Dies ist der Preis der Produktvariante. Wird durchgestrichen im Katalog angezeigt. Dient als Basis für aktuelle Preisberechnungen. Ist dieser Wert nicht definiert, verwendet die Logik der Warbenkorb-Aktion den Ist-Preis.
+        price_details: Preis - Dies ist der aktuelle Preis der Produktvariante im Katalog. Kann explizit durch z.B. Katalog-Aktionen geändert werden.
+        minimum_price_details: Mindestpreis - die Schwelle, unter die der aktuelle Preis weder durch Katalog- noch Warenkorb-Werbeaktionen verringert werden kann. Verwenden Sie dieses Feld, um Rentabilität Ihre Verkäufe zu sichern.
+        gateway:
+            no_sca_support_notice: Das gewählte Zahlungs-Gateway unterstützt kein SCA.
+            pay_pal_express_checkout_deprecation_notice: >
+                PayPal Express Checkout ist veraltet. Bitte verwenden Sie die neue <a href="https://github.com/Sylius/PayPalPlugin" target="_blank">PayPal Handelsplattform</a> Integration.
+        sales_summary: Verkaufszusammenfassung
+        statistics:
+            day: Tag
+            lifetime: Gesamter Zeitraum
+            month: Monat
+            week: Woche
+            2weeks: 2 Wochen
+            year: Jahr

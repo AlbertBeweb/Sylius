@@ -26,9 +26,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ChannelPricingType extends AbstractResourceType
 {
-    /**
-     * {@inheritdoc}
-     */
+    public function __construct(
+        string $dataClass,
+        array $validationGroups,
+        private ?\Sylius\Component\Resource\Repository\RepositoryInterface $channelPricingRepository = null,
+    ) {
+        parent::__construct($dataClass, $validationGroups);
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -38,6 +43,12 @@ final class ChannelPricingType extends AbstractResourceType
             ])
             ->add('originalPrice', MoneyType::class, [
                 'label' => 'sylius.ui.original_price',
+                'required' => false,
+                'currency' => $options['channel']->getBaseCurrency()->getCode(),
+            ])
+            ->add('minimumPrice', MoneyType::class, [
+                'label' => 'sylius.ui.minimum_price',
+                'required' => false,
                 'currency' => $options['channel']->getBaseCurrency()->getCode(),
             ])
         ;
@@ -51,6 +62,16 @@ final class ChannelPricingType extends AbstractResourceType
                 return;
             }
 
+            if ($channelPricing->getPrice() === null && $channelPricing->getOriginalPrice() === null) {
+                $event->setData(null);
+
+                if ($channelPricing->getId() !== null) {
+                    $this->channelPricingRepository->remove($channelPricing);
+                }
+
+                return;
+            }
+
             $channelPricing->setChannelCode($options['channel']->getCode());
             $channelPricing->setProductVariant($options['product_variant']);
 
@@ -58,9 +79,6 @@ final class ChannelPricingType extends AbstractResourceType
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -73,16 +91,11 @@ final class ChannelPricingType extends AbstractResourceType
             ->setAllowedTypes('product_variant', ['null', ProductVariantInterface::class])
 
             ->setDefaults([
-                'label' => function (Options $options): string {
-                    return $options['channel']->getName();
-                },
+                'label' => fn (Options $options): string => $options['channel']->getName(),
             ])
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_channel_pricing';

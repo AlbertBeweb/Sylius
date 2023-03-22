@@ -7,13 +7,13 @@ Feature: Registering a new account after checkout
     Background:
         Given the store operates on a single channel in "United States"
         And the store has a product "PHP T-Shirt" priced at "$19.99"
-        And the store ships everywhere for free
-        And the store allows paying offline
+        And the store ships everywhere for Free
+        And the store allows paying Offline
 
-    @ui
+    @ui @no-api
     Scenario: Registering a new account after checkout
         Given I have product "PHP T-Shirt" in the cart
-        And I have completed addressing step with email "john@example.com" and "United States" based shipping address
+        And I have completed addressing step with email "john@example.com" and "United States" based billing address
         And I have proceeded order with "Free" shipping method and "Offline" payment
         And I have confirmed order
         When I proceed to the registration

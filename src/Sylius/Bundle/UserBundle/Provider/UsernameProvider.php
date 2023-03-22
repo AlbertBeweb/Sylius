@@ -14,14 +14,15 @@ declare(strict_types=1);
 namespace Sylius\Bundle\UserBundle\Provider;
 
 use Symfony\Component\Security\Core\User\UserInterface;
+use Webmozart\Assert\Assert;
 
 class UsernameProvider extends AbstractUserProvider
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function findUser(string $username): ?UserInterface
+    protected function findUser(string $uniqueIdentifier): ?UserInterface
     {
-        return $this->userRepository->findOneBy(['usernameCanonical' => $username]);
+        $user = $this->userRepository->findOneBy(['usernameCanonical' => $uniqueIdentifier]);
+        Assert::nullOrIsInstanceOf($user, UserInterface::class);
+
+        return $user;
     }
 }

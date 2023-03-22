@@ -28,7 +28,7 @@ final class FakeChannelContextSpec extends ObjectBehavior
     function let(
         FakeChannelCodeProviderInterface $fakeChannelCodeProvider,
         ChannelRepositoryInterface $channelRepository,
-        RequestStack $requestStack
+        RequestStack $requestStack,
     ): void {
         $this->beConstructedWith($fakeChannelCodeProvider, $channelRepository, $requestStack);
     }
@@ -43,9 +43,9 @@ final class FakeChannelContextSpec extends ObjectBehavior
         ChannelRepositoryInterface $channelRepository,
         RequestStack $requestStack,
         Request $request,
-        ChannelInterface $channel
+        ChannelInterface $channel,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
+        $requestStack->getMainRequest()->willReturn($request);
 
         $fakeChannelCodeProvider->getCode($request)->willReturn('CHANNEL_CODE');
 
@@ -56,7 +56,7 @@ final class FakeChannelContextSpec extends ObjectBehavior
 
     function it_throws_a_channel_not_found_exception_if_there_is_no_master_request(RequestStack $requestStack): void
     {
-        $requestStack->getMasterRequest()->willReturn(null);
+        $requestStack->getMainRequest()->willReturn(null);
 
         $this->shouldThrow(ChannelNotFoundException::class)->during('getChannel');
     }
@@ -65,9 +65,9 @@ final class FakeChannelContextSpec extends ObjectBehavior
         FakeChannelCodeProviderInterface $fakeChannelCodeProvider,
         ChannelRepositoryInterface $channelRepository,
         RequestStack $requestStack,
-        Request $request
+        Request $request,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
+        $requestStack->getMainRequest()->willReturn($request);
 
         $fakeChannelCodeProvider->getCode($request)->willReturn(null);
 
@@ -80,9 +80,9 @@ final class FakeChannelContextSpec extends ObjectBehavior
         FakeChannelCodeProviderInterface $fakeChannelCodeProvider,
         ChannelRepositoryInterface $channelRepository,
         RequestStack $requestStack,
-        Request $request
+        Request $request,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
+        $requestStack->getMainRequest()->willReturn($request);
 
         $fakeChannelCodeProvider->getCode($request)->willReturn('CHANNEL_CODE');
 

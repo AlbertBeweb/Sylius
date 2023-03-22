@@ -23,8 +23,7 @@ use Symfony\Component\Form\FormEvents;
 
 class SelectAttributeChoicesCollectionType extends AbstractType
 {
-    /** @var string */
-    private $defaultLocaleCode;
+    private string $defaultLocaleCode;
 
     public function __construct(TranslationLocaleProviderInterface $localeProvider)
     {
@@ -32,7 +31,7 @@ class SelectAttributeChoicesCollectionType extends AbstractType
     }
 
     /**
-     * {@inheritdoc}
+     * @psalm-suppress InvalidScalarArgument Some weird magic going on here, not sure about refactor
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -53,11 +52,12 @@ class SelectAttributeChoicesCollectionType extends AbstractType
                         continue;
                     }
 
+                    $key = (string) $key;
                     $newKey = $this->getUniqueKey();
                     $fixedData[$newKey] = $this->resolveValues($values);
 
                     if ($form->offsetExists($key)) {
-                        $type = get_class($form->get($key)->getConfig()->getType()->getInnerType());
+                        $type = $form->get($key)->getConfig()->getType()->getInnerType()::class;
                         $options = $form->get($key)->getConfig()->getOptions();
 
                         $form->remove($key);
@@ -70,17 +70,11 @@ class SelectAttributeChoicesCollectionType extends AbstractType
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return CollectionType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_select_attribute_choices_collection';

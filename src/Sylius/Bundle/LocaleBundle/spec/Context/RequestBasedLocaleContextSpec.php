@@ -35,16 +35,16 @@ final class RequestBasedLocaleContextSpec extends ObjectBehavior
 
     function it_throws_locale_not_found_exception_if_master_request_is_not_found(RequestStack $requestStack): void
     {
-        $requestStack->getMasterRequest()->willReturn(null);
+        $requestStack->getMainRequest()->willReturn(null);
 
         $this->shouldThrow(LocaleNotFoundException::class)->during('getLocaleCode');
     }
 
     function it_throws_locale_not_found_exception_if_master_request_does_not_have_locale_attribute(
         RequestStack $requestStack,
-        Request $request
+        Request $request,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
+        $requestStack->getMainRequest()->willReturn($request);
 
         $request->attributes = new ParameterBag();
 
@@ -54,9 +54,9 @@ final class RequestBasedLocaleContextSpec extends ObjectBehavior
     function it_throws_locale_not_found_exception_if_master_request_locale_code_is_not_among_available_ones(
         RequestStack $requestStack,
         LocaleProviderInterface $localeProvider,
-        Request $request
+        Request $request,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
+        $requestStack->getMainRequest()->willReturn($request);
 
         $request->attributes = new ParameterBag(['_locale' => 'en_US']);
 
@@ -68,10 +68,9 @@ final class RequestBasedLocaleContextSpec extends ObjectBehavior
     function it_returns_master_request_locale_code(
         RequestStack $requestStack,
         LocaleProviderInterface $localeProvider,
-        Request $request
+        Request $request,
     ): void {
-        $requestStack->getMasterRequest()->willReturn($request);
-
+        $requestStack->getMainRequest()->willReturn($request);
         $request->attributes = new ParameterBag(['_locale' => 'pl_PL']);
 
         $localeProvider->getAvailableLocalesCodes()->willReturn(['pl_PL', 'de_DE']);

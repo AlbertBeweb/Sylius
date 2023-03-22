@@ -3,6 +3,7 @@ default:
         ui_managing_payments:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.address
                 - sylius.behat.context.transform.channel
@@ -31,4 +32,4 @@ default:
                 - sylius.behat.context.ui.admin.managing_payments
                 - sylius.behat.context.ui.shop.cart
             filters:
-                tags: "@managing_payments && @ui"
+                tags: "@managing_payments&&@ui"

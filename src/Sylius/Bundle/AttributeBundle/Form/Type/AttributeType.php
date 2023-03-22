@@ -18,36 +18,22 @@ use Sylius\Bundle\ResourceBundle\Form\Registry\FormTypeRegistryInterface;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
 use Sylius\Bundle\ResourceBundle\Form\Type\ResourceTranslationsType;
 use Sylius\Component\Attribute\Model\AttributeInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 
 abstract class AttributeType extends AbstractResourceType
 {
-    /** @var string */
-    protected $attributeTranslationType;
-
-    /** @var FormTypeRegistryInterface */
-    protected $formTypeRegistry;
-
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(
         string $dataClass,
         array $validationGroups,
-        string $attributeTranslationType,
-        FormTypeRegistryInterface $formTypeRegistry
+        protected string $attributeTranslationType,
+        protected FormTypeRegistryInterface $formTypeRegistry,
     ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->attributeTranslationType = $attributeTranslationType;
-        $this->formTypeRegistry = $formTypeRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -60,6 +46,7 @@ abstract class AttributeType extends AbstractResourceType
                 'label' => 'sylius.form.attribute.type',
                 'disabled' => true,
             ])
+            ->add('translatable', CheckboxType::class, ['label' => 'sylius.form.attribute.translatable'])
         ;
 
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {

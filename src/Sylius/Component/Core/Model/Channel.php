@@ -15,6 +15,7 @@ namespace Sylius\Component\Core\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Sylius\Component\Addressing\Model\CountryInterface;
 use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Channel\Model\Channel as BaseChannel;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -22,29 +23,47 @@ use Sylius\Component\Locale\Model\LocaleInterface;
 
 class Channel extends BaseChannel implements ChannelInterface
 {
-    /** @var CurrencyInterface */
+    /** @var CurrencyInterface|null */
     protected $baseCurrency;
 
-    /** @var LocaleInterface */
+    /** @var LocaleInterface|null */
     protected $defaultLocale;
 
-    /** @var ZoneInterface */
+    /** @var ZoneInterface|null */
     protected $defaultTaxZone;
 
-    /** @var string */
+    /** @var string|null */
     protected $taxCalculationStrategy;
 
-    /** @var CurrencyInterface[]|Collection */
+    /**
+     * @var Collection|CurrencyInterface[]
+     *
+     * @psalm-var Collection<array-key, CurrencyInterface>
+     */
     protected $currencies;
 
-    /** @var LocaleInterface[]|Collection */
+    /**
+     * @var Collection|LocaleInterface[]
+     *
+     * @psalm-var Collection<array-key, LocaleInterface>
+     */
     protected $locales;
 
-    /** @var string */
+    /**
+     * @var Collection|CountryInterface[]
+     *
+     * @psalm-var Collection<array-key, CountryInterface>
+     */
+    protected $countries;
+
+    /** @var string|null */
     protected $themeName;
 
-    /** @var string */
+    /** @var string|null */
     protected $contactEmail;
+
+    /** @var string|null */
+    protected $contactPhoneNumber;
 
     /** @var bool */
     protected $skippingShippingStepAllowed = false;
@@ -55,92 +74,73 @@ class Channel extends BaseChannel implements ChannelInterface
     /** @var bool */
     protected $accountVerificationRequired = true;
 
+    protected bool $shippingAddressInCheckoutRequired = false;
+
     /** @var ShopBillingDataInterface|null */
     protected $shopBillingData;
+
+    /** @var TaxonInterface|null */
+    protected $menuTaxon;
+
+    protected int $lowestPriceForDiscountedProductsCheckingPeriod = 30;
 
     public function __construct()
     {
         parent::__construct();
 
+        /** @var ArrayCollection<array-key, CurrencyInterface> $this->currencies */
         $this->currencies = new ArrayCollection();
+        /** @var ArrayCollection<array-key, LocaleInterface> $this->locales */
         $this->locales = new ArrayCollection();
+        /** @var ArrayCollection<array-key, CountryInterface> $this->countries */
+        $this->countries = new ArrayCollection();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBaseCurrency(): ?CurrencyInterface
     {
         return $this->baseCurrency;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setBaseCurrency(?CurrencyInterface $baseCurrency): void
+    public function setBaseCurrency(?CurrencyInterface $currency): void
     {
-        $this->baseCurrency = $baseCurrency;
+        $this->baseCurrency = $currency;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultLocale(): ?LocaleInterface
     {
         return $this->defaultLocale;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setDefaultLocale(?LocaleInterface $defaultLocale): void
+    public function setDefaultLocale(?LocaleInterface $locale): void
     {
-        $this->defaultLocale = $defaultLocale;
+        $this->defaultLocale = $locale;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultTaxZone(): ?ZoneInterface
     {
         return $this->defaultTaxZone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setDefaultTaxZone(?ZoneInterface $defaultTaxZone): void
     {
         $this->defaultTaxZone = $defaultTaxZone;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTaxCalculationStrategy(): ?string
     {
         return $this->taxCalculationStrategy;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setTaxCalculationStrategy(?string $taxCalculationStrategy): void
     {
         $this->taxCalculationStrategy = $taxCalculationStrategy;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCurrencies(): Collection
     {
         return $this->currencies;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addCurrency(CurrencyInterface $currency): void
     {
         if (!$this->hasCurrency($currency)) {
@@ -148,9 +148,6 @@ class Channel extends BaseChannel implements ChannelInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeCurrency(CurrencyInterface $currency): void
     {
         if ($this->hasCurrency($currency)) {
@@ -158,25 +155,16 @@ class Channel extends BaseChannel implements ChannelInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasCurrency(CurrencyInterface $currency): bool
     {
         return $this->currencies->contains($currency);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLocales(): Collection
     {
         return $this->locales;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addLocale(LocaleInterface $locale): void
     {
         if (!$this->hasLocale($locale)) {
@@ -184,9 +172,6 @@ class Channel extends BaseChannel implements ChannelInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function removeLocale(LocaleInterface $locale): void
     {
         if ($this->hasLocale($locale)) {
@@ -194,92 +179,103 @@ class Channel extends BaseChannel implements ChannelInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasLocale(LocaleInterface $locale): bool
     {
         return $this->locales->contains($locale);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function getCountries(): Collection
+    {
+        return $this->countries;
+    }
+
+    public function addCountry(CountryInterface $country): void
+    {
+        if (!$this->hasCountry($country)) {
+            $this->countries->add($country);
+        }
+    }
+
+    public function removeCountry(CountryInterface $country): void
+    {
+        if ($this->hasCountry($country)) {
+            $this->countries->removeElement($country);
+        }
+    }
+
+    public function hasCountry(CountryInterface $country): bool
+    {
+        return $this->countries->contains($country);
+    }
+
     public function getThemeName(): ?string
     {
         return $this->themeName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setThemeName(?string $themeName): void
     {
         $this->themeName = $themeName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getContactEmail(): ?string
     {
         return $this->contactEmail;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setContactEmail(?string $contactEmail): void
     {
         $this->contactEmail = $contactEmail;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function getContactPhoneNumber(): ?string
+    {
+        return $this->contactPhoneNumber;
+    }
+
+    public function setContactPhoneNumber(?string $contactPhoneNumber): void
+    {
+        $this->contactPhoneNumber = $contactPhoneNumber;
+    }
+
     public function isSkippingShippingStepAllowed(): bool
     {
         return $this->skippingShippingStepAllowed;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setSkippingShippingStepAllowed(bool $skippingShippingStepAllowed): void
     {
         $this->skippingShippingStepAllowed = $skippingShippingStepAllowed;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isSkippingPaymentStepAllowed(): bool
     {
         return $this->skippingPaymentStepAllowed;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setSkippingPaymentStepAllowed(bool $skippingPaymentStepAllowed): void
     {
         $this->skippingPaymentStepAllowed = $skippingPaymentStepAllowed;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isAccountVerificationRequired(): bool
     {
         return $this->accountVerificationRequired;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setAccountVerificationRequired(bool $accountVerificationRequired): void
     {
         $this->accountVerificationRequired = $accountVerificationRequired;
+    }
+
+    public function isShippingAddressInCheckoutRequired(): bool
+    {
+        return $this->shippingAddressInCheckoutRequired;
+    }
+
+    public function setShippingAddressInCheckoutRequired(bool $shippingAddressInCheckoutRequired): void
+    {
+        $this->shippingAddressInCheckoutRequired = $shippingAddressInCheckoutRequired;
     }
 
     public function getShopBillingData(): ?ShopBillingDataInterface
@@ -290,5 +286,25 @@ class Channel extends BaseChannel implements ChannelInterface
     public function setShopBillingData(ShopBillingDataInterface $shopBillingData): void
     {
         $this->shopBillingData = $shopBillingData;
+    }
+
+    public function getMenuTaxon(): ?TaxonInterface
+    {
+        return $this->menuTaxon;
+    }
+
+    public function setMenuTaxon(?TaxonInterface $menuTaxon): void
+    {
+        $this->menuTaxon = $menuTaxon;
+    }
+
+    public function getLowestPriceForDiscountedProductsCheckingPeriod(): int
+    {
+        return $this->lowestPriceForDiscountedProductsCheckingPeriod;
+    }
+
+    public function setLowestPriceForDiscountedProductsCheckingPeriod(int $periodInDays): void
+    {
+        $this->lowestPriceForDiscountedProductsCheckingPeriod = $periodInDays;
     }
 }

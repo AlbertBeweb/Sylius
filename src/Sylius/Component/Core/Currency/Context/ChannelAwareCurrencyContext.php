@@ -21,21 +21,10 @@ use Sylius\Component\Currency\Model\CurrencyInterface;
 
 final class ChannelAwareCurrencyContext implements CurrencyContextInterface
 {
-    /** @var CurrencyContextInterface */
-    private $currencyContext;
-
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    public function __construct(CurrencyContextInterface $currencyContext, ChannelContextInterface $channelContext)
+    public function __construct(private CurrencyContextInterface $currencyContext, private ChannelContextInterface $channelContext)
     {
-        $this->currencyContext = $currencyContext;
-        $this->channelContext = $channelContext;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCurrencyCode(): string
     {
         /** @var ChannelInterface $channel */
@@ -49,7 +38,7 @@ final class ChannelAwareCurrencyContext implements CurrencyContextInterface
             }
 
             return $currencyCode;
-        } catch (CurrencyNotFoundException $exception) {
+        } catch (CurrencyNotFoundException) {
             return $channel->getBaseCurrency()->getCode();
         }
     }
@@ -60,7 +49,7 @@ final class ChannelAwareCurrencyContext implements CurrencyContextInterface
             function (CurrencyInterface $currency) {
                 return $currency->getCode();
             },
-            $channel->getCurrencies()->toArray()
+            $channel->getCurrencies()->toArray(),
         );
 
         return in_array($currencyCode, $availableCurrencies, true);

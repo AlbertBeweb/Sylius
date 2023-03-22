@@ -15,46 +15,57 @@ namespace Sylius\Behat\Context\Ui\Shop;
 
 use Behat\Behat\Context\Context;
 use Sylius\Behat\Page\Shop\HomePageInterface;
+use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Locale\Context\LocaleNotFoundException;
+use Sylius\Component\Locale\Model\LocaleInterface;
 use Webmozart\Assert\Assert;
 
 final class LocaleContext implements Context
 {
-    /** @var HomePageInterface */
-    private $homePage;
-
-    public function __construct(HomePageInterface $homePage)
-    {
-        $this->homePage = $homePage;
+    public function __construct(
+        private HomePageInterface $homePage,
+        private SharedStorageInterface $sharedStorage,
+    ) {
     }
 
     /**
      * @Given I switched the shop's locale to :locale
+     * @Given I have switched to the :locale locale
      * @When I switch to the :locale locale
      * @When I change my locale to :locale
      */
-    public function iSwitchTheLocaleToTheLocale($locale)
+    public function iSwitchTheLocaleToTheLocale(LocaleInterface $locale): void
     {
         $this->homePage->open();
-        $this->homePage->switchLocale($locale);
+        $this->homePage->switchLocale($locale->getName('en_US'));
+
+        $this->sharedStorage->set('current_locale_code', $locale->getCode());
     }
 
     /**
-     * @Then I should shop using the :locale locale
-     * @Then I should still shop using the :locale locale
+     * @When I use the locale :localeCode
      */
-    public function iShouldShopUsingTheLocale($locale)
+    public function iUseTheLocale(string $localeCode): void
     {
-        Assert::same($this->homePage->getActiveLocale(), $locale);
+        $this->homePage->tryToOpen(['_locale' => $localeCode]);
     }
 
     /**
-     * @Then I should be able to shop using the :locale locale
-     * @Then the store should be available in the :locale locale
+     * @Then I should shop using the :localeNameInItsLocale locale
+     * @Then I should still shop using the :localeNameInItsLocale locale
      */
-    public function iShouldBeAbleToShopUsingTheLocale($locale)
+    public function iShouldShopUsingTheLocale(string $localeNameInItsLocale): void
     {
-        Assert::oneOf($locale, $this->homePage->getAvailableLocales());
+        Assert::same($this->homePage->getActiveLocale(), $localeNameInItsLocale);
+    }
+
+    /**
+     * @Then I should be able to shop using the :localeNameInCurrentLocale locale
+     * @Then the store should be available in the :localeNameInCurrentLocale locale
+     */
+    public function iShouldBeAbleToShopUsingTheLocale(string $localeNameInCurrentLocale)
+    {
+        Assert::oneOf($localeNameInCurrentLocale, $this->homePage->getAvailableLocales());
     }
 
     /**
@@ -67,7 +78,7 @@ final class LocaleContext implements Context
             throw new \InvalidArgumentException(sprintf(
                 'Expected "%s" not to be in "%s"',
                 $locale,
-                implode('", "', $this->homePage->getAvailableLocales())
+                implode('", "', $this->homePage->getAvailableLocales()),
             ));
         }
     }
@@ -81,7 +92,7 @@ final class LocaleContext implements Context
             $this->homePage->tryToOpen();
 
             throw new \Exception('The page should not be able to open.');
-        } catch (LocaleNotFoundException $e) {
+        } catch (LocaleNotFoundException) {
         }
     }
 }

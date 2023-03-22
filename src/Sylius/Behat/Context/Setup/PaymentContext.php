@@ -14,10 +14,11 @@ declare(strict_types=1);
 namespace Sylius\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Formatter\StringInflector;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
@@ -27,38 +28,14 @@ use Webmozart\Assert\Assert;
 
 final class PaymentContext implements Context
 {
-    /** @var SharedStorageInterface */
-    private $sharedStorage;
-
-    /** @var PaymentMethodRepositoryInterface */
-    private $paymentMethodRepository;
-
-    /** @var ExampleFactoryInterface */
-    private $paymentMethodExampleFactory;
-
-    /** @var FactoryInterface */
-    private $paymentMethodTranslationFactory;
-
-    /** @var ObjectManager */
-    private $paymentMethodManager;
-
-    /** @var array */
-    private $gatewayFactories;
-
     public function __construct(
-        SharedStorageInterface $sharedStorage,
-        PaymentMethodRepositoryInterface $paymentMethodRepository,
-        ExampleFactoryInterface $paymentMethodExampleFactory,
-        FactoryInterface $paymentMethodTranslationFactory,
-        ObjectManager $paymentMethodManager,
-        array $gatewayFactories
+        private SharedStorageInterface $sharedStorage,
+        private PaymentMethodRepositoryInterface $paymentMethodRepository,
+        private ExampleFactoryInterface $paymentMethodExampleFactory,
+        private FactoryInterface $paymentMethodTranslationFactory,
+        private ObjectManager $paymentMethodManager,
+        private array $gatewayFactories,
     ) {
-        $this->sharedStorage = $sharedStorage;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->paymentMethodExampleFactory = $paymentMethodExampleFactory;
-        $this->paymentMethodTranslationFactory = $paymentMethodTranslationFactory;
-        $this->paymentMethodManager = $paymentMethodManager;
-        $this->gatewayFactories = $gatewayFactories;
     }
 
     /**
@@ -67,7 +44,7 @@ final class PaymentContext implements Context
      */
     public function storeAllowsPaying($paymentMethodName, $position = null)
     {
-        $this->createPaymentMethod($paymentMethodName, 'PM_' . $paymentMethodName, 'Offline', 'Payment method', true, $position);
+        $this->createPaymentMethod($paymentMethodName, 'PM_' . StringInflector::nameToCode($paymentMethodName), 'Offline', 'Payment method', true, $position);
     }
 
     /**
@@ -95,7 +72,7 @@ final class PaymentContext implements Context
      */
     public function theStoreHasPaymentMethodWithCodeAndPaypalExpressCheckoutGateway(
         $paymentMethodName,
-        $paymentMethodCode
+        $paymentMethodCode,
     ) {
         $paymentMethod = $this->createPaymentMethod($paymentMethodName, $paymentMethodCode, 'Paypal Express Checkout');
         $paymentMethod->getGatewayConfig()->setConfig([
@@ -166,6 +143,22 @@ final class PaymentContext implements Context
     }
 
     /**
+     * @Given the store allows paying with :paymentMethodName in :channel channel
+     */
+    public function theStoreAllowsPayingWithInChannel(string $paymentMethodName, ChannelInterface $channel): void
+    {
+        $paymentMethod = $this->createPaymentMethod(
+            $paymentMethodName,
+            StringInflector::nameToUppercaseCode($paymentMethodName),
+            'Offline',
+            'Payment method',
+            false,
+        );
+
+        $paymentMethod->addChannel($channel);
+    }
+
+    /**
      * @Then /^the (latest order) should have a payment with state "([^"]+)"$/
      */
     public function theLatestOrderHasAuthorizedPayment(OrderInterface $order, string $state)
@@ -191,7 +184,7 @@ final class PaymentContext implements Context
         $gatewayFactory = 'Offline',
         $description = '',
         $addForCurrentChannel = true,
-        $position = null
+        $position = null,
     ) {
         $gatewayFactory = array_search($gatewayFactory, $this->gatewayFactories);
 

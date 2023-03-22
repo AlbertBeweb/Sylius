@@ -36,6 +36,30 @@ To manage the currently used currency, we use the **CurrencyContext**. You can a
         $currency = $this->get('sylius.context.currency')->getCurrency();
     }
 
+Getting the list of available currencies for a channel
+------------------------------------------------------
+
+If you want to get a list of currently available currencies for a given channel,
+you can get them from the ``Channel``.
+You can also get the current ``Channel`` from the container.
+
+.. code-block:: php
+
+    <?php
+
+    public function fooAction()
+    {
+        // If you don't have it, you can get the current channel from container
+        $channel = $this->container->get('sylius.context.channel')->getChannel();
+
+        $currencies = $channel->getCurrencies();
+    }
+
+.. note::
+
+    If you want to learn more about ``Channels``, what they represent, and how they work; read the previous chapter :doc:`Channels </book/configuration/channels>`
+
+
 Currency Converter
 ------------------
 
@@ -44,21 +68,6 @@ The ``Sylius\Component\Currency\Converter\CurrencyConverter`` is a service avail
 It allows you to convert money values from one currency to another.
 
 This solution is used for displaying an *approximate* value of price when the desired currency is different from the base currency of the current channel.
-
-Available Currencies Provider
------------------------------
-
-The default menu for selecting currency is using a service - **CurrencyProvider** - with the ``sylius.currency_provider`` id, which returns all enabled currencies.
-This is your entry point if you would like override this logic and return different currencies for various scenarios.
-
-.. code-block:: php
-
-    <?php
-
-    public function fooAction()
-    {
-        $currencies = $this->get('sylius.currency_provider')->getAvailableCurrencies();
-    }
 
 Switching Currency of a Channel
 -------------------------------

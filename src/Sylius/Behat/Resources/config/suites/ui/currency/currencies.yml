@@ -6,6 +6,7 @@ default:
         ui_currencies:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.channel
                 - sylius.behat.context.transform.currency
@@ -19,4 +20,4 @@ default:
                 - sylius.behat.context.ui.shop.currency
 
             filters:
-                tags: "@currencies && @ui"
+                tags: "@currencies&&@ui"

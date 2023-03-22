@@ -18,6 +18,8 @@ use Sylius\Bundle\UserBundle\Provider\AbstractUserProvider;
 use Sylius\Component\User\Canonicalizer\CanonicalizerInterface;
 use Sylius\Component\User\Model\User;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 final class EmailProviderSpec extends ObjectBehavior
@@ -45,7 +47,7 @@ final class EmailProviderSpec extends ObjectBehavior
     function it_loads_user_by_email(
         UserRepositoryInterface $userRepository,
         CanonicalizerInterface $canonicalizer,
-        User $user
+        User $user,
     ): void {
         $canonicalizer->canonicalize('test@user.com')->willReturn('test@user.com');
 
@@ -61,5 +63,11 @@ final class EmailProviderSpec extends ObjectBehavior
         $user->getId()->willReturn(1);
 
         $this->refreshUser($user)->shouldReturn($user);
+    }
+
+    function it_should_throw_exception_when_unsupported_user_is_used(
+        UserInterface $user,
+    ): void {
+        $this->shouldThrow(UnsupportedUserException::class)->during('refreshUser', [$user]);
     }
 }

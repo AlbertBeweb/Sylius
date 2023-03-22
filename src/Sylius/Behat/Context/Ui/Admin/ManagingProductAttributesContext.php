@@ -25,33 +25,13 @@ use Webmozart\Assert\Assert;
 
 final class ManagingProductAttributesContext implements Context
 {
-    /** @var CreatePageInterface */
-    private $createPage;
-
-    /** @var IndexPageInterface */
-    private $indexPage;
-
-    /** @var UpdatePageInterface */
-    private $updatePage;
-
-    /** @var CurrentPageResolverInterface */
-    private $currentPageResolver;
-
-    /** @var SharedSecurityServiceInterface */
-    private $sharedSecurityService;
-
     public function __construct(
-        CreatePageInterface $createPage,
-        IndexPageInterface $indexPage,
-        UpdatePageInterface $updatePage,
-        CurrentPageResolverInterface $currentPageResolver,
-        SharedSecurityServiceInterface $sharedSecurityService
+        private CreatePageInterface $createPage,
+        private IndexPageInterface $indexPage,
+        private UpdatePageInterface $updatePage,
+        private CurrentPageResolverInterface $currentPageResolver,
+        private SharedSecurityServiceInterface $sharedSecurityService,
     ) {
-        $this->createPage = $createPage;
-        $this->indexPage = $indexPage;
-        $this->updatePage = $updatePage;
-        $this->currentPageResolver = $currentPageResolver;
-        $this->sharedSecurityService = $sharedSecurityService;
     }
 
     /**
@@ -77,6 +57,14 @@ final class ManagingProductAttributesContext implements Context
     public function iSpecifyItsNameAs($name, $language)
     {
         $this->createPage->nameIt($name, $language);
+    }
+
+    /**
+     * @When I disable its translatability
+     */
+    public function iDisableItsTranslatability(): void
+    {
+        $this->createPage->disableTranslation();
     }
 
     /**
@@ -134,7 +122,7 @@ final class ManagingProductAttributesContext implements Context
 
         Assert::true($this->indexPage->isSingleResourceWithSpecificElementOnPage(
             ['name' => $name],
-            sprintf('td span.ui.label:contains("%s")', ucfirst($type))
+            sprintf('td span.ui.label:contains("%s")', ucfirst($type)),
         ));
     }
 
@@ -250,7 +238,7 @@ final class ManagingProductAttributesContext implements Context
         AdminUserInterface $user,
         ProductAttributeInterface $productAttribute,
         string $oldValue,
-        string $newValue
+        string $newValue,
     ): void {
         $this->sharedSecurityService->performActionAsAdminUser(
             $user,
@@ -258,7 +246,7 @@ final class ManagingProductAttributesContext implements Context
                 $this->iWantToEditThisAttribute($productAttribute);
                 $this->iChangeItsValueTo($oldValue, $newValue);
                 $this->iSaveMyChanges();
-            }
+            },
         );
     }
 
@@ -302,7 +290,7 @@ final class ManagingProductAttributesContext implements Context
     public function theAdministratorDeletesTheValueFromThisProductAttribute(
         AdminUserInterface $user,
         string $value,
-        ProductAttributeInterface $productAttribute
+        ProductAttributeInterface $productAttribute,
     ): void {
         $this->sharedSecurityService->performActionAsAdminUser(
             $user,
@@ -310,7 +298,7 @@ final class ManagingProductAttributesContext implements Context
                 $this->iWantToEditThisAttribute($productAttribute);
                 $this->iDeleteValue($value);
                 $this->iSaveMyChanges();
-            }
+            },
         );
     }
 
@@ -392,7 +380,7 @@ final class ManagingProductAttributesContext implements Context
     public function iShouldBeNotifiedThatMaxLengthMustBeGreaterOrEqualToTheMinLength(): void
     {
         $this->assertValidationMessage(
-            'Configuration max length must be greater or equal to the min length.'
+            'Configuration max length must be greater or equal to the min length.',
         );
     }
 
@@ -402,7 +390,7 @@ final class ManagingProductAttributesContext implements Context
     public function iShouldBeNotifiedThatMaxEntriesValueMustBeGreaterOrEqualToTheMinEntriesValue(): void
     {
         $this->assertValidationMessage(
-            'Configuration max entries value must be greater or equal to the min entries value.'
+            'Configuration max entries value must be greater or equal to the min entries value.',
         );
     }
 
@@ -412,7 +400,7 @@ final class ManagingProductAttributesContext implements Context
     public function iShouldBeNotifiedThatMinEntriesValueMustBeLowerOrEqualToTheNumberOfAddedChoices(): void
     {
         $this->assertValidationMessage(
-            'Configuration min entries value must be lower or equal to the number of added choices.'
+            'Configuration min entries value must be lower or equal to the number of added choices.',
         );
     }
 
@@ -422,7 +410,7 @@ final class ManagingProductAttributesContext implements Context
     public function iShouldBeNotifiedThatMultipleMustBeTrueIfMinOrMaxEntriesValuesAreSpecified(): void
     {
         $this->assertValidationMessage(
-            'Configuration multiple must be true if min or max entries values are specified.'
+            'Configuration multiple must be true if min or max entries values are specified.',
         );
     }
 

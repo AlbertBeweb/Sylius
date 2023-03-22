@@ -22,17 +22,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ProvinceChoiceType extends AbstractType
 {
-    /** @var RepositoryInterface */
-    private $provinceRepository;
-
-    public function __construct(RepositoryInterface $provinceRepository)
+    public function __construct(private RepositoryInterface $provinceRepository)
     {
-        $this->provinceRepository = $provinceRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -53,17 +46,11 @@ final class ProvinceChoiceType extends AbstractType
         $resolver->addAllowedTypes('country', ['null', CountryInterface::class]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_province_choice';

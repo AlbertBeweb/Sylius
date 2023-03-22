@@ -17,15 +17,12 @@ use Sylius\Bundle\UserBundle\Mailer\Emails;
 use Sylius\Component\Mailer\Sender\SenderInterface;
 use Sylius\Component\User\Model\UserInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Webmozart\Assert\Assert;
 
 class MailerListener
 {
-    /** @var SenderInterface */
-    protected $emailSender;
-
-    public function __construct(SenderInterface $emailSender)
+    public function __construct(protected SenderInterface $emailSender)
     {
-        $this->emailSender = $emailSender;
     }
 
     public function sendResetPasswordTokenEmail(GenericEvent $event): void
@@ -45,6 +42,9 @@ class MailerListener
 
     protected function sendEmail(UserInterface $user, string $emailCode): void
     {
-        $this->emailSender->send($emailCode, [$user->getEmail()], ['user' => $user]);
+        $email = $user->getEmail();
+        Assert::notNull($email);
+
+        $this->emailSender->send($emailCode, [$email], ['user' => $user]);
     }
 }

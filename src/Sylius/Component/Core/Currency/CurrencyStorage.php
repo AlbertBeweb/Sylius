@@ -19,17 +19,10 @@ use Sylius\Component\Resource\Storage\StorageInterface;
 
 final class CurrencyStorage implements CurrencyStorageInterface
 {
-    /** @var StorageInterface */
-    private $storage;
-
-    public function __construct(StorageInterface $storage)
+    public function __construct(private StorageInterface $storage)
     {
-        $this->storage = $storage;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function set(ChannelInterface $channel, string $currencyCode): void
     {
         if ($this->isBaseCurrency($currencyCode, $channel) || !$this->isAvailableCurrency($currencyCode, $channel)) {
@@ -41,17 +34,11 @@ final class CurrencyStorage implements CurrencyStorageInterface
         $this->storage->set($this->provideKey($channel), $currencyCode);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function get(ChannelInterface $channel): ?string
     {
         return $this->storage->get($this->provideKey($channel));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     private function provideKey(ChannelInterface $channel): string
     {
         return '_currency_' . $channel->getCode();
@@ -68,7 +55,7 @@ final class CurrencyStorage implements CurrencyStorageInterface
             function (CurrencyInterface $currency) {
                 return $currency->getCode();
             },
-            $channel->getCurrencies()->toArray()
+            $channel->getCurrencies()->toArray(),
         );
 
         return in_array($currencyCode, $availableCurrencies, true);

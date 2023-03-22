@@ -22,72 +22,49 @@ use Symfony\Component\Routing\RouterInterface;
 
 final class LocaleStrippingRouter implements RouterInterface, WarmableInterface
 {
-    /** @var RouterInterface */
-    private $router;
-
-    /** @var LocaleContextInterface */
-    private $localeContext;
-
-    public function __construct(RouterInterface $router, LocaleContextInterface $localeContext)
+    public function __construct(private RouterInterface $router, private LocaleContextInterface $localeContext)
     {
-        $this->router = $router;
-        $this->localeContext = $localeContext;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function match($pathinfo): array
     {
         return $this->router->match($pathinfo);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function generate($name, $parameters = [], $absolute = UrlGeneratorInterface::ABSOLUTE_PATH): string
+    public function generate($name, $parameters = [], $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): string
     {
-        $url = $this->router->generate($name, $parameters, $absolute);
+        $url = $this->router->generate($name, $parameters, $referenceType);
 
-        if (false === strpos($url, '_locale')) {
+        if (!str_contains($url, '_locale')) {
             return $url;
         }
 
         return $this->removeUnusedQueryArgument($url, '_locale', $this->localeContext->getLocaleCode());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setContext(RequestContext $context): void
     {
         $this->router->setContext($context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getContext(): RequestContext
     {
         return $this->router->getContext();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRouteCollection(): RouteCollection
     {
         return $this->router->getRouteCollection();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function warmUp($cacheDir): void
+    /** @return string[] */
+    public function warmUp($cacheDir): array
     {
         if ($this->router instanceof WarmableInterface) {
-            $this->router->warmUp($cacheDir);
+            return $this->router->warmUp($cacheDir);
         }
+
+        return [];
     }
 
     private function removeUnusedQueryArgument(string $url, string $key, string $value): string

@@ -17,41 +17,27 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Uri;
 use Http\Message\MessageFactory;
-use Psr\Http\Message\UriInterface;
-use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 final class NotificationController
 {
-    /** @var ClientInterface */
-    private $client;
-
-    /** @var MessageFactory */
-    private $messageFactory;
-
-    /** @var UriInterface */
-    private $hubUri;
-
-    /** @var string */
-    private $environment;
+    private Uri $hubUri;
 
     public function __construct(
-        ClientInterface $client,
-        MessageFactory $messageFactory,
+        private ClientInterface $client,
+        private MessageFactory $messageFactory,
         string $hubUri,
-        string $environment
+        private string $environment,
     ) {
-        $this->client = $client;
-        $this->messageFactory = $messageFactory;
         $this->hubUri = new Uri($hubUri);
-        $this->environment = $environment;
     }
 
     public function getVersionAction(Request $request): JsonResponse
     {
         $content = [
-            'version' => Kernel::VERSION,
+            'version' => SyliusCoreBundle::VERSION,
             'hostname' => $request->getHost(),
             'locale' => $request->getLocale(),
             'user_agent' => $request->headers->get('User-Agent'),
@@ -64,13 +50,13 @@ final class NotificationController
             Request::METHOD_GET,
             $this->hubUri,
             $headers,
-            json_encode($content)
+            json_encode($content),
         );
 
         try {
             $hubResponse = $this->client->send($hubRequest, ['verify' => false]);
-        } catch (GuzzleException $exception) {
-            return JsonResponse::create('', JsonResponse::HTTP_NO_CONTENT);
+        } catch (GuzzleException) {
+            return new JsonResponse('', JsonResponse::HTTP_NO_CONTENT);
         }
 
         $hubResponse = json_decode($hubResponse->getBody()->getContents(), true);

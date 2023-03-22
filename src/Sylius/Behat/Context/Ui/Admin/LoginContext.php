@@ -21,20 +21,14 @@ use Webmozart\Assert\Assert;
 
 final class LoginContext implements Context
 {
-    /** @var DashboardPageInterface */
-    private $dashboardPage;
-
-    /** @var LoginPageInterface */
-    private $loginPage;
-
-    public function __construct(DashboardPageInterface $dashboardPage, LoginPageInterface $loginPage)
-    {
-        $this->dashboardPage = $dashboardPage;
-        $this->loginPage = $loginPage;
+    public function __construct(
+        private DashboardPageInterface $dashboardPage,
+        private LoginPageInterface $loginPage,
+    ) {
     }
 
     /**
-     * @Given I want to log in
+     * @When I want to log in
      */
     public function iWantToLogIn()
     {
@@ -56,6 +50,14 @@ final class LoginContext implements Context
     public function iSpecifyThePasswordAs($password = null)
     {
         $this->loginPage->specifyPassword($password);
+    }
+
+    /**
+     * @When /^(this administrator) logs in using "([^"]+)" password$/
+     */
+    public function theyLogIn(AdminUserInterface $adminUser, $password)
+    {
+        $this->logInAgain($adminUser->getUsername(), $password);
     }
 
     /**
@@ -95,7 +97,7 @@ final class LoginContext implements Context
      */
     public function iShouldBeNotifiedAboutBadCredentials()
     {
-        Assert::true($this->loginPage->hasValidationErrorWith('Error Bad credentials.'));
+        Assert::true($this->loginPage->hasValidationErrorWith('Error Invalid credentials.'));
     }
 
     /**
@@ -104,16 +106,7 @@ final class LoginContext implements Context
     public function iShouldBeAbleToLogInAsAuthenticatedByPassword($username, $password)
     {
         $this->logInAgain($username, $password);
-
-        $this->dashboardPage->verify();
-    }
-
-    /**
-     * @When /^(this administrator) logs in using "([^"]+)" password$/
-     */
-    public function theyLogIn(AdminUserInterface $adminUser, $password)
-    {
-        $this->logInAgain($adminUser->getUsername(), $password);
+        $this->iShouldBeLoggedIn();
     }
 
     /**
@@ -123,18 +116,24 @@ final class LoginContext implements Context
     {
         $this->logInAgain($username, $password);
 
-        Assert::true($this->loginPage->hasValidationErrorWith('Error Bad credentials.'));
+        Assert::true($this->loginPage->hasValidationErrorWith('Error Invalid credentials.'));
         Assert::false($this->dashboardPage->isOpen());
     }
 
     /**
-     * @param string $username
-     * @param string $password
+     * @Then I should be on the login page
      */
-    private function logInAgain($username, $password)
+    public function iShouldBeOnTheLoginPage(): void
     {
-        $this->dashboardPage->open();
-        $this->dashboardPage->logOut();
+        Assert::true($this->loginPage->isOpen());
+    }
+
+    private function logInAgain(string $username, string $password): void
+    {
+        $this->dashboardPage->tryToOpen();
+        if ($this->dashboardPage->isOpen()) {
+            $this->dashboardPage->logOut();
+        }
 
         $this->loginPage->open();
         $this->loginPage->specifyUsername($username);

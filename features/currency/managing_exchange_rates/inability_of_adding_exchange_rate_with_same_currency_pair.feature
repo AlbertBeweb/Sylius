@@ -9,10 +9,10 @@ Feature: Inability of adding exchange rates with the same currency pair
         And the exchange rate of "Euro" to "British Pound" is 1.2
         And I am logged in as an administrator
 
-    @ui
+    @ui @api
     Scenario: Being prevented from adding an exchange rate for the same currency pair
-        Given I want to add a new exchange rate
-        When I specify its ratio as 3.20
+        When I want to add a new exchange rate
+        And I specify its ratio as 3.20
         And I choose "Euro" as the source currency
         And I choose "British Pound" as the target currency
         And I try to add it
@@ -20,10 +20,10 @@ Feature: Inability of adding exchange rates with the same currency pair
         And I should still see one exchange rate on the list
         And this exchange rate should have a ratio of 1.2
 
-    @ui
+    @ui @api
     Scenario: Being prevented from adding an exchange rate for a reversed currency pair
-        Given I want to add a new exchange rate
-        When I specify its ratio as 3.20
+        When I want to add a new exchange rate
+        And I specify its ratio as 3.20
         And I choose "British Pound" as the source currency
         And I choose "Euro" as the target currency
         And I try to add it

@@ -19,17 +19,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class PromotionActionChoiceType extends AbstractType
 {
-    /** @var array */
-    private $actions;
-
-    public function __construct(array $actions)
+    public function __construct(private array $actions)
     {
-        $this->actions = $actions;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -37,17 +30,11 @@ final class PromotionActionChoiceType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_promotion_action_choice';

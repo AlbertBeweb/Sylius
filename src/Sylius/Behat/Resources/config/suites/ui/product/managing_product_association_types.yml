@@ -6,6 +6,7 @@ default:
         ui_managing_product_association_types:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.locale
                 - sylius.behat.context.transform.product_association_type
@@ -19,4 +20,4 @@ default:
                 - sylius.behat.context.ui.admin.notification
 
             filters:
-                tags: "@managing_product_association_types && @ui"
+                tags: "@managing_product_association_types&&@ui"

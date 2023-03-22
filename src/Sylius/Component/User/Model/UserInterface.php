@@ -17,8 +17,8 @@ use Doctrine\Common\Collections\Collection;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Sylius\Component\Resource\Model\TimestampableInterface;
 use Sylius\Component\Resource\Model\ToggleableInterface;
-use Symfony\Component\Security\Core\Encoder\EncoderAwareInterface;
-use Symfony\Component\Security\Core\User\AdvancedUserInterface;
+use SyliusLabs\Polyfill\Symfony\Security\Core\Encoder\EncoderAwareInterface;
+use SyliusLabs\Polyfill\Symfony\Security\Core\User\AdvancedUserInterface;
 
 interface UserInterface extends
     AdvancedUserInterface,
@@ -101,6 +101,8 @@ interface UserInterface extends
 
     /**
      * @return Collection|UserOAuthInterface[]
+     *
+     * @psalm-return Collection<array-key, UserOAuthInterface>
      */
     public function getOAuthAccounts(): Collection;
 
@@ -109,4 +111,8 @@ interface UserInterface extends
     public function addOAuthAccount(UserOAuthInterface $oauth): void;
 
     public function setEncoderName(?string $encoderName): void;
+
+    public function __serialize(): array;
+
+    public function __unserialize(array $data): void;
 }

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace spec\Sylius\Bundle\CoreBundle\Validator\Constraints;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use PhpSpec\ObjectBehavior;
 use Sylius\Bundle\CoreBundle\Validator\Constraints\ChannelDefaultLocaleEnabled;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -51,7 +50,7 @@ final class ChannelDefaultLocaleEnabledValidatorSpec extends ObjectBehavior
         ExecutionContextInterface $executionContext,
         ConstraintViolationBuilderInterface $constraintViolationBuilder,
         ChannelInterface $channel,
-        LocaleInterface $locale
+        LocaleInterface $locale,
     ): void {
         $constraint = new ChannelDefaultLocaleEnabled();
 
@@ -68,7 +67,7 @@ final class ChannelDefaultLocaleEnabledValidatorSpec extends ObjectBehavior
     function it_does_nothing_if_default_locale_is_enabled_for_a_given_channel(
         ExecutionContextInterface $executionContext,
         ChannelInterface $channel,
-        LocaleInterface $locale
+        LocaleInterface $locale,
     ): void {
         $constraint = new ChannelDefaultLocaleEnabled();
 

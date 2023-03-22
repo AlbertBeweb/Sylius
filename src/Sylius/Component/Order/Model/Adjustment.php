@@ -49,30 +49,31 @@ class Adjustment implements AdjustmentInterface
     /** @var string|null */
     protected $originCode;
 
+    /** @var mixed[] */
+    protected $details = [];
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function __clone()
+    {
+        $this->id = null;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = null;
+    }
+
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAdjustable(): ?AdjustableInterface
     {
         return $this->order ?? $this->orderItem ?? $this->orderItemUnit;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setAdjustable(?AdjustableInterface $adjustable): void
     {
         $this->assertNotLocked();
@@ -95,49 +96,31 @@ class Adjustment implements AdjustmentInterface
         $adjustable->addAdjustment($this);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): ?string
     {
         return $this->type;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setType(?string $type): void
     {
         $this->type = $type;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLabel(): ?string
     {
         return $this->label;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setLabel(?string $label): void
     {
         $this->label = $label;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAmount(): int
     {
         return $this->amount;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setAmount(int $amount): void
     {
         $this->amount = $amount;
@@ -146,17 +129,11 @@ class Adjustment implements AdjustmentInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isNeutral(): bool
     {
         return $this->neutral;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setNeutral(bool $neutral): void
     {
         if ($this->neutral !== $neutral) {
@@ -165,60 +142,64 @@ class Adjustment implements AdjustmentInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isLocked(): bool
     {
         return $this->locked;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function lock(): void
     {
         $this->locked = true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function unlock(): void
     {
         $this->locked = false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isCharge(): bool
     {
         return 0 > $this->amount;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isCredit(): bool
     {
         return 0 < $this->amount;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOriginCode(): ?string
     {
         return $this->originCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function setOriginCode(?string $originCode): void
     {
         $this->originCode = $originCode;
+    }
+
+    public function getOrder(): ?OrderInterface
+    {
+        return $this->order;
+    }
+
+    public function getOrderItem(): ?OrderItemInterface
+    {
+        return $this->orderItem;
+    }
+
+    public function getOrderItemUnit(): ?OrderItemUnitInterface
+    {
+        return $this->orderItemUnit;
+    }
+
+    public function getDetails(): array
+    {
+        return $this->details;
+    }
+
+    public function setDetails(array $details): void
+    {
+        $this->details = $details;
     }
 
     private function recalculateAdjustable(): void

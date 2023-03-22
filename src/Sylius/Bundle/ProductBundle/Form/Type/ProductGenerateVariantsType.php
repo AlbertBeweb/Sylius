@@ -20,22 +20,17 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 final class ProductGenerateVariantsType extends AbstractResourceType
 {
-    /** @var EventSubscriberInterface */
-    private $generateProductVariantsSubscriber;
-
     /**
      * @param array|string[] $validationGroups
      */
-    public function __construct(string $dataClass, array $validationGroups, EventSubscriberInterface $generateProductVariants)
-    {
+    public function __construct(
+        string $dataClass,
+        array $validationGroups,
+        private EventSubscriberInterface $generateProductVariantsSubscriber,
+    ) {
         parent::__construct($dataClass, $validationGroups);
-
-        $this->generateProductVariantsSubscriber = $generateProductVariants;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -45,12 +40,10 @@ final class ProductGenerateVariantsType extends AbstractResourceType
                 'allow_delete' => true,
                 'by_reference' => false,
             ])
-            ->addEventSubscriber($this->generateProductVariantsSubscriber);
+            ->addEventSubscriber($this->generateProductVariantsSubscriber)
+        ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_product_generate_variants';

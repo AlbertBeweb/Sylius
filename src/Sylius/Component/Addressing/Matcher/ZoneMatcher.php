@@ -21,9 +21,6 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class ZoneMatcher implements ZoneMatcherInterface
 {
-    /** @var RepositoryInterface */
-    private $zoneRepository;
-
     /**
      * @var array
      */
@@ -33,14 +30,10 @@ final class ZoneMatcher implements ZoneMatcherInterface
         ZoneInterface::TYPE_ZONE,
     ];
 
-    public function __construct(RepositoryInterface $zoneRepository)
+    public function __construct(private RepositoryInterface $zoneRepository)
     {
-        $this->zoneRepository = $zoneRepository;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function match(AddressInterface $address, ?string $scope = null): ?ZoneInterface
     {
         $zones = [];
@@ -61,9 +54,6 @@ final class ZoneMatcher implements ZoneMatcherInterface
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function matchAll(AddressInterface $address, ?string $scope = null): array
     {
         $zones = [];

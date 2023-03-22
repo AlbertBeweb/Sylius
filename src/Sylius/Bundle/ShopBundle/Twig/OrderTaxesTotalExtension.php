@@ -16,14 +16,21 @@ namespace Sylius\Bundle\ShopBundle\Twig;
 use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Order\Model\AdjustmentInterface as BaseAdjustmentInterface;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
-class OrderTaxesTotalExtension extends \Twig_Extension
+@trigger_error(
+    'The "Sylius\Bundle\ShopBundle\Twig\OrderTaxesTotalExtension" class is deprecated since Sylius 1.12 and will be removed in 2.0. Use methods "getTaxExcludedTotal" and "getTaxIncludedTotal" from "Sylius\Component\Core\Model\Order" instead.',
+    \E_USER_DEPRECATED,
+);
+
+class OrderTaxesTotalExtension extends AbstractExtension
 {
     public function getFunctions(): array
     {
         return [
-            new \Twig_Function('sylius_order_tax_included', [$this, 'getIncludedTax']),
-            new \Twig_Function('sylius_order_tax_excluded', [$this, 'getExcludedTax']),
+            new TwigFunction('sylius_order_tax_included', [$this, 'getIncludedTax']),
+            new TwigFunction('sylius_order_tax_excluded', [$this, 'getExcludedTax']),
         ];
     }
 
@@ -41,10 +48,8 @@ class OrderTaxesTotalExtension extends \Twig_Extension
     {
         return array_reduce(
             $order->getAdjustmentsRecursively(AdjustmentInterface::TAX_ADJUSTMENT)->toArray(),
-            static function (int $total, BaseAdjustmentInterface $adjustment) use ($isNeutral) {
-                return $isNeutral === $adjustment->isNeutral() ? $total + $adjustment->getAmount() : $total;
-            },
-            0
+            static fn (int $total, BaseAdjustmentInterface $adjustment) => $isNeutral === $adjustment->isNeutral() ? $total + $adjustment->getAmount() : $total,
+            0,
         );
     }
 }

@@ -19,20 +19,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class CalculatorChoiceType extends AbstractType
 {
-    /** @var array */
-    private $calculators;
-
     /**
      * @param array $calculators
      */
-    public function __construct($calculators)
+    public function __construct(private $calculators)
     {
-        $this->calculators = $calculators;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -42,17 +35,11 @@ final class CalculatorChoiceType extends AbstractType
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBlockPrefix(): string
     {
         return 'sylius_shipping_calculator_choice';

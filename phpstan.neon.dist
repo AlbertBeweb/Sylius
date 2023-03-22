@@ -1,0 +1,39 @@
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-webmozart-assert/extension.neon
+    - vendor/jangregor/phpstan-prophecy/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+
+parameters:
+    level: 3
+
+    reportUnmatchedIgnoredErrors: false
+
+    paths:
+        - 'src/'
+
+    excludePaths:
+        # Test dependencies
+        - '**/spec/**.php'
+        - '**/Bundle/*/test/**.php'
+        - '**/Bundle/*/test/app/**.php'
+        - '**/Bundle/*/test/src/**.php'
+        - '**/Bundle/*/Tests/**.php'
+        - 'src/Sylius/Behat/**.php'
+
+        # Vendor files in subpackages
+        - '**/Bundle/*/vendor/**.php'
+        - '**/Component/*/vendor/**.php'
+
+        # Deprecated classes
+        - 'src/Sylius/Bundle/CoreBundle/Application/Kernel.php'
+        - 'src/Sylius/Bundle/UserBundle/Security/UserPasswordEncoder.php'
+
+        # To investigate, occurs after release of doctrine/orm 2.14, the processing of these classes ends with exit code 143
+        - 'src/Sylius/Bundle/CoreBundle/Doctrine/DQL/**.php'
+        - 'src/Sylius/Bundle/CoreBundle/Doctrine/ORM/SqlWalker/**.php'
+    ignoreErrors:
+        - '/Access to an undefined property Doctrine\\Common\\Collections\\ArrayCollection/'
+        - '/Class Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken constructor invoked with 4 parameters\, 2\-3 required./'
+        - '/Method Symfony\\Component\\Serializer\\Normalizer\\NormalizerInterface\:\:supportsNormalization\(\) invoked with 3 parameters\, 1\-2 required\./'

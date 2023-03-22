@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Tests\Fixture;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectManager;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\Fixture\LocaleFixture;
@@ -47,7 +47,7 @@ final class LocaleFixtureTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [['load_default_locale' => false]],
             ['load_default_locale' => false],
-            'load_default_locale'
+            'load_default_locale',
         );
     }
 
@@ -59,19 +59,16 @@ final class LocaleFixtureTest extends TestCase
         $this->assertProcessedConfigurationEquals(
             [[]],
             ['load_default_locale' => true],
-            'load_default_locale'
+            'load_default_locale',
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getConfiguration(): LocaleFixture
     {
         return new LocaleFixture(
             $this->getMockBuilder(FactoryInterface::class)->getMock(),
             $this->getMockBuilder(ObjectManager::class)->getMock(),
-            'default_LOCALE'
+            'default_LOCALE',
         );
     }
 }

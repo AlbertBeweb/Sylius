@@ -6,6 +6,7 @@ default:
         ui_managing_administrators:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.session
 
                 - sylius.behat.context.transform.admin
                 - sylius.behat.context.transform.shared_storage
@@ -23,4 +24,4 @@ default:
                 - sylius.behat.context.ui.admin.login
 
             filters:
-                tags: "@managing_administrators && @ui"
+                tags: "@managing_administrators&&@ui"

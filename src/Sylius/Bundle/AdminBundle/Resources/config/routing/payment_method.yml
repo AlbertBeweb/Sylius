@@ -8,19 +8,19 @@ sylius_admin_payment_method:
         grid: sylius_admin_payment_method
         permission: true
         vars:
-          all:
-              subheader: sylius.ui.manage_payment_methods_available_to_your_customers
-              templates:
-                  form: "@SyliusAdmin/PaymentMethod/_form.html.twig"
-          index:
-              icon: payment
+            all:
+                subheader: sylius.ui.manage_payment_methods_available_to_your_customers
+                templates:
+                    form: "@SyliusAdmin/PaymentMethod/_form.html.twig"
+            index:
+                icon: payment
     type: sylius.resource
 
 sylius_admin_payment_method_create:
     path: /payment-methods/new/{factory}
     methods: [GET, POST]
     defaults:
-        _controller: sylius.controller.payment_method:createAction
+        _controller: sylius.controller.payment_method::createAction
         _sylius:
             section: admin
             factory:
@@ -42,5 +42,5 @@ sylius_admin_get_payment_gateways:
     path: /payment-gateways
     methods: [GET]
     defaults:
-        _controller: sylius.controller.payment_method:getPaymentGatewaysAction
+        _controller: sylius.controller.payment_method::getPaymentGatewaysAction
         template: "@SyliusAdmin/PaymentMethod/Gateways/paymentGateways.html.twig"

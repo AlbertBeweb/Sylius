@@ -13,44 +13,58 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\CoreBundle\Security;
 
+use Sylius\Bundle\CoreBundle\Provider\SessionProvider;
 use Sylius\Bundle\UserBundle\Event\UserEvent;
 use Sylius\Bundle\UserBundle\UserEvents;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Webmozart\Assert\Assert;
 
 final class UserImpersonator implements UserImpersonatorInterface
 {
-    /** @var Session */
-    private $session;
+    private string $sessionTokenParameter;
 
-    /** @var string */
-    private $sessionTokenParameter;
+    private string $firewallContextName;
 
-    /** @var string */
-    private $firewallContextName;
-
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-
-    public function __construct(Session $session, string $firewallContextName, EventDispatcherInterface $eventDispatcher)
-    {
-        $this->session = $session;
+    public function __construct(
+        private RequestStack|SessionInterface $requestStackOrSession,
+        string $firewallContextName,
+        private EventDispatcherInterface $eventDispatcher,
+    ) {
         $this->sessionTokenParameter = sprintf('_security_%s', $firewallContextName);
         $this->firewallContextName = $firewallContextName;
-        $this->eventDispatcher = $eventDispatcher;
+
+        if ($requestStackOrSession instanceof SessionInterface) {
+            trigger_deprecation('sylius/core-bundle', '1.12', sprintf('Passing an instance of %s as constructor argument for %s is deprecated as of Sylius 1.12 and will be removed in 2.0. Pass an instance of %s instead.', SessionInterface::class, self::class, RequestStack::class));
+        }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function impersonate(UserInterface $user): void
     {
-        $token = new UsernamePasswordToken($user, $user->getPassword(), $this->firewallContextName, $user->getRoles());
-        $this->session->set($this->sessionTokenParameter, serialize($token));
-        $this->session->save();
+        /** @deprecated parameter credential was deprecated in Symfony 5.4, so in Sylius 1.11 too, in Sylius 2.0 providing 4 arguments will be prohibited. */
+        if (3 === (new \ReflectionClass(UsernamePasswordToken::class))->getConstructor()->getNumberOfParameters()) {
+            $token = new UsernamePasswordToken(
+                $user,
+                $this->firewallContextName,
+                array_map(/** @param object|string $role */ static fn ($role): string => (string) $role, $user->getRoles()),
+            );
+        } else {
+            Assert::methodExists($user, 'getPassword');
+            $token = new UsernamePasswordToken(
+                $user,
+                $user->getPassword(),
+                $this->firewallContextName,
+                array_map(/** @param object|string $role */ static fn ($role): string => (string) $role, $user->getRoles()),
+            );
+        }
 
-        $this->eventDispatcher->dispatch(UserEvents::SECURITY_IMPERSONATE, new UserEvent($user));
+        $session = SessionProvider::getSession($this->requestStackOrSession);
+        $session->set($this->sessionTokenParameter, serialize($token));
+        $session->save();
+
+        $this->eventDispatcher->dispatch(new UserEvent($user), UserEvents::SECURITY_IMPERSONATE);
     }
 }

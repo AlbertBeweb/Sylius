@@ -15,7 +15,6 @@ namespace Sylius\Bundle\AdminBundle\Action;
 
 use Sylius\Component\Core\Model\AvatarImage;
 use Sylius\Component\Core\Repository\AvatarImageRepositoryInterface;
-use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,39 +25,22 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class RemoveAvatarAction
 {
-    /** @var AvatarImageRepositoryInterface */
-    private $avatarRepository;
-
-    /** @var EngineInterface */
-    private $templatingEngine;
-
-    /** @var RouterInterface */
-    private $router;
-
-    /** @var CsrfTokenManagerInterface */
-    private $csrfTokenManager;
-
     public function __construct(
-        AvatarImageRepositoryInterface $avatarRepository,
-        EngineInterface $templatingEngine,
-        RouterInterface $router,
-        CsrfTokenManagerInterface $csrfTokenManager
+        private AvatarImageRepositoryInterface $avatarRepository,
+        private RouterInterface $router,
+        private CsrfTokenManagerInterface $csrfTokenManager,
     ) {
-        $this->avatarRepository = $avatarRepository;
-        $this->templatingEngine = $templatingEngine;
-        $this->router = $router;
-        $this->csrfTokenManager = $csrfTokenManager;
     }
 
     public function __invoke(Request $request): Response
     {
         $userId = $request->attributes->get('id');
 
-        if (!$this->csrfTokenManager->isTokenValid(new CsrfToken($userId, $request->query->get('_csrf_token')))) {
+        if (!$this->csrfTokenManager->isTokenValid(new CsrfToken($userId, (string) $request->query->get('_csrf_token')))) {
             throw new HttpException(Response::HTTP_FORBIDDEN, 'Invalid csrf token.');
         }
 
-        /** @var AvatarImage $avatar */
+        /** @var AvatarImage|null $avatar */
         $avatar = $this->avatarRepository->findOneByOwnerId($userId);
 
         if (null !== $avatar) {

@@ -13,29 +13,26 @@ declare(strict_types=1);
 
 namespace Sylius\Bundle\ProductBundle\EventListener;
 
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\ObjectManager;
 use Sylius\Component\Attribute\AttributeType\SelectAttributeType;
 use Sylius\Component\Product\Model\ProductAttributeInterface;
 use Sylius\Component\Product\Model\ProductAttributeValueInterface;
 use Sylius\Component\Product\Repository\ProductAttributeValueRepositoryInterface;
+use Webmozart\Assert\Assert;
 
 final class SelectProductAttributeChoiceRemoveListener
 {
-    /** @var string */
-    private $productAttributeValueClass;
-
-    public function __construct(string $productAttributeValueClass)
+    public function __construct(private string $productAttributeValueClass)
     {
-        $this->productAttributeValueClass = $productAttributeValueClass;
     }
 
     public function postUpdate(LifecycleEventArgs $event): void
     {
-        /** @var ProductAttributeInterface $productAttribute */
-        $productAttribute = $event->getEntity();
+        $productAttribute = $event->getObject();
 
-        if (!($productAttribute instanceof ProductAttributeInterface)) {
+        if (!$productAttribute instanceof ProductAttributeInterface) {
             return;
         }
 
@@ -43,7 +40,8 @@ final class SelectProductAttributeChoiceRemoveListener
             return;
         }
 
-        $entityManager = $event->getEntityManager();
+        $entityManager = $event->getObjectManager();
+        Assert::isInstanceOf($entityManager, EntityManagerInterface::class);
 
         $unitOfWork = $entityManager->getUnitOfWork();
         $changeSet = $unitOfWork->getEntityChangeSet($productAttribute);

@@ -13,9 +13,21 @@ declare(strict_types=1);
 
 namespace Sylius\Behat\Element\Product\ShowPage;
 
+use Behat\Mink\Element\NodeElement;
+
 interface PricingElementInterface
 {
     public function getPriceForChannel(string $channelName): string;
 
     public function getOriginalPriceForChannel(string $channelName): string;
+
+    public function getCatalogPromotionsNamesForChannel(string $channelName): array;
+
+    public function getCatalogPromotionLinksForChannel(string $channelName): array;
+
+    public function getLowestPriceBeforeDiscountForChannel(string $channelName): string;
+
+    public function getSimpleProductPricingRowForChannel(string $channelName): NodeElement;
+
+    public function getVariantPricingRowForChannel(string $variantName, string $channelName): NodeElement;
 }

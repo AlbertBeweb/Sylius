@@ -27,30 +27,28 @@ use Webmozart\Assert\Assert;
 
 final class SetupCommand extends AbstractInstallCommand
 {
-    /**
-     * {@inheritdoc}
-     */
+    protected static $defaultName = 'sylius:install:setup';
+
     protected function configure(): void
     {
         $this
-            ->setName('sylius:install:setup')
             ->setDescription('Sylius configuration setup.')
-            ->setHelp(<<<EOT
+            ->setHelp(
+                <<<EOT
 The <info>%command.name%</info> command allows user to configure basic Sylius data.
 EOT
             )
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): void
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $currency = $this->getContainer()->get('sylius.setup.currency')->setup($input, $output, $this->getHelper('question'));
         $locale = $this->getContainer()->get('sylius.setup.locale')->setup($input, $output, $this->getHelper('question'));
         $this->getContainer()->get('sylius.setup.channel')->setup($locale, $currency);
         $this->setupAdministratorUser($input, $output, $locale->getCode());
+
+        return 0;
     }
 
     protected function setupAdministratorUser(InputInterface $input, OutputInterface $output, string $localeCode): void
@@ -63,7 +61,7 @@ EOT
 
         try {
             $user = $this->configureNewUser($userFactory->createNew(), $input, $output);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException) {
             return;
         }
 
@@ -80,7 +78,7 @@ EOT
     private function configureNewUser(
         AdminUserInterface $user,
         InputInterface $input,
-        OutputInterface $output
+        OutputInterface $output,
     ): AdminUserInterface {
         /** @var UserRepositoryInterface $userRepository */
         $userRepository = $this->getAdminUserRepository();
@@ -106,15 +104,20 @@ EOT
     private function createEmailQuestion(): Question
     {
         return (new Question('E-mail: '))
-            ->setValidator(function ($value) {
-                /** @var ConstraintViolationListInterface $errors */
-                $errors = $this->getContainer()->get('validator')->validate((string) $value, [new Email(), new NotBlank()]);
-                foreach ($errors as $error) {
-                    throw new \DomainException($error->getMessage());
-                }
+            ->setValidator(
+                /**
+                 * @param mixed $value
+                 */
+                function ($value): string {
+                    /** @var ConstraintViolationListInterface $errors */
+                    $errors = $this->getContainer()->get('validator')->validate((string) $value, [new Email(), new NotBlank()]);
+                    foreach ($errors as $error) {
+                        throw new \DomainException((string) $error->getMessage());
+                    }
 
-                return $value;
-            })
+                    return $value;
+                },
+            )
             ->setMaxAttempts(3)
         ;
     }
@@ -182,15 +185,18 @@ EOT
 
     private function getPasswordQuestionValidator(): \Closure
     {
-        return function ($value) {
-            /** @var ConstraintViolationListInterface $errors */
-            $errors = $this->getContainer()->get('validator')->validate($value, [new NotBlank()]);
-            foreach ($errors as $error) {
-                throw new \DomainException($error->getMessage());
-            }
+        return
+            /** @param mixed $value */
+            function ($value): string {
+                /** @var ConstraintViolationListInterface $errors */
+                $errors = $this->getContainer()->get('validator')->validate($value, [new NotBlank()]);
+                foreach ($errors as $error) {
+                    throw new \DomainException((string) $error->getMessage());
+                }
 
-            return $value;
-        };
+                return $value;
+            }
+        ;
     }
 
     private function createPasswordQuestion(string $message, \Closure $validator): Question

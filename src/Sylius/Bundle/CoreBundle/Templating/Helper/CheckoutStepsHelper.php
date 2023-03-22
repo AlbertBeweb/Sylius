@@ -20,18 +20,10 @@ use Symfony\Component\Templating\Helper\Helper;
 
 class CheckoutStepsHelper extends Helper
 {
-    /** @var OrderPaymentMethodSelectionRequirementCheckerInterface */
-    private $orderPaymentMethodSelectionRequirementChecker;
-
-    /** @var OrderShippingMethodSelectionRequirementCheckerInterface */
-    private $orderShippingMethodSelectionRequirementChecker;
-
     public function __construct(
-        OrderPaymentMethodSelectionRequirementCheckerInterface $orderPaymentMethodSelectionRequirementChecker,
-        OrderShippingMethodSelectionRequirementCheckerInterface $orderShippingMethodSelectionRequirementChecker
+        private OrderPaymentMethodSelectionRequirementCheckerInterface $orderPaymentMethodSelectionRequirementChecker,
+        private OrderShippingMethodSelectionRequirementCheckerInterface $orderShippingMethodSelectionRequirementChecker,
     ) {
-        $this->orderPaymentMethodSelectionRequirementChecker = $orderPaymentMethodSelectionRequirementChecker;
-        $this->orderShippingMethodSelectionRequirementChecker = $orderShippingMethodSelectionRequirementChecker;
     }
 
     public function isShippingRequired(OrderInterface $order): bool
@@ -44,9 +36,6 @@ class CheckoutStepsHelper extends Helper
         return $this->orderPaymentMethodSelectionRequirementChecker->isPaymentMethodSelectionRequired($order);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'sylius_checkout_steps';

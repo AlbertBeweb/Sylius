@@ -25,57 +25,29 @@ use Sylius\Component\Locale\Context\LocaleContextInterface;
  */
 /* final */ class ShopperContext implements ShopperContextInterface
 {
-    /** @var ChannelContextInterface */
-    private $channelContext;
-
-    /** @var CurrencyContextInterface */
-    private $currencyContext;
-
-    /** @var LocaleContextInterface */
-    private $localeContext;
-
-    /** @var CustomerContextInterface */
-    private $customerContext;
-
     public function __construct(
-        ChannelContextInterface $channelContext,
-        CurrencyContextInterface $currencyContext,
-        LocaleContextInterface $localeContext,
-        CustomerContextInterface $customerContext
+        private ChannelContextInterface $channelContext,
+        private CurrencyContextInterface $currencyContext,
+        private LocaleContextInterface $localeContext,
+        private CustomerContextInterface $customerContext,
     ) {
-        $this->channelContext = $channelContext;
-        $this->currencyContext = $currencyContext;
-        $this->localeContext = $localeContext;
-        $this->customerContext = $customerContext;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getChannel(): ChannelInterface
     {
         return $this->channelContext->getChannel();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCurrencyCode(): string
     {
         return $this->currencyContext->getCurrencyCode();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLocaleCode(): string
     {
         return $this->localeContext->getLocaleCode();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCustomer(): ?CustomerInterface
     {
         return $this->customerContext->getCustomer();

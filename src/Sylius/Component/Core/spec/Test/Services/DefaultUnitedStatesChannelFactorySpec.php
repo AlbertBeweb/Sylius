@@ -37,7 +37,7 @@ final class DefaultUnitedStatesChannelFactorySpec extends ObjectBehavior
         FactoryInterface $countryFactory,
         FactoryInterface $currencyFactory,
         FactoryInterface $localeFactory,
-        ZoneFactoryInterface $zoneFactory
+        ZoneFactoryInterface $zoneFactory,
     ): void {
         $this->beConstructedWith(
             $channelRepository,
@@ -50,7 +50,7 @@ final class DefaultUnitedStatesChannelFactorySpec extends ObjectBehavior
             $currencyFactory,
             $localeFactory,
             $zoneFactory,
-            'en_US'
+            'en_US',
         );
     }
 
@@ -74,7 +74,7 @@ final class DefaultUnitedStatesChannelFactorySpec extends ObjectBehavior
         ChannelInterface $channel,
         CountryInterface $unitedStates,
         CurrencyInterface $currency,
-        LocaleInterface $locale
+        LocaleInterface $locale,
     ): void {
         $channel->getName()->willReturn('United States');
         $channelFactory->createNamed('United States')->willReturn($channel);
@@ -101,6 +101,7 @@ final class DefaultUnitedStatesChannelFactorySpec extends ObjectBehavior
         $channel->addCurrency($currency)->shouldBeCalled();
         $channel->setDefaultLocale($locale)->shouldBeCalled();
         $channel->addLocale($locale)->shouldBeCalled();
+        $channel->setHostname('us.store.com')->shouldBeCalled();
 
         $currencyRepository->findOneBy(['code' => 'USD'])->willReturn(null);
         $localeRepository->findOneBy(['code' => 'en_US'])->willReturn(null);

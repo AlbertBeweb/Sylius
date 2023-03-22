@@ -13,12 +13,13 @@ declare(strict_types=1);
 
 namespace Sylius\Behat\Page\Admin\Product;
 
-use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Element\NodeElement;
 use Sylius\Behat\Behaviour\SpecifiesItsCode;
 use Sylius\Behat\Page\Admin\Crud\CreatePage as BaseCreatePage;
 use Sylius\Behat\Service\AutocompleteHelper;
+use Sylius\Behat\Service\DriverHelper;
 use Sylius\Behat\Service\SlugGenerationHelper;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
 use Sylius\Component\Product\Model\ProductAssociationTypeInterface;
 use Webmozart\Assert\Assert;
@@ -38,10 +39,10 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
         $this->activateLanguageTab($localeCode);
         $this->getElement('name', ['%locale%' => $localeCode])->setValue($name);
 
-        if ($this->getDriver() instanceof Selenium2Driver) {
+        if (DriverHelper::isJavascript($this->getDriver())) {
             SlugGenerationHelper::waitForSlugGeneration(
                 $this->getSession(),
-                $this->getElement('slug', ['%locale%' => $localeCode])
+                $this->getElement('slug', ['%locale%' => $localeCode]),
             );
         }
     }
@@ -53,20 +54,19 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
         $this->getElement('slug', ['%locale%' => $locale])->setValue($slug);
     }
 
-    public function specifyPrice(string $channelName, string $price): void
+    public function specifyPrice(ChannelInterface $channel, string $price): void
     {
-        $this->getElement('price', ['%channelName%' => $channelName])->setValue($price);
+        $this->getElement('price', ['%channelCode%' => $channel->getCode()])->setValue($price);
     }
 
-    public function specifyOriginalPrice(string $channelName, int $originalPrice): void
+    public function specifyOriginalPrice(ChannelInterface $channel, int $originalPrice): void
     {
-        $this->getElement('original_price', ['%channelName%' => $channelName])->setValue($originalPrice);
+        $this->getElement('original_price', ['%channelCode%' => $channel->getCode()])->setValue($originalPrice);
     }
 
     public function addAttribute(string $attributeName, string $value, string $localeCode): void
     {
         $this->clickTabIfItsNotActive('attributes');
-        $this->clickLocaleTabIfItsNotActive($localeCode);
 
         $attributeOption = $this->getElement('attributes_choice')->find('css', sprintf('option:contains("%s")', $attributeName));
         $this->selectElementFromAttributesDropdown($attributeOption->getAttribute('value'));
@@ -74,13 +74,34 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
         $this->getDocument()->pressButton('Add attributes');
         $this->waitForFormElement();
 
+        if ('' === $value) {
+            return;
+        }
+
         $this->getElement('attribute_value', ['%attributeName%' => $attributeName, '%localeCode%' => $localeCode])->setValue($value);
+    }
+
+    public function selectAttributeValue(string $attributeName, string $value, string $localeCode): void
+    {
+        $this->getElement('attribute_value_select', ['%attributeName%' => $attributeName, '%localeCode%' => $localeCode])->selectOption($value);
+    }
+
+    public function addNonTranslatableAttribute(string $attributeName, string $value): void
+    {
+        $this->clickTabIfItsNotActive('attributes');
+
+        $attributeOption = $this->getElement('attributes_choice')->find('css', sprintf('option:contains("%s")', $attributeName));
+        $this->selectElementFromAttributesDropdown($attributeOption->getAttribute('value'));
+
+        $this->getDocument()->pressButton('Add attributes');
+        $this->waitForFormElement();
+
+        $this->getElement('non_translatable_attribute_value', ['%attributeName%' => $attributeName])->setValue($value);
     }
 
     public function getAttributeValidationErrors(string $attributeName, string $localeCode): string
     {
         $this->clickTabIfItsNotActive('attributes');
-        $this->clickLocaleTabIfItsNotActive($localeCode);
 
         $validationError = $this->getElement('attribute')->find('css', '.sylius-validation-error');
 
@@ -116,6 +137,20 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
         return $taxonName === $this->getDocument()->find('css', '.search > .text')->getText();
     }
 
+    public function checkProductTaxon(TaxonInterface $taxon): void
+    {
+        $this->openTaxonBookmarks();
+
+        $productTaxonsCodes = [];
+        $productTaxonsElement = $this->getElement('product_taxons');
+        if ($productTaxonsElement->getValue() !== '') {
+            $productTaxonsCodes = explode(',', $productTaxonsElement->getValue());
+        }
+        $productTaxonsCodes[] = $taxon->getCode();
+
+        $productTaxonsElement->setValue(implode(',', $productTaxonsCodes));
+    }
+
     public function attachImage(string $path, string $type = null): void
     {
         $this->clickTabIfItsNotActive('media');
@@ -136,20 +171,16 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
     {
         $this->clickTab('associations');
 
-        Assert::isInstanceOf($this->getDriver(), Selenium2Driver::class);
-
         $dropdown = $this->getElement('association_dropdown', [
             '%association%' => $productAssociationType->getName(),
         ]);
         $dropdown->click();
 
         foreach ($productsNames as $productName) {
-            $dropdown->waitFor(5, function () use ($productName, $productAssociationType) {
-                return $this->hasElement('association_dropdown_item', [
-                    '%association%' => $productAssociationType->getName(),
-                    '%item%' => $productName,
-                ]);
-            });
+            $dropdown->waitFor(5, fn () => $this->hasElement('association_dropdown_item', [
+                '%association%' => $productAssociationType->getName(),
+                '%item%' => $productName,
+            ]));
 
             $item = $this->getElement('association_dropdown_item', [
                 '%association%' => $productAssociationType->getName(),
@@ -182,7 +213,7 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
 
     public function activateLanguageTab(string $locale): void
     {
-        if (!$this->getDriver() instanceof Selenium2Driver) {
+        if (DriverHelper::isNotJavascript($this->getDriver())) {
             return;
         }
 
@@ -208,6 +239,16 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
         $this->getElement('shipping_required')->uncheck();
     }
 
+    public function getChannelPricingValidationMessage(): string
+    {
+        return $this->getElement('prices_validation_message')->getText();
+    }
+
+    public function cancelChanges(): void
+    {
+        $this->getElement('cancel_button')->click();
+    }
+
     protected function getElement(string $name, array $parameters = []): NodeElement
     {
         if (!isset($parameters['%locale%'])) {
@@ -224,20 +265,24 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
             'association_dropdown_item' => '.field > label:contains("%association%") ~ .product-select > div.menu > div.item:contains("%item%")',
             'association_dropdown_item_selected' => '.field > label:contains("%association%") ~ .product-select > a.label:contains("%item%")',
             'attribute' => '.attribute',
-            'attribute_delete_button' => '.tab[data-tab="%localeCode%"] .attribute .label:contains("%attributeName%") ~ button',
-            'attribute_value' => '.tab[data-tab="%localeCode%"] .attribute .label:contains("%attributeName%") ~ input',
+            'attribute_delete_button' => '#attributesContainer .attributes-group .attributes-header:contains("%attributeName%") button',
+            'attribute_value' => '#attributesContainer [data-test-product-attribute-value-in-locale="%attributeName% %localeCode%"] input',
+            'attribute_value_select' => '#attributesContainer [data-test-product-attribute-value-in-locale="%attributeName% %localeCode%"] select',
             'attributes_choice' => '#sylius_product_attribute_choice',
+            'cancel_button' => '[data-test-cancel-changes-button]',
             'channel_checkbox' => '.checkbox:contains("%channelName%") input',
-            'channel_pricings' => '#sylius_product_variant_channelPricings',
             'code' => '#sylius_product_code',
             'form' => 'form[name="sylius_product"]',
             'images' => '#sylius_product_images',
             'language_tab' => '[data-locale="%locale%"] .title',
             'locale_tab' => '#attributesContainer .menu [data-tab="%localeCode%"]',
             'main_taxon' => '#sylius_product_mainTaxon',
+            'product_taxons' => '#sylius_product_productTaxons',
             'name' => '#sylius_product_translations_%locale%_name',
-            'price' => '#sylius_product_variant_channelPricings > .field:contains("%channelName%") input[name$="[price]"]',
-            'original_price' => '#sylius_product_variant_channelPricings > .field:contains("%channelName%") input[name$="[originalPrice]"]',
+            'non_translatable_attribute_value' => '#attributesContainer [data-test-product-attribute-value-in-locale="%attributeName% "] input',
+            'original_price' => '#sylius_product_variant_channelPricings_%channelCode%_originalPrice',
+            'price' => '#sylius_product_variant_channelPricings_%channelCode%_price',
+            'prices_validation_message' => '#sylius_product_variant_channelPricings ~ .sylius-validation-error, #sylius_product_variant_channelPricings .sylius-validation-error',
             'price_calculator' => '#sylius_product_variant_pricingCalculator',
             'shipping_category' => '#sylius_product_variant_shippingCategory',
             'shipping_required' => '#sylius_product_variant_shippingRequired',
@@ -255,20 +300,14 @@ class CreateSimpleProductPage extends BaseCreatePage implements CreateSimpleProd
 
     private function selectElementFromAttributesDropdown(string $id): void
     {
-        /** @var Selenium2Driver $driver */
-        $driver = $this->getDriver();
-        Assert::isInstanceOf($driver, Selenium2Driver::class);
-
-        $driver->executeScript('$(\'#sylius_product_attribute_choice\').dropdown(\'show\');');
-        $driver->executeScript(sprintf('$(\'#sylius_product_attribute_choice\').dropdown(\'set selected\', \'%s\');', $id));
+        $this->getDriver()->executeScript('$(\'#sylius_product_attribute_choice\').dropdown(\'show\');');
+        $this->getDriver()->executeScript(sprintf('$(\'#sylius_product_attribute_choice\').dropdown(\'set selected\', \'%s\');', $id));
     }
 
     private function waitForFormElement(int $timeout = 5): void
     {
         $form = $this->getElement('form');
-        $this->getDocument()->waitFor($timeout, function () use ($form) {
-            return false === strpos($form->getAttribute('class'), 'loading');
-        });
+        $this->getDocument()->waitFor($timeout, fn () => !str_contains($form->getAttribute('class'), 'loading'));
     }
 
     private function clickTabIfItsNotActive(string $tabName): void
